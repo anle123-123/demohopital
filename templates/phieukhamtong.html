@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ title or ("Phiếu tổng hợp | " ~ (header.HOVATEN or "")) }}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- CSS GỘP TẠI CHỖ -->
+  <style>
+    :root{ --fg:#111; --muted:#666; --line:#444; --tbl:#f2f2f2; }
+    *{ box-sizing:border-box }
+    html,body{ margin:0; padding:0; background:#f3f3f3; color:var(--fg); font-family:"Times New Roman",serif }
+    .toolbar{ position:sticky; top:0; background:#fff; padding:10px; border-bottom:1px dashed #ccc; display:flex; gap:8px; z-index:10 }
+    .btn{ padding:6px 12px; border:1px solid #333; border-radius:6px; background:#fff; cursor:pointer }
+    .btn:active{ transform:translateY(1px) }
+
+    .a4{ width:210mm; min-height:297mm; margin:14px auto; background:#fff; padding:18mm 16mm; box-shadow:0 8px 20px rgba(0,0,0,.08) }
+    .head{ display:flex; justify-content:space-between; font-size:12px; }
+    .head b{ letter-spacing:.2px }
+    h1{ text-align:center; font-size:22px; margin:10px 0 6px }
+    .line{ border-top:1px solid #000; margin:6px 0 12px }
+
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 24px; font-size:14px }
+    .label{ color:var(--muted) }
+
+    .box{ background:#fafafa; border:1px solid #eee; border-radius:6px; padding:8px; margin:8px 0 }
+    table{ width:100%; border-collapse:collapse; font-size:13px; margin-top:6px }
+    th,td{ border:1px solid var(--line); padding:6px 8px; vertical-align:top }
+    th{ background:var(--tbl) }
+    .right{ text-align:right }
+    tfoot td{ font-weight:bold }
+
+    .sign{ display:flex; justify-content:space-between; margin-top:18mm; font-size:13px }
+    .sign .col{ width:45%; text-align:center }
+
+    @media print{
+      .toolbar{ display:none }
+      body{ background:#fff }
+      .a4{ box-shadow:none; margin:0; padding:12mm }
+    }
+  </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  </head>
+<body>
+
+  <!-- Thanh công cụ nhỏ -->
+  <div class="toolbar">
+    <button class="btn" id="btnPrint">🖨️ In / Lưu PDF</button>
+    <button class="btn" id="btnBack">↩️ Quay lại</button>
+  </div>
+
+  <!-- Trang A4 -->
+  <div class="a4">
+    <div class="head">
+      <div>
+        <div><b>SỞ Y TẾ …</b></div>
+        <div><b>BỆNH VIỆN …</b></div>
+        <div>KHOA: {{ header.KHOA or '—' }}</div>
+      </div>
+      <div style="text-align:right">
+        <div>Mã phiếu: <b>{{ header.MAPHIEU }}</b></div>
+        <div>Ngày khám: <b>{{ header.NGAYKHAM }}</b></div>
+      </div>
+    </div>
+
+    <h1>GIẤY TỔNG HỢP KHÁM / RA VIỆN</h1>
+    <div class="line"></div>
+
+    <div class="grid">
+      <div><span class="label">Họ tên:</span> <b>{{ header.HOVATEN }}</b></div>
+      <div><span class="label">Mã BN:</span> <b>{{ header.MABENHNHAN }}</b></div>
+      <div><span class="label">Ngày sinh:</span> {{ header.NGAYSINH or '—' }}</div>
+      <div><span class="label">SĐT:</span> {{ header.SODIENTHOAI or '—' }}</div>
+      <div><span class="label">Địa chỉ:</span> {{ header.DIACHI or '—' }}</div>
+      <div><span class="label">Quê quán:</span> {{ header.QUEQUAN or '—' }}</div>
+      <div><span class="label">Bác sĩ phụ trách:</span> {{ header.BACSI or '—' }}</div>
+      <div><span class="label">Lý do khám:</span> {{ header.LYDOKHAM or '—' }}</div>
+    </div>
+
+    <div class="box">
+      <div class="label">Chẩn đoán (ICD10):</div>
+      <div><b>{{ header.ICD10 or '—' }}</b> – {{ header.CHANDOAN_CHITIET or '' }}</div>
+    </div>
+
+    <h3>Chi tiết chi phí</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:18%">Loại</th>
+          <th>Mô tả</th>
+          <th style="width:8%">SL</th>
+          <th style="width:14%">Đơn giá</th>
+          <th style="width:16%">Thành tiền</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if details|length == 0 %}
+          <tr><td colspan="5" style="text-align:center">Không có chi phí</td></tr>
+        {% else %}
+          {% for r in details %}
+          <tr>
+            <td>{{ r.LOAI }}</td>
+            <td>{{ r.MOTA }}</td>
+            <td class="right">{{ ("{:,.2f}".format(r.SOLUONG or 0)).rstrip('0').rstrip('.') }}</td>
+            <td class="right">{{ "{:,.0f}".format(r.DONGIA or 0) }}</td>
+            <td class="right">{{ "{:,.0f}".format(r.THANHTIEN or 0) }}</td>
+          </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" class="right">Tổng cộng</td>
+          <td class="right">{{ "{:,.0f}".format(tong_tien or 0) }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="sign">
+      <div class="col">
+        <b>TRƯỞNG KHOA</b><br/><i>(Ký, ghi rõ họ tên)</i>
+      </div>
+      <div class="col">
+        <b>BÁC SĨ ĐIỀU TRỊ</b><br/><i>(Ký, ghi rõ họ tên)</i>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS GỘP TẠI CHỖ -->
+  <script>
+    // In/Save PDF
+    document.getElementById("btnPrint").addEventListener("click", function(){
+      window.print();
+    });
+
+    // Quay lại trang trước
+    document.getElementById("btnBack").addEventListener("click", function(){
+      if (history.length > 1) history.back();
+      else window.location.href = "/";
+    });
+  </script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

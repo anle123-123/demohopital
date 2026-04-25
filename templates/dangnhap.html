@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đăng nhập hệ thống</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dangnhap.css') }}">
+</head>
+
+<body>
+  <main class="page">
+    <div class="login-card" role="dialog" aria-labelledby="loginTitle">
+      <div class="brand">
+        <a class="brand-link" href="{{ url_for('trang_chu') }}">🏥 HOPITAL</a>
+      </div>
+
+      <h1 id="loginTitle" class="title">Đăng nhập hệ thống</h1>
+
+      <form id="loginForm" novalidate>
+        <div class="form-group">
+          <label for="taikhoan">Tài khoản</label>
+          <input type="text" id="taikhoan" name="taikhoan" autocomplete="username" required>
+        </div>
+
+        <div class="form-group">
+          <label for="matkhau">Mật khẩu</label>
+          <input type="password" id="matkhau" name="matkhau" autocomplete="current-password" required>
+        </div>
+
+        <!-- OTP Input -->
+        <div id="otpWrap" style="display:none;">
+          <div class="form-group">
+            <label for="otp">Mã OTP (6 số)</label>
+            <input type="text" id="otp" inputmode="numeric" autocomplete="one-time-code" placeholder="VD: 123456">
+          </div>
+          <div style="font-size:13px; color:#666; margin-top:5px;">
+            Mã xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư (cả mục spam).
+          </div>
+
+          <div style="margin-top: 15px; text-align: center;">
+            <a id="resendLink" href="#"
+              style="font-size: 13px; color: #aaa; pointer-events: none; text-decoration: none;">
+              Gửi lại mã (60s)
+            </a>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" id="btnLogin" class="btn-primary">Đăng nhập</button>
+        </div>
+
+        <div class="register-link" style="text-align: center; margin-top: 15px; font-size: 0.9rem;">
+          Chưa có tài khoản? <a href="/register"
+            style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Đăng ký ngay</a>
+        </div>
+
+        <p id="msg" class="msg" aria-live="polite"></p>
+      </form>
+
+      <div class="hint">
+        <a href="{{ url_for('trang_chu') }}" class="link">← Về trang chủ</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const msg = document.getElementById("msg");
+    const btn = document.getElementById("btnLogin");
+    const resendLink = document.getElementById("resendLink");
+
+    const otpWrap = document.getElementById("otpWrap");
+
+    let step = "password"; // "password" | "otp"
+    let countdownInterval;
+
+    function startCountdown(seconds) {
+      let counter = seconds;
+      resendLink.style.pointerEvents = "none";
+      resendLink.style.color = "#aaa";
+      resendLink.textContent = `Gửi lại mã (${counter}s)`;
+
+      clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        counter--;
+        if (counter <= 0) {
+          clearInterval(countdownInterval);
+          resendLink.style.pointerEvents = "auto";
+          resendLink.style.color = "var(--primary-color)";
+          resendLink.textContent = "Gửi lại mã";
+        } else {
+          resendLink.textContent = `Gửi lại mã (${counter}s)`;
+        }
+      }, 1000);
+    }
+
+    resendLink.addEventListener("click", async (e) => {
+      e.preventDefault();
+      setMsg("Đang gửi lại mã...", "ok");
+
+      try {
+        const res = await fetch("/api/login/resend-otp", { method: "POST" });
+        const data = await res.json();
+
+        if (data.success) {
+          setMsg("Đã gửi lại mã OTP mới.", "ok");
+          startCountdown(60);
+        } else {
+          setMsg(data.error || "Không thể gửi lại mã.", "error");
+        }
+      } catch (err) {
+        setMsg("Lỗi kết nối.", "error");
+      }
+    });
+
+    function setMsg(text, type = "") {
+      msg.textContent = text || "";
+      msg.className = "msg" + (type ? " " + type : "");
+    }
+
+    function getNext() {
+      const u = new URL(window.location.href);
+      return u.searchParams.get("next") || "/home";
+    }
+
+    function showOtpStep() {
+      step = "otp";
+      // Ẩn username/pass nhưng không xóa giá trị
+      document.getElementById("taikhoan").closest(".form-group").style.display = "none";
+      document.getElementById("matkhau").closest(".form-group").style.display = "none";
+
+      otpWrap.style.display = "block";
+      btn.textContent = "Xác nhận OTP";
+      document.getElementById("otp").focus();
+      startCountdown(60);
+    }
+
+    async function doLoginPassword() {
+      const taikhoan = document.getElementById("taikhoan").value.trim();
+      const matkhau = document.getElementById("matkhau").value.trim();
+
+      if (!taikhoan || !matkhau) {
+        setMsg("Vui lòng nhập đầy đủ tài khoản và mật khẩu.", "error");
+        return;
+      }
+
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taikhoan, matkhau })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data || !data.success) {
+        setMsg(data.error || "Sai tài khoản hoặc mật khẩu.", "error");
+        return;
+      }
+
+      // ✅ Nếu backend trả otpauth_uri => luôn show QR + yêu cầu OTP
+      if (data.require_otp) {
+        setMsg(data.message || "Vui lòng nhập OTP đã được gửi đến email.", "ok");
+        showOtpStep();
+        return;
+      }
+
+      // (trường hợp bạn cho phép login không OTP)
+      setMsg("Đăng nhập thành công.", "ok");
+      window.location.href = getNext();
+    }
+
+    async function doLoginOtp() {
+      const otp = (document.getElementById("otp").value || "").trim();
+      const taikhoan = document.getElementById("taikhoan").value.trim();
+      const matkhau = document.getElementById("matkhau").value.trim();
+
+      if (!otp) {
+        setMsg("Vui lòng nhập mã OTP.", "error");
+        return;
+      }
+
+      const res = await fetch("/api/login/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp, taikhoan, matkhau }) // Gửi kèm user/pass
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data && data.success) {
+        setMsg("Đăng nhập thành công.", "ok");
+        window.location.href = getNext();
+      } else {
+        setMsg(data.error || "OTP không đúng.", "error");
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setMsg("");
+      btn.disabled = true;
+
+      try {
+        if (step === "password") await doLoginPassword();
+        else await doLoginOtp();
+      } catch (err) {
+        setMsg("Không thể kết nối máy chủ. Vui lòng thử lại.", "error");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.documentElement.classList.add("preload");
+    window.addEventListener("DOMContentLoaded", () => {
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove("preload");
+        document.body.classList.add("enter");
+      });
+    });
+  </script>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+
+</html>

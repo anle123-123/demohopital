@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql_db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=0966288650aA@
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - ./data:/usr/src/app/data

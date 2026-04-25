@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>{{ title or 'Hồ sơ bệnh nhân' }}</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* === 1. DASHBOARD LAYOUT STYLES (ĐỒNG BỘ) === */
+    :root {
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --bg-body: #f4f7f6;
+      --sidebar-bg: #2c3e50;
+      --sidebar-text: #ecf0f1;
+      --active-item: #3498db;
+      --color-border: #ddd;
+    }
+
+    body { font-family: 'Segoe UI', sans-serif; display: flex; margin: 0; background: var(--bg-body); height: 100vh; overflow: hidden; }
+
+    /* Bỏ gạch chân triệt để ở mọi liên kết */
+    a, a:hover, a:focus, a:active { text-decoration: none !important; }
+
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; }
+    .sidebar-brand { height: var(--header-height); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-item { display: flex; align-items: center; padding: 12px 25px; color: #bdc3c7; transition: 0.3s; border-left: 4px solid transparent; font-size: 0.95rem; }
+    .nav-item i { width: 25px; margin-right: 10px; text-align: center; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--active-item); }
+
+    /* Submenu */
+    .nav-group { margin: 0; }
+    .nav-group-label { padding: 12px 25px; color: #bdc3c7; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .nav-group-label:hover { color: white; }
+    .nav-group-label .left { display: flex; align-items: center; }
+    .nav-group-label .left i { width: 25px; text-align: center; margin-right: 10px; }
+    .nav-group-content { display: none; background: rgba(0,0,0,0.2); }
+    .nav-group.is-open .nav-group-content { display: block; }
+    .nav-group-content .nav-item { padding-left: 55px; font-size: 0.9rem; }
+
+    /* Main Content */
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .top-header { height: var(--header-height); background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; }
+    .header-user { display: flex; align-items: center; gap: 15px; }
+    .btn-logout { color: #e74c3c; font-weight: 500; font-size: 0.9rem; border: 1px solid #e74c3c; padding: 5px 15px; border-radius: 20px; transition: 0.2s; }
+    .btn-logout:hover { background: #e74c3c; color: white; }
+
+    /* Search Box Header */
+    .header-search { flex: 1; max-width: 400px; margin: 0 20px; }
+    .header-search form { display: flex; width: 100%; position: relative; }
+    .header-search input { width: 100%; padding: 8px 15px 8px 35px; border: 1px solid #ddd; border-radius: 20px; outline: none; background: #f9f9f9; }
+    .header-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999; }
+
+    /* Content Body */
+    .content-body { flex: 1; overflow-y: auto; padding: 30px; }
+
+    /* === 2. PAGE SPECIFIC STYLES (Hồ sơ) === */
+    .bn-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 5px solid var(--active-item); }
+    .bn-card h2 { margin: 0 0 10px 0; color: #2c3e50; font-size: 1.5rem; }
+    .bn-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; color: #555; font-size: 0.95rem; }
+    .bn-info-item i { color: var(--active-item); width: 20px; text-align: center; margin-right: 5px; }
+
+    /* Profile edit */
+    .edit-actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .profile-form { margin-top: 15px; background: #fbfdff; border: 1px solid #e7eff7; border-radius: 12px; padding: 15px; }
+    .profile-form .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .profile-form label { display: block; font-size: 0.85rem; color: #6b7280; margin-bottom: 6px; font-weight: 600; }
+    .profile-form input { width: 100%; padding: 10px; border: 1px solid #dbe3ea; border-radius: 8px; outline: none; background: white; }
+    .profile-form input:focus { border-color: var(--active-item); box-shadow: 0 0 0 3px rgba(52,152,219,0.15); }
+    .msg { margin-top: 10px; font-weight: 600; }
+    .msg.err { color: #e74c3c; }
+    .msg.ok { color: #2e7d32; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 5px; border-bottom: 2px solid #eee; margin-bottom: 20px; }
+    .tab-btn { border: none; background: none; padding: 10px 20px; font-size: 1rem; color: #7f8c8d; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent; transition: 0.3s; }
+    .tab-btn:hover { color: var(--active-item); background: rgba(52, 152, 219, 0.05); }
+    .tab-btn.active { color: var(--active-item); border-bottom-color: var(--active-item); }
+
+    .tab-content { display: none; animation: fadeIn 0.3s; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Tables */
+    .table-wrap { background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f8f9fa; color: #555; font-weight: 700; padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    td { padding: 12px 15px; border-bottom: 1px solid #eee; color: #333; font-size: 0.95rem; vertical-align: top; }
+    tr:hover { background: #fcfcfc; }
+    .empty { text-align: center; color: #999; font-style: italic; padding: 20px; }
+
+    /* Buttons & Forms */
+    .btn { border: none; background: var(--active-item); color: white; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s;}
+    .btn:hover { opacity: 0.9; }
+    .btn.outline { background: white; color: var(--active-item); border: 1px solid var(--active-item); }
+    .btn.outline:hover { background: var(--active-item); color: white; }
+    .btn.sm { padding: 4px 10px; font-size: 0.8rem; }
+    .btn.danger { background: #e74c3c; }
+    .btn.danger.outline { background: white; border-color: #e74c3c; color: #e74c3c; }
+    .btn.danger.outline:hover { background: #e74c3c; color: white; }
+
+    .upload-row { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .upload-row input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; outline: none; }
+    .upload-row input[type="file"] { border: none; }
+
+    .back-link { margin-top: 20px; display: inline-block; color: #7f8c8d; font-weight: 500; }
+    .back-link:hover { color: var(--active-item); }
+  </style>
+</head>
+
+<body>
+
+  <aside class="sidebar">
+    <a href="{{ url_for('trang_chu') }}" class="sidebar-brand">
+      <i class="fa-solid fa-hospital-user" style="margin-right: 10px;"></i> HOPITAL
+    </a>
+
+    <div class="sidebar-menu">
+      <a href="{{ url_for('trang_chu') }}" class="nav-item {{ 'active' if active=='trang_chu' else '' }}">
+        <i class="fa-solid fa-house"></i> Trang chủ
+      </a>
+
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('ql_bac_si') }}" class="nav-item {{ 'active' if active=='ql_bac_si' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i> Quản lí bác sĩ
+        </a>
+        <a href="/admin/khoa" class="nav-item {{ 'active' if active=='ql_khoa' else '' }}">
+          <i class="fa-solid fa-building-circle-check"></i> Quản lý Khoa
+        </a>
+        <a href="{{ url_for('admin_accounts_page_v2') }}" class="nav-item {{ 'active' if active=='ql_tai_khoan' else '' }}">
+          <i class="fa-solid fa-users-gear"></i> Tài khoản hệ thống
+        </a>
+        <a href="/admin/dich-vu" class="nav-item {{ 'active' if active=='ql_dich_vu' else '' }}">
+          <i class="fa-solid fa-receipt"></i> Quản lý Dịch vụ
+        </a>
+        <a href="/admin/xet-nghiem" class="nav-item {{ 'active' if active=='ql_xet_nghiem' else '' }}">
+          <i class="fa-solid fa-flask"></i> Quản lý Xét nghiệm
+        </a>
+        <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+          <i class="fa-solid fa-bed"></i> Phòng bệnh
+        </a>
+      {% endif %}
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+        <div class="nav-group {{ 'is-open' if active in ['ql_lich_hen','goi_so','lay_so_online'] else '' }}">
+          <div class="nav-group-label" onclick="this.parentElement.classList.toggle('is-open')">
+            <div class="left">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Lịch hẹn</span>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
+          </div>
+          
+          <div class="nav-group-content">
+            {% if session.role == 'doctor' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            <a href="{{ url_for('goi_so') }}" class="nav-item {{ 'active' if active=='goi_so' else '' }}">Danh sách thứ tự</a>
+            <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">Lấy số online</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('ql_kham_benh') }}" class="nav-item {{ 'active' if active=='ql_kham_benh' else '' }}">
+          <i class="fa-solid fa-stethoscope"></i> Khám bệnh
+        </a>
+
+        <a href="{{ url_for('benh_nhan') }}" class="nav-item {{ 'active' if active=='benh_nhan' else 'active' }}">
+          <i class="fa-solid fa-address-card"></i> Hồ sơ bệnh nhân
+        </a>
+
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('ql_thuoc_kho') }}" class="nav-item {{ 'active' if active=='thuoc_kho' else '' }}">
+            <i class="fa-solid fa-pills"></i> Thuốc & Kho
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('ql_thanh_toan') }}" class="nav-item {{ 'active' if active=='thanh_toan' else '' }}">
+          <i class="fa-solid fa-credit-card"></i> Thanh toán
+        </a>
+
+        <a href="{{ url_for('lich_lam_viec') }}" class="nav-item {{ 'active' if active=='lich_lam_viec' else '' }}">
+          <i class="fa-solid fa-calendar-days"></i> Lịch làm việc
+        </a>
+
+        {% if session.role == 'doctor' %}
+          <a href="{{ url_for('xet_lich_lam') }}" class="nav-item {{ 'active' if active=='xet_lich_lam' else '' }}">
+            <i class="fa-solid fa-user-clock"></i> Đăng ký lịch
+          </a>
+
+          <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+            <i class="fa-solid fa-bed"></i> Phòng bệnh
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('bao_cao_thong_ke') }}" class="nav-item {{ 'active' if active=='bao_cao' else '' }}">
+          <i class="fa-solid fa-chart-line"></i> Báo cáo
+        </a>
+
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+
+      {% else %}
+        <a href="{{ url_for('quansat_layso') }}" class="nav-item {{ 'active' if active=='quansat_layso' else '' }}">
+          <i class="fa-solid fa-eye"></i> Quan sát số
+        </a>
+        <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">
+          <i class="fa-solid fa-ticket"></i> Lấy số online
+        </a>
+        <a href="{{ url_for('dat_lich_page') }}" class="nav-item {{ 'active' if active=='dat_lich' else '' }}">
+          <i class="fa-solid fa-calendar-plus"></i> Đặt lịch khám
+        </a>
+
+        {% if session.mabn %}
+          <a href="{{ url_for('ho_so_benh_nhan', mabn=session.mabn) }}" class="nav-item {{ 'active' if active=='ho_so_toi' else 'active' }}">
+            <i class="fa-solid fa-file-medical"></i> Hồ sơ của tôi
+          </a>
+        {% else %}
+           <a href="#" class="nav-item active">
+            <i class="fa-solid fa-file-medical"></i> Hồ sơ của tôi
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="top-header">
+      <div style="font-weight: bold; font-size: 1.1rem; color: #2c3e50;">
+        {% if session.get('role', 'doctor') == 'patient' %} CỔNG BỆNH NHÂN
+        {% else %} TRA CỨU HỒ SƠ {% endif %}
+      </div>
+
+      <div class="header-search">
+        {% if session.get('role', 'doctor') != 'patient' %}
+        <form action="{{ url_for('benh_nhan') }}" method="get">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" name="q" placeholder="Tìm Mã BN / Họ tên / SĐT...">
+        </form>
+        {% endif %}
+      </div>
+
+      <div class="header-user">
+        <span>Xin chào, <b>{{ session.user }}</b></span>
+        <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+      </div>
+    </header>
+
+    <div class="content-body">
+
+      <div class="bn-card">
+        <h2>{{ bn.HOVATEN }} <span style="font-size:1rem; color:#888;">({{ bn.MABENHNHAN }})</span></h2>
+
+        <div class="bn-info-grid" id="profileView">
+          <div class="bn-info-item"><i class="fa-solid fa-cake-candles"></i> <b>Ngày sinh:</b> <span id="v_ngaysinh">{{ bn.NGAYSINH or '—' }}</span></div>
+          <div class="bn-info-item"><i class="fa-solid fa-phone"></i> <b>SĐT:</b> <span id="v_sdt">{{ bn.SODIENTHOAI or '—' }}</span></div>
+          <div class="bn-info-item"><i class="fa-solid fa-location-dot"></i> <b>Địa chỉ:</b> <span id="v_diachi">{{ bn.DIACHI or '—' }}</span></div>
+          <div class="bn-info-item"><i class="fa-solid fa-house-chimney"></i> <b>Quê quán:</b> <span id="v_quequan">{{ bn.QUEQUAN or '—' }}</span></div>
+        </div>
+
+        {% if session.get('role') == 'patient' %}
+          <div class="edit-actions">
+            <button class="btn outline" id="btnEditProfile"><i class="fa-solid fa-pen"></i> Sửa thông tin</button>
+            <button class="btn" id="btnSaveProfile" style="display:none;"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
+            <button class="btn outline danger" id="btnCancelProfile" style="display:none;"><i class="fa-solid fa-xmark"></i> Huỷ</button>
+          </div>
+
+          <div class="profile-form" id="profileForm" style="display:none;">
+            <div class="row">
+              <div>
+                <label for="pf_ngaysinh">Ngày sinh</label>
+                <input type="date" id="pf_ngaysinh" value="{{ (bn.NGAYSINH or '') }}">
+              </div>
+              <div>
+                <label for="pf_sdt">Số điện thoại</label>
+                <input type="text" id="pf_sdt" placeholder="VD: 0901234567" value="{{ (bn.SODIENTHOAI or '') }}">
+              </div>
+              <div>
+                <label for="pf_diachi">Địa chỉ</label>
+                <input type="text" id="pf_diachi" placeholder="VD: 12 Nguyễn Trãi, Q1" value="{{ (bn.DIACHI or '') }}">
+              </div>
+              <div>
+                <label for="pf_quequan">Quê quán</label>
+                <input type="text" id="pf_quequan" placeholder="VD: Cần Thơ" value="{{ (bn.QUEQUAN or '') }}">
+              </div>
+            </div>
+
+            <div class="msg err" id="pf_err" style="display:none;"></div>
+            <div class="msg ok" id="pf_ok" style="display:none;"></div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="kham"><i class="fa-solid fa-stethoscope"></i> Lịch sử khám</button>
+        <button class="tab-btn" data-tab="xn"><i class="fa-solid fa-flask"></i> Xét nghiệm</button>
+        <button class="tab-btn" data-tab="don"><i class="fa-solid fa-pills"></i> Đơn thuốc</button>
+        <button class="tab-btn" data-tab="file"><i class="fa-solid fa-paperclip"></i> Tệp đính kèm</button>
+      </div>
+
+      <div id="tab-kham" class="tab-content active">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Mã phiếu</th>
+                <th>Ngày khám</th>
+                <th>Khoa</th>
+                <th>Lý do khám</th>
+                <th>Chẩn đoán</th>
+                <th>Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in kham %}
+              <tr>
+                <td><b>{{ r.MAPHIEU }}</b></td>
+                <td>{{ r.NGAYKHAM }}</td>
+                <td><span style="color:#2980b9; font-weight:600">{{ r.KHOA or '' }}</span></td>
+                <td>{{ r.LYDOKHAM or '' }}</td>
+                <td>
+                  {{ r.CHANDOAN or '' }}
+                  {% if chan_doan.get(r.MAPHIEU) %}
+                  <div style="font-size:0.85rem; color:#666; margin-top:4px;">
+                    {% for cd in chan_doan[r.MAPHIEU] %}
+                    • <b>{{ cd.ICD10 or '—' }}</b>: {{ cd.MOTA or '' }}<br>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </td>
+                <td>{{ r.GHICHU or '' }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" class="empty">Chưa có lịch sử khám bệnh.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tab-xn" class="tab-content">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Mã XN</th>
+                <th>Phiếu khám</th>
+                <th>Loại XN</th>
+                <th>Chỉ định</th>
+                <th>Ngày chỉ định</th>
+                <th>Trạng thái</th>
+                <th>Kết quả</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in xn %}
+              <tr>
+                <td>{{ r.MAXN }}</td>
+                <td>{{ r.MAPHIEU }}</td>
+                <td>{{ r.LOAIXN }}</td>
+                <td>{{ r.CHIDINH or '' }}</td>
+                <td>{{ r.NGAYCHIDINH }}</td>
+                <td>
+                  {% if r.TRANGTHAI == 'Đã có kết quả' %}
+                    <span class="badge" style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:4px; font-size:0.8rem">Hoàn thành</span>
+                  {% else %}
+                    <span class="badge" style="background:#fff3e0; color:#ef6c00; padding:3px 8px; border-radius:4px; font-size:0.8rem">Đang chờ</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if r.FILEURL %}
+                  <a class="btn outline sm" href="{{ r.FILEURL }}" target="_blank"><i class="fa-solid fa-eye"></i> Xem</a>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="7" class="empty">Chưa có dữ liệu xét nghiệm.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tab-don" class="tab-content">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Phiếu khám</th>
+                <th>Ngày kê</th>
+                <th>Bác sĩ</th>
+                <th>Chi tiết thuốc</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in don %}
+              <tr>
+                <td><b>{{ d.MADON }}</b></td>
+                <td>{{ d.MAPHIEU }}</td>
+                <td>{{ d.NGAYKE }}</td>
+                <td>{{ d.BACSI or '' }}</td>
+                <td>
+                  {% set listct = don_ct.get(d.MADON, []) %}
+                  {% if listct|length == 0 %}
+                  <span style="color:#999">—</span>
+                  {% else %}
+                  {% for ct in listct %}
+                  • <b>{{ ct.TENTHUOC }}</b> {{ ct.HAMLUONG or '' }} — {{ ct.LIEUDUNG or '' }}
+                  {% if ct.SOLUONG %} (SL: {{ ct.SOLUONG }} {{ ct.DONVI or '' }}){% endif %}
+                  <br>
+                  {% endfor %}
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="empty">Chưa có đơn thuốc nào.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tab-file" class="tab-content">
+        {% if session.get('role', 'doctor') != 'patient' %}
+        <div class="upload-row">
+          <span style="font-weight:600; margin-right:10px;">Thêm tài liệu:</span>
+          <input type="file" id="hs_file" accept=".pdf,.png,.jpg,.jpeg" style="flex:1">
+          <input type="text" id="hs_note" placeholder="Ghi chú (VD: X-Quang phổi)" style="flex:1">
+          <button class="btn" id="btnUpload"><i class="fa-solid fa-upload"></i> Tải lên</button>
+        </div>
+        {% endif %}
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tên tệp</th>
+                <th>Loại</th>
+                <th>Ngày tải</th>
+                <th>Ghi chú</th>
+                <th style="text-align:right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="hs_tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+      <div style="margin-top:20px;">
+        <a href="{{ url_for('benh_nhan') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Quay lại danh sách bệnh nhân</a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <script>
+    // ===== Tabs Switch =====
+    const btns = document.querySelectorAll('.tab-btn');
+    const tabs = document.querySelectorAll('.tab-content');
+
+    btns.forEach(b => b.addEventListener('click', () => {
+      btns.forEach(x => x.classList.remove('active'));
+      tabs.forEach(t => t.classList.remove('active'));
+
+      b.classList.add('active');
+      document.getElementById('tab-' + b.dataset.tab).classList.add('active');
+    }));
+
+    // ===== Constants =====
+    const MABN = "{{ bn.MABENHNHAN if bn else '' }}";
+    const IS_PATIENT = {{ 'true' if session.role == 'patient' else 'false' }};
+    const $ = (sel) => document.querySelector(sel);
+
+    // ===== Profile edit (Patient only) =====
+    function showMsg(kind, text) {
+      const err = $('#pf_err');
+      const ok = $('#pf_ok');
+      if (!err || !ok) return;
+
+      err.style.display = 'none';
+      ok.style.display = 'none';
+
+      if (!text) return;
+
+      if (kind === 'ok') {
+        ok.textContent = text;
+        ok.style.display = 'block';
+      } else {
+        err.textContent = text;
+        err.style.display = 'block';
+      }
+    }
+
+    function setEditMode(on) {
+      const form = $('#profileForm');
+      const btnEdit = $('#btnEditProfile');
+      const btnSave = $('#btnSaveProfile');
+      const btnCancel = $('#btnCancelProfile');
+
+      if (!form || !btnEdit || !btnSave || !btnCancel) return;
+
+      form.style.display = on ? 'block' : 'none';
+      btnEdit.style.display = on ? 'none' : 'inline-flex';
+      btnSave.style.display = on ? 'inline-flex' : 'none';
+      btnCancel.style.display = on ? 'inline-flex' : 'none';
+
+      if (!on) showMsg('', '');
+    }
+
+    function normalizeDateForInput(s) {
+      if (!s) return '';
+      const t = String(s).trim();
+      if (!t || t === '—') return '';
+      if (t.length >= 10 && t[4] === '-' && t[7] === '-') return t.slice(0, 10);
+      return t;
+    }
+
+    async function saveProfile() {
+      if (!MABN) return showMsg('err', 'Không tìm thấy mã bệnh nhân.');
+
+      // Basic validations
+      const ngaysinh = normalizeDateForInput($('#pf_ngaysinh')?.value || '');
+      const sdt = ($('#pf_sdt')?.value || '').trim();
+      const diachi = ($('#pf_diachi')?.value || '').trim();
+      const quequan = ($('#pf_quequan')?.value || '').trim();
+
+      if (sdt && !/^[0-9+()\-.\s]{8,20}$/.test(sdt)) {
+        return showMsg('err', 'Số điện thoại không hợp lệ.');
+      }
+
+      const payload = {
+        NGAYSINH: ngaysinh || null,
+        SODIENTHOAI: sdt || null,
+        DIACHI: diachi || null,
+        QUEQUAN: quequan || null
+      };
+
+      const btnSave = $('#btnSaveProfile');
+      const oldText = btnSave ? btnSave.innerHTML : '';
+      if (btnSave) {
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+      }
+      showMsg('', '');
+
+      try {
+        const r = await fetch(`/api/benhnhan/${encodeURIComponent(MABN)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const j = await r.json().catch(() => ({}));
+
+        if (!r.ok) {
+          showMsg('err', j.error || 'Cập nhật thất bại.');
+          return;
+        }
+
+        // Update view without reload
+        $('#v_ngaysinh').textContent = ngaysinh || '—';
+        $('#v_sdt').textContent = sdt || '—';
+        $('#v_diachi').textContent = diachi || '—';
+        $('#v_quequan').textContent = quequan || '—';
+
+        showMsg('ok', 'Đã cập nhật thông tin.');
+        setEditMode(false);
+      } catch (e) {
+        showMsg('err', 'Lỗi kết nối.');
+      } finally {
+        if (btnSave) {
+          btnSave.disabled = false;
+          btnSave.innerHTML = oldText;
+        }
+      }
+    }
+
+    function initProfileEdit() {
+      if (!IS_PATIENT) return;
+
+      const inputDate = $('#pf_ngaysinh');
+      if (inputDate) inputDate.value = normalizeDateForInput(inputDate.value);
+
+      $('#btnEditProfile')?.addEventListener('click', () => setEditMode(true));
+      $('#btnCancelProfile')?.addEventListener('click', () => setEditMode(false));
+      $('#btnSaveProfile')?.addEventListener('click', saveProfile);
+    }
+
+    // ===== File Attachments Logic =====
+    async function loadFiles() {
+      const tb = document.getElementById('hs_tbody');
+      if (!tb) return;
+      if (!MABN) { tb.innerHTML = '<tr><td colspan="5" class="empty">Lỗi: Không tìm thấy mã bệnh nhân</td></tr>'; return; }
+
+      try {
+        const r = await fetch(`/api/hoso/${encodeURIComponent(MABN)}/files`);
+        if (!r.ok) return;
+
+        const list = await r.json();
+        if (!list.length) {
+          tb.innerHTML = '<tr><td colspan="5" class="empty">Chưa có tài liệu đính kèm</td></tr>';
+          return;
+        }
+
+        tb.innerHTML = list.map(x => `
+          <tr>
+            <td><i class="fa-regular fa-file"></i> ${x.TENTEP || x.TENFILE || ''}</td>
+            <td>${x.LOAITEP || 'File'}</td>
+            <td>${x.NGAYTAI || ''}</td>
+            <td>${x.GHICHU || ''}</td>
+            <td style="text-align:right">
+              <a class="btn outline sm" href="/api/hoso/file/${x.ID}" target="_blank"><i class="fa-solid fa-eye"></i> Xem</a>
+              ${!IS_PATIENT ? `<button class="btn outline sm danger" onclick="deleteFile(${x.ID})"><i class="fa-solid fa-trash"></i></button>` : ''}
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) { console.error(e); }
+    }
+
+    async function uploadFile() {
+      const f = $('#hs_file')?.files[0];
+      const note = $('#hs_note')?.value.trim() || '';
+
+      if (!f) return alert('Vui lòng chọn file!');
+
+      const fd = new FormData();
+      fd.append('file', f);
+      fd.append('ghichu', note);
+
+      const btn = $('#btnUpload');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...'; }
+
+      try {
+        const r = await fetch(`/api/hoso/${encodeURIComponent(MABN)}/upload`, { method: 'POST', body: fd });
+        const j = await r.json().catch(() => ({}));
+
+        if (!r.ok || !j.ok) {
+          alert(j.error || 'Tải lên thất bại');
+        } else {
+          $('#hs_file').value = '';
+          $('#hs_note').value = '';
+          loadFiles();
+        }
+      } catch (e) {
+        alert('Lỗi kết nối');
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-upload"></i> Tải lên'; }
+      }
+    }
+
+    async function deleteFile(id) {
+      if (!confirm('Xoá tệp này?')) return;
+      try {
+        const r = await fetch(`/api/hoso/file/${id}`, { method: 'DELETE' });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.ok) return alert(j.error || 'Không xoá được');
+        loadFiles();
+      } catch (e) { alert('Lỗi kết nối'); }
+    }
+
+    // ===== Init =====
+    document.addEventListener('DOMContentLoaded', () => {
+      initProfileEdit();
+      document.getElementById('btnUpload')?.addEventListener('click', uploadFile);
+      loadFiles();
+    });
+  </script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html> 

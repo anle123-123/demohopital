@@ -1,0 +1,76 @@
+/* ====== Hồ sơ bệnh nhân (detail page) ====== */
+.container { padding: 16px; }
+
+.bn-card {
+  background:#fff;
+  border-radius:12px;
+  padding:16px;
+  margin:16px 0;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+}
+.bn-card h2 { margin:0 0 8px; }
+.muted { color:#64748b; font-size:14px; }
+
+.tabs { display:flex; gap:8px; margin:16px 0; flex-wrap:wrap; }
+.tab-btn {
+  background:#fff;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  padding:8px 12px;
+  cursor:pointer;
+}
+.tab-btn.active {
+  background:#0ea5e9;
+  color:#fff;
+  border-color:#0ea5e9;
+}
+
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+.table-wrap {
+  overflow:auto;
+  background:#fff;
+  border-radius:12px;
+}
+
+.table-wrap table { width:100%; border-collapse:collapse; }
+.table-wrap th, .table-wrap td {
+  border-bottom:1px solid #e5e7eb;
+  padding:10px;
+  text-align:left;
+}
+.table-wrap th { background:#eef2ff; color:#334155; }
+.table-wrap tr:nth-child(even) { background:#fafafa; }
+
+.file-link { text-decoration:none; }
+.empty { text-align:center; color:#64748b; }
+
+.back-link { margin-top:16px; }
+.back-link a { text-decoration:none; }
+/* ============= TABS ============= */
+.tabs {
+  margin: 16px 0;
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  margin-right: 6px;
+  background: #e2e8f0;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: #0ea5e9;
+  color: white;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}

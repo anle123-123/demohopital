@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Giới thiệu - Hopital AZC</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* === COPY CSS CHUNG TỪ HOME.HTML (Giữ nguyên header/footer) === */
+    :root {
+      --primary-color: #0093E9;
+      --primary-dark: #005b9f;
+      --topbar-bg: #004ebc;
+      --text-color: #333;
+      --bg-light: #f9fbfd;
+    }
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; color: var(--text-color); line-height: 1.6; }
+    a { text-decoration: none; }
+    ul { list-style: none; padding: 0; }
+    
+    /* Top Bar & Header (Giống trang chủ) */
+    .top-info-bar { background-color: var(--topbar-bg); color: white; padding: 8px 0; font-size: 0.9rem; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+    .top-flex { display: flex; justify-content: space-between; align-items: center; }
+    .landing-header { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+    .nav-container { height: 80px; display: flex; align-items: center; justify-content: space-between; }
+    .logo-brand { font-size: 1.8rem; font-weight: bold; color: var(--topbar-bg); display: flex; align-items: center; gap: 10px; }
+    .main-menu { display: flex; gap: 25px; height: 100%; align-items: center; }
+    .main-menu > a { color: #333; font-weight: 500; font-size: 1rem; transition: 0.3s; padding: 10px 0; }
+    .main-menu > a:hover { color: var(--primary-color); }
+    .btn-appointment { background-color: #d32f2f; color: white; padding: 10px 25px; border-radius: 30px; font-weight: bold; transition: 0.3s; }
+    .btn-appointment:hover { background-color: #b71c1c; transform: translateY(-2px); }
+
+    /* Dropdown CSS */
+    .dropdown { position: relative; height: 100%; display: flex; align-items: center; }
+    .dropdown > a { color: #333; font-weight: 500; font-size: 1rem; transition: 0.3s; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    .dropdown:hover > a { color: var(--primary-color); }
+    .dropdown-content { display: none; position: absolute; top: 60px; left: -150px; background-color: white; min-width: 600px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border-radius: 8px; padding: 20px; z-index: 1000; grid-template-columns: 1fr 1fr; gap: 15px; border-top: 4px solid var(--primary-color); animation: fadeIn 0.3s ease; }
+    .dropdown:hover .dropdown-content { display: grid; }
+    .menu-sub-item { display: flex !important; align-items: center; color: #555 !important; padding: 10px; border-radius: 6px; transition: 0.2s; }
+    .menu-sub-item:hover { background-color: #f0f8ff; color: var(--primary-color) !important; padding-left: 15px; }
+    .menu-sub-item i { width: 25px; color: var(--primary-color); margin-right: 10px; text-align: center; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* === CSS RIÊNG CHO TRANG GIỚI THIỆU === */
+    
+    /* 1. About Hero Banner */
+    .about-hero {
+      position: relative;
+      height: 450px;
+      background: linear-gradient(rgba(0, 50, 100, 0.6), rgba(0, 50, 100, 0.6)), url('https://images.unsplash.com/photo-1631217868264-e5b9099a5804?auto=format&fit=crop&q=80&w=1600'); /* Ảnh đội ngũ bác sĩ */
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+    }
+    .about-hero h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 10px; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+    .about-hero p { font-size: 1.5rem; font-weight: 300; opacity: 0.9; }
+
+    /* 2. Stats Section */
+    .stats-bar { padding: 60px 0; background: white; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; text-align: center; }
+    .stat-item h2 { font-size: 3rem; color: var(--primary-color); font-weight: 800; margin: 0; line-height: 1; }
+    .stat-item p { color: #666; font-size: 1rem; margin-top: 10px; font-weight: 500; }
+
+    /* 3. Story Section */
+    .story-section { padding: 80px 0; background: var(--bg-light); }
+    .grid-story { display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; align-items: center; }
+    .story-img img { width: 100%; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    .story-content h4 { color: var(--primary-color); font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .story-content h2 { font-size: 2.2rem; margin-top: 0; margin-bottom: 25px; color: #2c3e50; }
+    .story-content p { color: #555; margin-bottom: 20px; font-size: 1.05rem; text-align: justify; }
+
+    /* 4. Vision & Mission (3 Cards) */
+    .vision-section { padding: 80px 0; }
+    .vision-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 40px; }
+    .vis-card { 
+      background: white; padding: 40px 30px; border-radius: 15px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; transition: 0.3s; border: 1px solid #eee;
+    }
+    .vis-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-color: var(--primary-color); }
+    .vis-icon { width: 70px; height: 70px; background: #e3f2fd; color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 25px; }
+    .vis-card h3 { font-size: 1.3rem; margin-bottom: 15px; color: #2c3e50; }
+    .vis-card p { color: #666; font-size: 0.95rem; }
+
+    /* 5. Gallery Section */
+    .gallery-section { padding: 80px 0; background: white; }
+    .gallery-layout { display: grid; grid-template-columns: 40% 60%; gap: 40px; align-items: center; }
+    .gal-text h2 { font-size: 2rem; margin-bottom: 20px; color: #2c3e50; }
+    .gal-items { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .gal-items img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; transition: 0.3s; cursor: pointer; }
+    .gal-items img:hover { transform: scale(1.02); filter: brightness(1.1); }
+    .gal-big { grid-column: span 2; height: 300px !important; }
+
+    /* Footer & Floating Buttons (Giữ nguyên) */
+    .main-footer { background-color: #004ebc; color: white; padding: 60px 0 20px; }
+    .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.5fr; gap: 40px; }
+    .footer-col h4 { font-size: 1.1rem; margin-bottom: 20px; font-weight: 700; text-transform: uppercase; }
+    .footer-col p, .footer-col a { color: rgba(255,255,255,0.8); display: block; margin-bottom: 8px; font-size: 0.9rem; }
+    .copyright { text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; margin-top: 40px; font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+
+    .floating-btns { position: fixed; left: 30px; bottom: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; }
+    .float-btn { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.4rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    .btn-phone { background: #d32f2f; }
+    .btn-zalo { background: #0068ff; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .top-info-bar, .main-menu { display: none; }
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+      .grid-story, .gallery-layout, .vision-grid, .footer-grid { grid-template-columns: 1fr; }
+      .about-hero h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="top-info-bar">
+    <div class="container top-flex">
+      <div class="contact-info">
+        <span style="margin-right:20px"><i class="fa-solid fa-phone"></i> Hotline: 0888999777</span>
+        <span><i class="fa-solid fa-clock"></i> 7:30 - 17:00 (T2-T7)</span>
+      </div>
+      <div class="social-icons">
+        <i class="fa-brands fa-facebook"></i>
+        <i class="fa-brands fa-youtube"></i>
+        <a href="{{ url_for('login_page') }}" style="color:white; margin-left: 20px; font-weight: bold;"><i class="fa-solid fa-user"></i> Đăng nhập</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="landing-header">
+    <div class="container nav-container">
+      <a href="{{ url_for('trang_chu') }}" class="logo-brand">
+        <i class="fa-solid fa-hospital-user"></i> HOPITAL AZC
+      </a>
+      
+      <nav class="main-menu">
+        <a href="{{ url_for('trang_chu') }}">Trang chủ</a>
+        <div class="dropdown">
+            <a href="#">Dịch vụ <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem;"></i></a>
+            <div class="dropdown-content" style="min-width: 250px; grid-template-columns: 1fr; left: 0;">
+              <a href="#" class="menu-sub-item"><i class="fa-solid fa-stethoscope"></i> Khám Chuyên khoa</a>
+              <a href="#" class="menu-sub-item"><i class="fa-solid fa-user-clock"></i> Khám theo yêu cầu</a>
+              <a href="#" class="menu-sub-item"><i class="fa-solid fa-file-medical"></i> Khám sức khỏe tổng quát</a>
+            </div>
+          </div>
+        
+        <div class="dropdown">
+          <a href="#">Chuyên khoa <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem;"></i></a>
+          <div class="dropdown-content">
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-bone"></i> Cơ Xương Khớp</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-brain"></i> Thần Kinh</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-utensils"></i> Tiêu Hoá</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-heart-pulse"></i> Tim Mạch</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-ear-listen"></i> Tai Mũi Họng</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-tooth"></i> Răng Hàm Mặt</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-eye"></i> Nhãn Khoa</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-baby"></i> Nhi Khoa</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-person-pregnant"></i> Sản Phụ Khoa</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-hand-dots"></i> Da Liễu</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('bac_si_page') }}">Bác sĩ</a>
+        <a href="#">Liên hệ</a>
+      </nav>
+      
+      <a href="{{ url_for('dat_lich_page') }}" class="btn-appointment">Đặt lịch khám</a>
+    </div>
+  </header>
+
+  <section class="about-hero">
+    <div class="container">
+      <h1>VỀ CHÚNG TÔI</h1>
+      <p>Lắng Nghe – Chăm Sóc – Đồng Hành</p>
+    </div>
+  </section>
+
+  <section class="stats-bar">
+    <div class="container stats-grid">
+      <div class="stat-item">
+        <h2>15+</h2>
+        <p>Năm kinh nghiệm trong lĩnh vực y tế</p>
+      </div>
+      <div class="stat-item">
+        <h2>30+</h2>
+        <p>Bác sĩ chuyên khoa giàu kinh nghiệm</p>
+      </div>
+      <div class="stat-item">
+        <h2>50+</h2>
+        <p>Điều dưỡng chuyên môn cao</p>
+      </div>
+      <div class="stat-item">
+        <h2>30K+</h2>
+        <p>Khách hàng tin tưởng đồng hành</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="story-section">
+    <div class="container grid-story">
+      <div class="story-img">
+        <img src="https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=600" alt="Doctor Writing">
+      </div>
+      <div class="story-content">
+        <h4>Câu chuyện thương hiệu</h4>
+        <h2>Vì sao thành lập Hopital AZC?</h2>
+        <p>Hopital AZC được thành lập với khát vọng tạo nên một không gian chăm sóc sức khỏe toàn diện, nơi mỗi khách hàng được quan tâm, lắng nghe và đồng hành như người thân.</p>
+        <p>Chúng tôi tin rằng sức khỏe là sự cân bằng giữa thể chất, tinh thần và cảm xúc. Vì vậy, Hopital AZC mang đến dịch vụ y tế chất lượng cao, kết hợp chuyên môn vững vàng của đội ngũ bác sĩ, điều dưỡng tận tâm cùng công nghệ hiện đại.</p>
+        <p>Mọi quy trình đều lấy bệnh nhân làm trung tâm, từ tiếp nhận, chẩn đoán đến điều trị và chăm sóc sau khám, nhằm mang lại giải pháp cá nhân hóa và hiệu quả.</p>
+        <a href="{{ url_for('dat_lich_page') }}" class="btn-appointment">Đặt lịch khám ngay</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="vision-section bg-light">
+    <div class="container">
+      <div style="text-align: center; max-width: 700px; margin: 0 auto;">
+        <span style="color:var(--primary-color); font-weight:bold;">Định hướng phát triển</span>
+        <h2 style="margin-top:5px; font-size: 2.2rem; color:#2c3e50;">Giá trị tạo nên sự khác biệt</h2>
+      </div>
+
+      <div class="vision-grid">
+        <div class="vis-card">
+          <div class="vis-icon"><i class="fa-solid fa-eye"></i></div>
+          <h3>Tầm nhìn</h3>
+          <p>Trở thành hệ thống y tế hàng đầu trong lĩnh vực chăm sóc sức khỏe toàn diện, nơi mọi người tìm thấy sự an tâm, tin tưởng và chất lượng y tế vượt trội.</p>
+        </div>
+        <div class="vis-card">
+          <div class="vis-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+          <h3>Sứ mệnh</h3>
+          <p>Mang đến dịch vụ y tế chuẩn mực với đội ngũ chuyên gia giàu kinh nghiệm, tận tâm lắng nghe và đồng hành, giúp mỗi khách hàng đạt được sức khỏe tối ưu.</p>
+        </div>
+        <div class="vis-card">
+          <div class="vis-icon"><i class="fa-solid fa-star"></i></div>
+          <h3>Giá trị cốt lõi</h3>
+          <p><strong>Tận tâm – Chính xác – Hiện đại.</strong> Chúng tôi đặt bệnh nhân làm trung tâm, áp dụng công nghệ tiên tiến và duy trì đạo đức nghề nghiệp để đảm bảo hiệu quả điều trị cao nhất.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <div class="container gallery-layout">
+      <div class="gal-text">
+        <h4 style="color:var(--primary-color);">Cơ sở vật chất</h4>
+        <h2>Hình ảnh phòng khám</h2>
+        <p>Không gian hiện đại, sạch sẽ, tuân thủ nghiêm ngặt tiêu chuẩn y tế.</p>
+        <ul style="margin-top:20px; color:#555;">
+          <li style="margin-bottom:10px;"><i class="fa-solid fa-check" style="color:green; margin-right:10px;"></i> Máy chụp CT hiện đại</li>
+          <li style="margin-bottom:10px;"><i class="fa-solid fa-check" style="color:green; margin-right:10px;"></i> Phòng xét nghiệm tự động</li>
+          <li style="margin-bottom:10px;"><i class="fa-solid fa-check" style="color:green; margin-right:10px;"></i> Không gian chờ tiện nghi</li>
+        </ul>
+      </div>
+      <div class="gal-items">
+        <img class="gal-big" src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800" alt="Clinic 1">
+        <img src="https://images.unsplash.com/photo-1504813184591-01572f98c85f?auto=format&fit=crop&q=80&w=400" alt="Clinic 2">
+        <img src="https://images.unsplash.com/photo-1504813184591-01572f98c85f?auto=format&fit=crop&q=80&w=400" alt="Clinic 3">
+      </div>
+    </div>
+  </section>
+
+  <footer class="main-footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <div style="font-size:1.5rem; font-weight:bold; margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+          <i class="fa-solid fa-hospital-user"></i> HOPITAL AZC
+        </div>
+        <p>ĐKKD số: ......</p>
+        <p>Sở Tài Chính cấp ngày .....</p>
+        <div style="margin-top:20px;">
+          <span style="background:red; padding:5px 10px; border-radius:5px; font-size:0.8rem; font-weight:bold;">ĐÃ ĐĂNG KÝ BỘ CÔNG THƯƠNG</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Địa chỉ & Giờ làm</h4>
+        <p><i class="fa-solid fa-location-dot"></i> 358 Đường Lê Thanh Nghị, Cẩm Phả, Quảng Ninh</p>
+        <p><i class="fa-solid fa-clock"></i> T2 - T7: 7h00 - 17h00</p>
+        <h4>Liên hệ</h4>
+        <p>Cấp cứu: 0888999777</p>
+        <p>Đặt lịch: 0777999888</p>
+      </div>
+      <div class="footer-col">
+        <h4>Liên kết</h4>
+        <a href="{{ url_for('gioi_thieu_page') }}">Giới thiệu</a>
+        <a href="#">Liên hệ</a>
+        <div class="social-icons" style="margin-top:20px; font-size:1.2rem;">
+          <i class="fa-brands fa-facebook"></i>
+          <i class="fa-brands fa-tiktok"></i>
+          <i class="fa-brands fa-youtube"></i>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Đăng ký tư vấn</h4>
+        <form class="footer-form">
+          <input type="text" placeholder="Nhập số điện thoại của bạn...">
+          <button type="button">Gửi</button>
+        </form>
+      </div>
+    </div>
+    <div class="copyright">Copyright 2025 © Hopital Clinic</div>
+  </footer>
+
+  <div class="floating-btns">
+    <div class="float-btn btn-phone"><i class="fa-solid fa-phone"></i></div>
+    <div class="float-btn btn-zalo"><i class="fa-solid fa-comment-dots"></i></div>
+  </div>
+
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

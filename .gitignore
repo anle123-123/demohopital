@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Env
+venv/
+env/
+.env
+.venv/
+.venv_flask/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs and Data
+*.log
+log
+debug_output.txt
+recovery_log.txt
+batch_results*.json
+data/
+weights/
+checkpoint/
+train_data/
+valid_data/
+
+# OS
+.DS_Store

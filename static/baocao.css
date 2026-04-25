@@ -1,0 +1,93 @@
+/* Tổng quan về giao diện */
+body {
+    background-color: #1a1a1a; /* Nền tối như trang chủ */
+    color: white;
+    font-family: 'Roboto', sans-serif; /* Sử dụng font giống như trang chủ */
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2 {
+    color: #ffffff; /* Đặt màu chữ cho tiêu đề */
+}
+
+h3 {
+    color: #e0e0e0; /* Màu tiêu đề cấp ba */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.card {
+    background-color: #292929; /* Nền của các thẻ */
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card h3 {
+    margin-top: 0;
+}
+
+/* Các nút bấm */
+button, .btn {
+    background-color: #0d6efd; /* Màu nút chính */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover, .btn:hover {
+    background-color: #0a58ca;
+}
+
+button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Biểu đồ */
+#reportChart {
+    margin-top: 40px;
+    background-color: #292929; /* Nền tối cho biểu đồ */
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Thẻ thông tin (boxes) */
+.stat-box {
+    display: inline-block;
+    width: 24%;
+    margin: 10px;
+    padding: 20px;
+    background-color: #333;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stat-box h4 {
+    margin: 0;
+    font-size: 18px;
+    color: #e0e0e0;
+}
+
+.stat-box p {
+    font-size: 24px;
+    margin: 5px 0 0;
+}
+
+/* Đảm bảo các phần tử không bị tràn */
+@media (max-width: 768px) {
+    .stat-box {
+        width: 48%;
+        margin: 10px 1%;
+    }
+}

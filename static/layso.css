@@ -1,0 +1,205 @@
+body {
+  font-family: Arial, sans-serif;
+  background: var(--color-bg-light);
+  /* Or var(--color-bg-darkest) for dark mode capability */
+  margin: 0;
+  padding: 0;
+  color: var(--color-text-primary);
+}
+
+.ticket-container {
+  max-width: 500px;
+  margin: 50px auto;
+  background: var(--color-bg-dark);
+  /* card bg */
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+}
+
+.ticket-container h1 {
+  text-align: center;
+  color: var(--color-accent-blue);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+form label {
+  font-weight: bold;
+  color: var(--color-text-primary);
+}
+
+form input,
+form select {
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg-light);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+form input:focus,
+form select:focus {
+  border-color: var(--color-accent-blue);
+}
+
+form button {
+  padding: 12px;
+  background: var(--color-accent-blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+form button:hover {
+  filter: brightness(0.9);
+}
+
+.result-box {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--color-bg-medium);
+  /* lighter/darker accent */
+  border: 1px solid var(--color-accent-blue);
+  /* or border color */
+  border-radius: 8px;
+  text-align: center;
+}
+
+.ticket-num {
+  font-size: 48px;
+  font-weight: bold;
+  color: #1e90ff;
+}
+
+/* Thêm box-sizing cho dễ quản lý layout */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: var(--color-bg-light);
+  /* fallback/base */
+  background-color: var(--color-bg-darkest);
+  /* theme aware via var? no, theme.css handles body usually, but here we override. Let's use var(--color-bg-darkest) from theme.css if available or standard. Actually theme.js adds dark mode class. But here we just use the vars. */
+  background: var(--color-bg-darkest);
+  margin: 0;
+  padding: 0;
+  color: var(--color-text-primary);
+}
+
+.ticket-container {
+  max-width: 500px;
+  width: 90%;
+  /* Thêm: Đảm bảo không dính cạnh màn hình */
+  margin: 20px auto;
+  /* Sửa: Giảm margin trên/dưới cho mobile */
+  background: var(--color-bg-dark);
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+}
+
+.ticket-container h1 {
+  text-align: center;
+  color: var(--color-accent-blue);
+  font-size: 24px;
+  /* Giảm nhẹ để vừa vặn hơn */
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+form label {
+  font-weight: bold;
+  color: var(--color-text-primary);
+}
+
+form input,
+form select {
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 16px;
+  /* Thêm: Ngăn auto-zoom trên iOS */
+  background: var(--color-bg-light);
+  /* input bg */
+  color: var(--color-text-primary);
+}
+
+form button {
+  padding: 12px;
+  background: var(--color-accent-blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+form button:hover {
+  filter: brightness(0.9);
+}
+
+/* ================================= */
+/* ⭐ BỔ SUNG CÁC CLASS BỊ THIẾU     */
+/* ================================= */
+.form-msg {
+  text-align: center;
+  font-weight: 500;
+  margin-top: 10px;
+  font-size: 15px;
+}
+
+.form-msg.error {
+  color: #d90429;
+  /* Màu đỏ */
+}
+
+.form-msg.ok {
+  color: #008000;
+  /* Màu xanh lá */
+}
+
+.muted {
+  font-size: 14px;
+  color: #555;
+}
+
+/* ================================= */
+
+.result-box {
+  margin-top: 20px;
+  padding: 20px;
+  background: #e9f7ff;
+  border: 1px solid #b3e0ff;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.result-box h2 {
+  font-size: 18px;
+  margin-top: 0;
+}
+
+.ticket-num {
+  font-size: 48px;
+  font-weight: bold;
+  color: var(--color-accent-blue);
+  margin: 10px 0;
+}
+
+/* Bỏ dấu } thừa ở cuối file gốc của bạn */

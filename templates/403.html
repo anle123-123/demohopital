@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <title>Không có quyền truy cập</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+
+        h1 {
+            color: #e74c3c;
+        }
+
+        p {
+            color: #555;
+        }
+
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+    </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  </head>
+
+<body>
+    <h1>🚫 Truy cập bị từ chối</h1>
+    <p>{{ msg or 'Bạn không có quyền thực hiện thao tác này.' }}</p>
+    <p><a href="/">Quay về trang chủ</a></p>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+
+</html>

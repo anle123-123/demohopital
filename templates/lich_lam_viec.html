@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>{{ title or 'Lịch làm việc' }}</title>
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='quanlibacsi.css') }}">
+
+  <style>
+    /* === 1. DASHBOARD LAYOUT STYLES === */
+    :root {
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --bg-body: #f4f7f6;
+      --sidebar-bg: #2c3e50;
+      --sidebar-text: #ecf0f1;
+      --active-item: #3498db;
+      --color-border: #e5e7eb;
+      --card-bg: #ffffff;
+      
+      /* Colors specific */
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --danger: #ef4444;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --radius: 8px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    body { font-family: 'Segoe UI', sans-serif; display: flex; margin: 0; background: var(--bg-body); height: 100vh; overflow: hidden; color: var(--text); }
+
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; z-index: 100; }
+    .sidebar-brand { height: var(--header-height); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; text-decoration: none; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-item { display: flex; align-items: center; padding: 12px 25px; color: #bdc3c7; text-decoration: none; transition: 0.3s; border-left: 4px solid transparent; font-size: 0.95rem; }
+    .nav-item i { width: 25px; margin-right: 10px; text-align: center; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white;text-decoration: none; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--active-item); }
+    
+    /* Submenu */
+    .nav-group-label { padding: 12px 25px; color: #bdc3c7; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+    .nav-group-label:hover { color: white; }
+    .nav-group-content { display: none; background: rgba(0,0,0,0.2); }
+    .nav-group.is-open .nav-group-content { display: block; }
+    .nav-group-content .nav-item { padding-left: 55px; font-size: 0.9rem; }
+    .nav-group.is-open .nav-group-label i.fa-chevron-down { transform: rotate(180deg); transition: 0.2s; }
+
+    /* Main Content */
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .top-header { height: var(--header-height); background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); z-index: 10; }
+    .header-user { display: flex; align-items: center; gap: 15px; }
+    .btn-logout { color: #e74c3c; text-decoration: none; font-weight: 500; font-size: 0.9rem; border: 1px solid #e74c3c; padding: 5px 15px; border-radius: 20px; transition: 0.2s; }
+    .btn-logout:hover { background: #e74c3c; color: white; }
+
+    /* Content Body */
+    .content-body { flex: 1; overflow-y: auto; padding: 30px; }
+
+    /* === 2. STYLE RIÊNG CỦA TRANG LỊCH (GIỮ NGUYÊN) === */
+    .schedule-table { width: 100%; border-collapse: collapse; background: var(--color-bg-medium); border-radius: 8px; overflow: hidden; table-layout: fixed; }
+    .schedule-table th, .schedule-table td { padding: 8px; text-align: center; border: 1px solid var(--color-border); color: var(--color-text-primary); vertical-align: top; }
+    .schedule-table th { background: var(--color-bg-dark); font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
+    .shift-header { width: 80px; font-weight: bold; background: var(--color-bg-dark); vertical-align: middle; }
+    
+    .shift-card { background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 6px; margin-bottom: 6px; font-size: 0.85rem; text-align: left; color: #333; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); transition: transform 0.1s; }
+    .shift-card:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); }
+    .shift-card .doctor-name { font-weight: 700; color: #2c3e50; margin-bottom: 3px; font-size: 0.9rem; }
+    .shift-card .info { color: #555; font-size: 0.8rem; line-height: 1.4; }
+    
+    .current-day { background-color: rgba(67, 97, 238, 0.08); }
+    
+    /* Layout Container cho nội dung */
+    .schedule-container { max-width: 1400px; margin: 0 auto; }
+    
+    .controls { background: var(--color-bg-dark); padding: 15px; border-radius: 8px; border: 1px solid var(--color-border); margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
+    .controls label { font-weight: 600; }
+    
+    .form-control { padding: 8px 12px; border-radius: 4px; border: 1px solid var(--color-border); background: var(--color-bg-medium); color: var(--color-text-primary); font-size: 0.95rem; }
+    
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: 0.2s; }
+    .btn-primary { background: var(--active-item); color: white; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-light { background: white; border: 1px solid var(--color-border); color: var(--text); }
+    .btn-light:hover { background: #f3f4f6; }
+  </style>
+</head>
+
+<body>
+
+  <aside class="sidebar">
+    <a href="{{ url_for('trang_chu') }}" class="sidebar-brand">
+      <i class="fa-solid fa-hospital-user" style="margin-right: 10px;"></i> HOPITAL
+    </a>
+
+    <div class="sidebar-menu">
+      <a href="{{ url_for('trang_chu') }}" class="nav-item {{ 'active' if active=='trang_chu' else '' }}">
+        <i class="fa-solid fa-house"></i> Trang chủ
+      </a>
+
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('ql_bac_si') }}" class="nav-item {{ 'active' if active=='ql_bac_si' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i> Quản lí bác sĩ
+        </a>
+        <a href="/admin/khoa" class="nav-item {{ 'active' if active=='ql_khoa' else '' }}">
+          <i class="fa-solid fa-building-circle-check"></i> Quản lý Khoa
+        </a>
+        <a href="{{ url_for('admin_accounts_page_v2') }}" class="nav-item {{ 'active' if active=='ql_tai_khoan' else '' }}">
+          <i class="fa-solid fa-users-gear"></i> Tài khoản hệ thống
+        </a>
+        <a href="/admin/dich-vu" class="nav-item {{ 'active' if active=='ql_dich_vu' else '' }}">
+          <i class="fa-solid fa-receipt"></i> Quản lý Dịch vụ
+        </a>
+        <a href="/admin/xet-nghiem" class="nav-item {{ 'active' if active=='ql_xet_nghiem' else '' }}">
+          <i class="fa-solid fa-flask"></i> Quản lý Xét nghiệm
+        </a>
+        <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+          <i class="fa-solid fa-bed"></i> Phòng bệnh
+        </a>
+      {% endif %}
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+
+        <!-- LỊCH HẸN dạng dropdown (giống ảnh bạn gửi) -->
+        <div class="nav-group {{ 'is-open' if active in ['ql_lich_hen','goi_so','lay_so_online'] else '' }}">
+          <div class="nav-group-label" onclick="this.parentElement.classList.toggle('is-open')">
+            <div class="left">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Lịch hẹn</span>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
+          </div>
+          
+          <div class="nav-group-content">
+            {% if session.role == 'doctor' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            <a href="{{ url_for('goi_so') }}" class="nav-item {{ 'active' if active=='goi_so' else '' }}">Danh sách thứ tự</a>
+            <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">Lấy số online</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('ql_kham_benh') }}" class="nav-item {{ 'active' if active=='ql_kham_benh' else '' }}">
+          <i class="fa-solid fa-stethoscope"></i> Khám bệnh
+        </a>
+
+        <a href="{{ url_for('benh_nhan') }}" class="nav-item {{ 'active' if active=='benh_nhan' else '' }}">
+          <i class="fa-solid fa-address-card"></i> Hồ sơ bệnh nhân
+        </a>
+
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('ql_thuoc_kho') }}" class="nav-item {{ 'active' if active=='thuoc_kho' else '' }}">
+            <i class="fa-solid fa-pills"></i> Thuốc & Kho
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('ql_thanh_toan') }}" class="nav-item {{ 'active' if active=='thanh_toan' else '' }}">
+          <i class="fa-solid fa-credit-card"></i> Thanh toán
+        </a>
+
+        <a href="{{ url_for('lich_lam_viec') }}" class="nav-item {{ 'active' if active=='lich_lam_viec' else '' }}">
+          <i class="fa-solid fa-calendar-days"></i> Lịch làm việc
+        </a>
+
+        <!-- ✅ MỞ CHO BÁC SĨ: Đăng ký lịch + Phòng bệnh -->
+        {% if session.role == 'doctor' %}
+          <a href="{{ url_for('xet_lich_lam') }}" class="nav-item {{ 'active' if active=='xet_lich_lam' else '' }}">
+            <i class="fa-solid fa-user-clock"></i> Đăng ký lịch
+          </a>
+
+          <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+            <i class="fa-solid fa-bed"></i> Phòng bệnh
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('bao_cao_thong_ke') }}" class="nav-item {{ 'active' if active=='bao_cao' else '' }}">
+          <i class="fa-solid fa-chart-line"></i> Báo cáo
+        </a>
+
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+
+      {% else %}
+        <!-- MENU BỆNH NHÂN -->
+        <a href="{{ url_for('quansat_layso') }}" class="nav-item {{ 'active' if active=='quansat_layso' else '' }}">
+          <i class="fa-solid fa-eye"></i> Quan sát số
+        </a>
+        <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">
+          <i class="fa-solid fa-ticket"></i> Lấy số online
+        </a>
+        <a href="{{ url_for('dat_lich_page') }}" class="nav-item {{ 'active' if active=='dat_lich' else '' }}">
+          <i class="fa-solid fa-calendar-plus"></i> Đặt lịch khám
+        </a>
+        {% if session.mabn %}
+          <a href="{{ url_for('ho_so_benh_nhan', mabn=session.mabn) }}" class="nav-item {{ 'active' if active=='ho_so_toi' else '' }}">
+            <i class="fa-solid fa-file-medical"></i> Hồ sơ của tôi
+          </a>
+        {% endif %}
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="top-header">
+      <div style="font-weight: bold; font-size: 1.1rem; color: #2c3e50;">QUẢN LÝ LỊCH LÀM VIỆC</div>
+      <div class="header-user">
+        <span>Xin chào, <b>{{ session.user }}</b></span>
+        <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+      </div>
+    </header>
+
+    <div class="content-body">
+      
+      <div class="hero-header" style="background:none; border:none; padding: 20px 0; margin-bottom: 20px;">
+        <h1 style="font-size: 1.8rem; margin:0;">XEM LỊCH LÀM VIỆC THEO TUẦN</h1>
+        <p style="margin:5px 0 0;">Tra cứu lịch làm việc của bác sĩ nhanh chóng, chính xác</p>
+      </div>
+
+      <div class="schedule-container">
+        <div class="controls">
+            <label for="weekPicker">Tuần học:</label>
+            <input type="date" id="weekPicker" class="form-control" style="width: auto;">
+            <span id="weekRangeDisplay" style="font-weight: 500; font-size: 1.1rem; color: var(--color-text-secondary); margin-right: auto;"></span>
+            
+            <a href="{{ url_for('xet_lich_lam') }}" class="btn btn-primary">
+                <i class="fa-solid fa-pen-to-square"></i> Đăng ký lịch làm
+            </a>
+            
+            <button id="btnRefresh" class="btn btn-light"><i class="fa-solid fa-sync"></i> Tải lại</button>
+        </div>
+
+        <section class="table-container">
+            <table class="schedule-table">
+                <thead>
+                    <tr id="headerRow">
+                        <th style="width: 100px;">CA HỌC</th>
+                        </tr>
+                </thead>
+                <tbody id="scheduleBody">
+                    </tbody>
+            </table>
+        </section>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API_SCHEDULE = '/api/lich-lam-viec';
+    const weekPicker = document.getElementById('weekPicker');
+    const weekRangeDisplay = document.getElementById('weekRangeDisplay');
+    const headerRow = document.getElementById('headerRow');
+    const tbody = document.getElementById('scheduleBody');
+    const btnRefresh = document.getElementById('btnRefresh');
+
+    let currentStartDate = null;
+    let currentEndDate = null;
+
+    function getMonday(d) {
+        d = new Date(d);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day == 0 ? -6 : 1);
+        return new Date(d.setDate(diff));
+    }
+
+    function formatDate(d) {
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        return `${dd}/${mm}`;
+    }
+
+    function formatDateFull(d) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function updateWeekDisplay(dateStr) {
+        const d = dateStr ? new Date(dateStr) : new Date();
+        const monday = getMonday(d);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+
+        currentStartDate = formatDateFull(monday);
+        currentEndDate = formatDateFull(sunday);
+
+        weekRangeDisplay.textContent = `(Từ ngày ${formatDate(monday)}/${monday.getFullYear()} đến ngày ${formatDate(sunday)}/${sunday.getFullYear()})`;
+
+        let headers = '<th style="width: 80px;">CA</th>';
+        const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
+
+        for (let i = 0; i < 7; i++) {
+            const curr = new Date(monday);
+            curr.setDate(monday.getDate() + i);
+            const isToday = formatDateFull(curr) === formatDateFull(new Date());
+            const cls = isToday ? 'current-day' : '';
+            headers += `<th class="${cls}" style="min-width: 140px;">${days[i]}<br><span style="font-weight:400; font-size:0.8rem;">${formatDate(curr)}/${curr.getFullYear()}</span></th>`;
+        }
+        headerRow.innerHTML = headers;
+
+        return { start: currentStartDate, end: currentEndDate };
+    }
+
+    async function loadSchedule() {
+        if (!currentStartDate || !currentEndDate) return;
+
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Đang tải dữ liệu...</td></tr>';
+
+        try {
+            const res = await fetch(`${API_SCHEDULE}?start=${currentStartDate}&end=${currentEndDate}`);
+            if (!res.ok) throw new Error('Failed to fetch');
+            const data = await res.json();
+
+            const grid = {
+                'Sáng': Array(7).fill().map(() => []),
+                'Chiều': Array(7).fill().map(() => []),
+                'Tối': Array(7).fill().map(() => [])
+            };
+
+            const start = new Date(currentStartDate);
+
+            data.forEach(item => {
+                const d = new Date(item.ngay);
+                let dayIdx = d.getDay() - 1;
+                if (dayIdx === -1) dayIdx = 6;
+
+                let ca = item.ca;
+                if (ca.toLowerCase().includes('sáng')) ca = 'Sáng';
+                else if (ca.toLowerCase().includes('chiều')) ca = 'Chiều';
+                else ca = 'Tối';
+
+                if (grid[ca] && grid[ca][dayIdx]) {
+                    grid[ca][dayIdx].push(item);
+                }
+            });
+
+            let html = '';
+            ['Sáng', 'Chiều'].forEach(ca => {
+                html += `<tr>`;
+                html += `<td class="shift-header">${ca.toUpperCase()}</td>`;
+                for (let i = 0; i < 7; i++) {
+                    const items = grid[ca][i];
+                    html += `<td>`;
+                    if (items.length > 0) {
+                        items.forEach(it => {
+                            html += `
+                            <div class="shift-card">
+                                <div class="doctor-name"><i class="fa-solid fa-user-md"></i> ${it.ten_bac_si || 'BS ???'}</div>
+                                <div class="info">
+                                    ⏱ ${it.bat_dau ? it.bat_dau.slice(0, 5) : ''}-${it.ket_thuc ? it.ket_thuc.slice(0, 5) : ''}<br>
+                                    🚪 ${it.phong || ''}<br>
+                                    🏥 ${it.khoa || ''}
+                                </div>
+                            </div>
+                        `;
+                        });
+                    }
+                    html += `</td>`;
+                }
+                html += `</tr>`;
+            });
+
+            tbody.innerHTML = html;
+
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red;">Lỗi tải dữ liệu</td></tr>`;
+        }
+    }
+
+    weekPicker.addEventListener('change', (e) => {
+        updateWeekDisplay(e.target.value);
+        loadSchedule();
+    });
+
+    btnRefresh.addEventListener('click', loadSchedule);
+
+    // Init with today
+    const todayStr = new Date().toISOString().split('T')[0];
+    weekPicker.value = todayStr;
+    updateWeekDisplay(todayStr);
+    loadSchedule();
+
+    // Dropdown logic matching admin pages
+    
+  </script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

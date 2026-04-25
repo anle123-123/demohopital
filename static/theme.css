@@ -1,0 +1,265 @@
+/* ========== THEME SYSTEM (LIGHT/DARK) ========== */
+:root {
+    /* --- Light Mode (Default) --- */
+    --color-bg-darkest: #F8FAFC;
+    /* Main background */
+    --color-bg-dark: #FFFFFF;
+    /* Card background */
+    --color-bg-medium: #F1F5F9;
+    /* Hover/Secondary background */
+    --color-border: #CBD5E1;
+    /* Borders */
+
+    --color-text-primary: #1E293B;
+    /* Main text */
+    --color-text-secondary: #64748B;
+    /* Secondary text */
+    --color-text-white: #0F172A;
+    /* Headings/Emphasis (Darker in light mode) */
+
+    --color-accent-blue: #0284C7;
+    --color-accent-blue-hover: #0369A1;
+    --color-accent-red: #EF4444;
+    --color-accent-orange: #F97316;
+    --color-accent-orange-hover: #EA580C;
+    --color-accent-green: #10B981;
+    --color-accent-green-hover: #059669;
+
+    /* Additional Utilities */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.5);
+}
+
+/* --- Dark Mode Override --- */
+[data-theme="dark"] {
+    --color-bg-darkest: #0F172A;
+    /* Deep dark blue/slate */
+    --color-bg-dark: #1E293B;
+    /* Slightly lighter for cards */
+    --color-bg-medium: #334155;
+    /* Lighter for hovers */
+    --color-border: #334155;
+    /* Border matches hover */
+
+    --color-text-primary: #E2E8F0;
+    /* Light gray for text */
+    --color-text-secondary: #94A3B8;
+    /* Muted gray */
+    --color-text-white: #F8FAFC;
+    /* White for Headings */
+
+    --color-accent-blue: #38BDF8;
+    /* Lighter blue for dark mode visibility */
+    --color-accent-blue-hover: #0EA5E9;
+    --color-accent-red: #F87171;
+    --color-accent-orange: #FB923C;
+    --color-accent-orange-hover: #F97316;
+    --color-accent-green: #34D399;
+    --color-accent-green-hover: #10B981;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --glass-bg: rgba(15, 23, 42, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* Common Transition */
+body,
+.card,
+.navbar,
+.modal,
+dialog,
+input,
+select,
+textarea,
+.btn,
+.qa,
+.stat {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Floating Toggle Button */
+#theme-toggle-btn {
+    position: fixed;
+    bottom: 20px;
+    /* Aligns with chatbot bubble usually */
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 9999;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+#theme-toggle-btn:hover {
+    transform: scale(1.1);
+    background-color: var(--color-bg-medium);
+}
+
+/* Sidebar: nhóm "Lịch hẹn" — nút mở/đóng + căn icon (dùng chung partial sidebar) */
+.sidebar .nav-group-label .left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sidebar .nav-group-label .left i {
+    width: 25px;
+    text-align: center;
+}
+.sidebar button.nav-group-label {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    border: none;
+    background: transparent;
+    font: inherit;
+    font-size: 0.95rem;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Sidebar: không để flex làm nội dung tràn / gãy layout; phần menu cuộn trong cột */
+aside.sidebar {
+    min-height: 0;
+    max-height: 100vh;
+    overflow: hidden;
+}
+aside.sidebar .sidebar-menu {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.sidebar .nav-group {
+    flex-shrink: 0;
+}
+.sidebar .nav-group-content {
+    display: none;
+    background: rgba(0, 0, 0, 0.2);
+}
+.sidebar .nav-group.is-open .nav-group-content {
+    display: block;
+}
+.sidebar .nav-group-content .nav-item {
+    padding-left: 55px;
+    font-size: 0.9rem;
+}
+.sidebar div.nav-group-label {
+    padding: 12px 25px;
+    color: #bdc3c7;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+.sidebar div.nav-group-label:hover {
+    color: #fff;
+}
+.sidebar .nav-group.is-open .nav-group-label > .fa-chevron-down,
+.sidebar .nav-group.is-open .nav-group-label i.fa-chevron-down {
+    transform: rotate(180deg);
+    transition: transform 0.2s ease;
+}
+/* ========== THEME SYSTEM (LIGHT/DARK) ========== */
+:root {
+    /* --- Light Mode (Default) --- */
+    --color-bg-darkest: #F8FAFC;
+    --color-bg-dark: #FFFFFF;
+    --color-bg-medium: #F1F5F9;
+    --color-border: #CBD5E1;
+
+    --color-text-primary: #1E293B;
+    --color-text-secondary: #64748B;
+    --color-text-white: #0F172A;
+
+    --color-accent-blue: #0284C7;
+    --color-accent-blue-hover: #0369A1;
+    --color-accent-red: #EF4444;
+    --color-accent-orange: #F97316;
+    --color-accent-orange-hover: #EA580C;
+    --color-accent-green: #10B981;
+    --color-accent-green-hover: #059669;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* --- Dark Mode Override --- */
+[data-theme="dark"] {
+    --color-bg-darkest: #0F172A;
+    --color-bg-dark: #1E293B;
+    --color-bg-medium: #334155;
+    --color-border: #334155;
+
+    --color-text-primary: #E2E8F0;
+    --color-text-secondary: #94A3B8;
+    --color-text-white: #F8FAFC;
+
+    --color-accent-blue: #38BDF8;
+    --color-accent-blue-hover: #0EA5E9;
+    --color-accent-red: #F87171;
+    --color-accent-orange: #FB923C;
+    --color-accent-orange-hover: #F97316;
+    --color-accent-green: #34D399;
+    --color-accent-green-hover: #10B981;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+}
+
+/* Common Transition */
+body, .card, .navbar, .modal, dialog, input, select, textarea, .btn, .qa, .stat {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ==========================================================
+   HÀNH ĐỘNG XÓA NÚT MẶT TRĂNG:
+   Dưới đây là mã ẩn nút mặt trăng trên tất cả các trang
+========================================================== */
+#theme-toggle-btn {
+    display: none !important;
+}
+
+/* Sidebar styles để giữ đồng bộ */
+.sidebar .nav-group-label .left { display: flex; align-items: center; gap: 10px; }
+.sidebar .nav-group-label .left i { width: 25px; text-align: center; }
+.sidebar button.nav-group-label {
+    width: 100%; box-sizing: border-box; margin: 0; border: none; background: transparent;
+    font: inherit; font-size: 0.95rem; color: inherit; cursor: pointer; text-align: left;
+    display: flex; justify-content: space-between; align-items: center;
+}
+aside.sidebar { min-height: 0; max-height: 100vh; overflow: hidden; }
+aside.sidebar .sidebar-menu { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.sidebar .nav-group { flex-shrink: 0; }
+.sidebar .nav-group-content { display: none; background: rgba(0, 0, 0, 0.2); }
+.sidebar .nav-group.is-open .nav-group-content { display: block; }
+.sidebar .nav-group-content .nav-item { padding-left: 55px; font-size: 0.9rem; }
+.sidebar div.nav-group-label {
+    padding: 12px 25px; color: #bdc3c7; cursor: pointer; display: flex;
+    justify-content: space-between; align-items: center; user-select: none;
+    width: 100%; box-sizing: border-box;
+}
+.sidebar div.nav-group-label:hover { color: #fff; }
+.sidebar .nav-group.is-open .nav-group-label > .fa-chevron-down,
+.sidebar .nav-group.is-open .nav-group-label i.fa-chevron-down {
+    transform: rotate(180deg);
+    transition: transform 0.2s ease;
+}

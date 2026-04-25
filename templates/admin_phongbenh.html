@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Quản lý Phòng bệnh - HOPITAL</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <style>
+    /* === 1. DASHBOARD LAYOUT STYLES === */
+    :root {
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --bg-body: #f4f7f6;
+      --sidebar-bg: #2c3e50;
+      --sidebar-text: #ecf0f1;
+      --active-item: #3498db;
+      --color-border: #e5e7eb;
+      --empty-bed: #2ecc71;
+      --occupied-bed: #e74c3c;
+      --text: #111827;
+    }
+
+    * { box-sizing: border-box; }
+
+    /* Sửa lỗi xung đột theme.css bằng cách khóa chặt thuộc tính body */
+    body.app { 
+      font-family: 'Segoe UI', sans-serif; 
+      display: flex !important; 
+      margin: 0 !important; 
+      background: var(--bg-body); 
+      height: 100vh !important; 
+      overflow: hidden !important; 
+      color: var(--text);
+    }
+
+    /* Bỏ gạch chân triệt để ở mọi liên kết */
+    a, a:hover, a:focus, a:active { text-decoration: none !important; }
+
+    /* Sidebar - Khóa chiều cao 100vh */
+    .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; height: 100vh !important; }
+    .sidebar-brand { height: var(--header-height); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; text-decoration: none; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-item { display: flex; align-items: center; padding: 12px 25px; color: #bdc3c7; text-decoration: none; transition: 0.3s; border-left: 4px solid transparent; font-size: 0.95rem; }
+    .nav-item i { width: 25px; margin-right: 10px; text-align: center; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--active-item); }
+    
+    /* Submenu */
+    .nav-group { margin: 0; }
+    .nav-group-label { padding: 12px 25px; color: #bdc3c7; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+    .nav-group-label .left { display: flex; align-items: center; gap: 10px; }
+    .nav-group-label .left i { width: 25px; text-align: center; }
+    .nav-group-label:hover { color: white; background: rgba(255,255,255,0.05); }
+    .nav-group-content { display: none; background: rgba(0,0,0,0.2); }
+    .nav-group.is-open .nav-group-content { display: block; }
+    .nav-group-content .nav-item { padding-left: 55px; font-size: 0.9rem; }
+    .nav-group.is-open .nav-group-label i.fa-chevron-down { transform: rotate(180deg); transition: transform 0.2s; }
+
+    /* Main Content */
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh !important; }
+    .top-header { height: var(--header-height); background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); z-index: 10; flex-shrink: 0; }
+    .header-user { display: flex; align-items: center; gap: 15px; }
+    .btn-logout { color: #e74c3c; text-decoration: none; font-weight: 500; font-size: 0.9rem; border: 1px solid #e74c3c; padding: 5px 15px; border-radius: 20px; transition: 0.2s; }
+    .btn-logout:hover { background: #e74c3c; color: white; }
+
+    /* Content Body */
+    .content-body { flex: 1; overflow-y: auto; padding: 30px; }
+
+    /* === 2. PAGE SPECIFIC STYLES === */
+    .page-title{margin:0 0 20px;color:#2c3e50;display:flex;align-items:center;gap:10px}
+    .controls{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+    .btn-primary{background:var(--active-item);color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:8px; transition: 0.2s;}
+    .btn-primary:hover{opacity:.9}
+
+    /* Select2 */
+    .select2-container .select2-selection--single{height:42px!important;padding:6px 0;border:1px solid #ddd!important;border-radius:6px!important}
+    .select2-container--default .select2-selection--single .select2-selection__arrow{height:40px!important}
+    .select2-container{min-width:300px}
+
+    /* Rooms */
+    .room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:20px}
+    .room-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 5px rgba(0,0,0,.05);border:1px solid #eee;display:flex;flex-direction:column}
+    .room-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid #f0f0f0;padding-bottom:10px}
+    .room-name{font-weight:800;color:#2c3e50;font-size:1.1rem}
+    .btn-add-bed{background:#f1f2f6;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;color:#555;font-size:.85rem;font-weight:700}
+    .btn-add-bed:hover{background:#e1e2e6;color:#000}
+
+    .bed-list{display:flex;flex-wrap:wrap;gap:10px}
+    .bed{width:90px;height:110px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;cursor:pointer;padding:5px;transition:transform .15s;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+    .bed:hover{transform:translateY(-2px)}
+    .bed.empty{background:var(--empty-bed)}
+    .bed.occupied{background:var(--occupied-bed)}
+    .bed-label{font-weight:800;font-size:1rem;margin-bottom:5px}
+    .patient-name{font-size:.75rem;text-align:center;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .btn-discharge{margin-top:8px;font-size:.65rem;background:#fff;color:#e74c3c;border:none;padding:2px 8px;border-radius:10px;font-weight:800;cursor:pointer}
+
+    /* Modals */
+    .modal{display:none;position:fixed;z-index:1000;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center}
+    .modal.show{display:flex}
+    .modal__panel{background:#fff;padding:25px;border-radius:10px;width:500px;max-width:92%;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+    .modal__header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid #eee;padding-bottom:10px}
+    .modal__header h3{margin:0;color:#2c3e50}
+    .modal__close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:#999}
+    .modal__close:hover{color:#e74c3c}
+
+    .search-box{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-bottom:15px;box-sizing:border-box;outline:none}
+    .search-box:focus{border-color:var(--active-item)}
+    .patient-table{width:100%;border-collapse:collapse;font-size:.9rem}
+    .patient-table th,.patient-table td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+    .btn-select{background:var(--active-item);color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:.8rem}
+
+    .info-row{display:flex;margin-bottom:10px;border-bottom:1px dashed #eee;padding-bottom:6px;gap:10px;font-size:.95rem}
+    .info-label{width:110px;font-weight:800;color:#7f8c8d;flex-shrink:0}
+  </style>
+</head>
+
+<body class="app">
+
+  <aside class="sidebar">
+    <a href="{{ url_for('trang_chu') }}" class="sidebar-brand">
+      <i class="fa-solid fa-hospital-user" style="margin-right: 10px;"></i> HOPITAL
+    </a>
+
+    <div class="sidebar-menu">
+      <a href="{{ url_for('trang_chu') }}" class="nav-item {{ 'active' if active=='trang_chu' else '' }}">
+        <i class="fa-solid fa-house"></i> Trang chủ
+      </a>
+
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('ql_bac_si') }}" class="nav-item {{ 'active' if active=='ql_bac_si' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i> Quản lý bác sĩ
+        </a>
+        <a href="/admin/khoa" class="nav-item {{ 'active' if active=='ql_khoa' else '' }}">
+          <i class="fa-solid fa-building-circle-check"></i> Quản lý Khoa
+        </a>
+        <a href="{{ url_for('admin_accounts_page_v2') }}" class="nav-item {{ 'active' if active=='ql_tai_khoan' else '' }}">
+          <i class="fa-solid fa-users-gear"></i> Tài khoản hệ thống
+        </a>
+        <a href="/admin/dich-vu" class="nav-item {{ 'active' if active=='ql_dich_vu' else '' }}">
+          <i class="fa-solid fa-receipt"></i> Quản lý Dịch vụ
+        </a>
+        <a href="/admin/xet-nghiem" class="nav-item {{ 'active' if active=='ql_xet_nghiem' else '' }}">
+          <i class="fa-solid fa-flask"></i> Quản lý Xét nghiệm
+        </a>
+        <a href="{{ url_for('phong_benh_page') }}" class="nav-item active">
+          <i class="fa-solid fa-bed"></i> Phòng bệnh
+        </a>
+      {% endif %}
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+
+        <div class="nav-group {{ 'is-open' if active in ['ql_lich_hen','goi_so','lay_so_online'] else '' }}">
+          <div class="nav-group-label" onclick="this.parentElement.classList.toggle('is-open')">
+            <div class="left">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Lịch hẹn</span>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
+          </div>
+          
+          <div class="nav-group-content">
+            {% if session.role == 'doctor' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            <a href="{{ url_for('goi_so') }}" class="nav-item {{ 'active' if active=='goi_so' else '' }}">Danh sách thứ tự</a>
+            <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">Lấy số online</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('ql_kham_benh') }}" class="nav-item {{ 'active' if active=='ql_kham_benh' else '' }}">
+          <i class="fa-solid fa-stethoscope"></i> Khám bệnh
+        </a>
+
+        <a href="{{ url_for('benh_nhan') }}" class="nav-item {{ 'active' if active=='benh_nhan' else '' }}">
+          <i class="fa-solid fa-address-card"></i> Hồ sơ bệnh nhân
+        </a>
+
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('ql_thuoc_kho') }}" class="nav-item {{ 'active' if active=='thuoc_kho' else '' }}">
+            <i class="fa-solid fa-pills"></i> Thuốc & Kho
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('ql_thanh_toan') }}" class="nav-item {{ 'active' if active=='thanh_toan' else '' }}">
+          <i class="fa-solid fa-credit-card"></i> Thanh toán
+        </a>
+
+        <a href="{{ url_for('lich_lam_viec') }}" class="nav-item {{ 'active' if active=='lich_lam_viec' else '' }}">
+          <i class="fa-solid fa-calendar-days"></i> Lịch làm việc
+        </a>
+
+        {% if session.role == 'doctor' %}
+          <a href="{{ url_for('xet_lich_lam') }}" class="nav-item {{ 'active' if active=='xet_lich_lam' else '' }}">
+            <i class="fa-solid fa-user-clock"></i> Đăng ký lịch
+          </a>
+
+          <a href="{{ url_for('phong_benh_page') }}" class="nav-item active">
+            <i class="fa-solid fa-bed"></i> Phòng bệnh
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('bao_cao_thong_ke') }}" class="nav-item {{ 'active' if active=='bao_cao' else '' }}">
+          <i class="fa-solid fa-chart-line"></i> Báo cáo
+        </a>
+
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+
+      {% else %}
+        <a href="{{ url_for('quansat_layso') }}" class="nav-item {{ 'active' if active=='quansat_layso' else '' }}">
+          <i class="fa-solid fa-eye"></i> Quan sát số
+        </a>
+        <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">
+          <i class="fa-solid fa-ticket"></i> Lấy số online
+        </a>
+        <a href="{{ url_for('dat_lich_page') }}" class="nav-item {{ 'active' if active=='dat_lich' else '' }}">
+          <i class="fa-solid fa-calendar-plus"></i> Đặt lịch khám
+        </a>
+        {% if session.mabn %}
+          <a href="{{ url_for('ho_so_benh_nhan', mabn=session.mabn) }}" class="nav-item {{ 'active' if active=='ho_so_toi' else '' }}">
+            <i class="fa-solid fa-file-medical"></i> Hồ sơ của tôi
+          </a>
+        {% endif %}
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="top-header">
+      <div style="font-weight:800;font-size:1.1rem;color:#2c3e50;">QUẢN LÝ NỘI TRÚ</div>
+      <div class="header-user">
+        <span>Xin chào, <b>{{ session.user }}</b></span>
+        <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+      </div>
+    </header>
+
+    <div class="content-body">
+      <h1 class="page-title">
+        <i class="fa-solid fa-bed" style="color:var(--active-item)"></i> Sơ đồ phòng bệnh
+      </h1>
+
+      <section class="controls">
+        <div style="display:flex;align-items:center;gap:15px;">
+          <label style="font-weight:700;color:#555;">Chọn khoa điều trị:</label>
+          <select id="deptSelect"><option value="">Đang tải...</option></select>
+        </div>
+
+        {% if session.role == 'admin' %}
+          <button class="btn-primary" onclick="openModal('roomModal')"><i class="fa-solid fa-plus"></i> Thêm phòng</button>
+        {% endif %}
+      </section>
+
+      <h3 id="currentDeptTitle" style="margin:0 0 20px;color:#2c3e50;border-left:4px solid var(--active-item);padding-left:12px;font-size:1.25rem;">
+        Vui lòng chọn khoa...
+      </h3>
+
+      <div class="room-grid" id="room-container"></div>
+    </div>
+  </div>
+
+  <div id="roomModal" class="modal">
+    <div class="modal__panel">
+      <div class="modal__header">
+        <h3>Thêm phòng mới</h3>
+        <button class="modal__close" onclick="closeModal('roomModal')">×</button>
+      </div>
+      <input type="text" class="search-box" id="newRoomName" placeholder="Nhập tên phòng (VD: Phòng 101)...">
+      <div style="text-align:right;margin-top:10px;">
+        <button class="btn-primary" onclick="addNewRoom()">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="patientModal" class="modal">
+    <div class="modal__panel" style="width:600px;">
+      <div class="modal__header">
+        <h3>Chọn bệnh nhân vào giường</h3>
+        <button class="modal__close" onclick="closeModal('patientModal')">×</button>
+      </div>
+      <input type="text" class="search-box" id="patientSearch" placeholder="🔍 Tìm Mã BN / Họ tên / SĐT..." onkeyup="filterPatients()">
+      <div style="max-height:350px;overflow-y:auto;">
+        <table class="patient-table">
+          <thead>
+            <tr><th>Mã BN</th><th>Họ tên</th><th>SĐT</th><th></th></tr>
+          </thead>
+          <tbody id="patient-list-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="infoModal" class="modal">
+    <div class="modal__panel">
+      <div class="modal__header">
+        <h3>Thông tin chi tiết</h3>
+        <button class="modal__close" onclick="closeModal('infoModal')">×</button>
+      </div>
+
+      <div id="patient-info-content"></div>
+
+      <div style="text-align:right;margin-top:15px;display:flex;justify-content:flex-end;gap:10px;">
+        <button class="btn-primary" style="background:#95a5a6" onclick="closeModal('infoModal')">Đóng</button>
+        <button id="btnSaveDates" class="btn-primary" onclick="saveBedDates()">Lưu ngày tháng</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Quyền
+    const IS_ADMIN = {{ 'true' if session.role == 'admin' else 'false' }};
+    const CAN_BED_ACTION = {{ 'true' if session.get('role') in ['admin','doctor'] else 'false' }};
+
+    // Endpoints
+    const API = {
+      khoa: "/api/khoa",
+      phong: "/api/phongbenh",
+      bn: "/api/benhnhan?limit=2000",
+      giuong: (id) => `/api/giuongbenh/${id}`,
+      giuongCreate: "/api/giuongbenh"
+    };
+
+    // State
+    let patientDatabase = [];
+    let currentDept = "";
+    let loadedRooms = [];
+    let selectedBedDbId = null;
+
+    // ===== Helpers =====
+    async function readErrorText(res) {
+      try {
+        const t = await res.text();
+        return t || (res.status + " " + res.statusText);
+      } catch {
+        return res.status + " " + res.statusText;
+      }
+    }
+
+    async function fetchJSON(url, options = {}) {
+      const opts = {
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options
+      };
+      return fetch(url, opts);
+    }
+
+    // Fallback nếu backend không nhận PUT -> thử POST
+    async function updateBedWithFallback(bedId, payload) {
+      let res = await fetchJSON(API.giuong(bedId), { method: "PUT", body: JSON.stringify(payload) });
+
+      if (res.status === 405) {
+        // thử POST (nhiều backend set POST update)
+        res = await fetchJSON(API.giuong(bedId), { method: "POST", body: JSON.stringify(payload) });
+      }
+      return res;
+    }
+
+    // ===== Init =====
+    $(document).ready(function () {
+      $('#deptSelect').select2({
+        placeholder: "Chọn khoa...",
+        allowClear: false,
+        width: '300px'
+      });
+
+      $('#deptSelect').on('select2:select', function (e) {
+        changeDept(e.params.data.id);
+      });
+
+      loadDepartments();
+      loadPatients();
+    });
+
+    async function loadDepartments() {
+      try {
+        const res = await fetch(API.khoa);
+        const depts = await res.json();
+
+        const $sel = $('#deptSelect');
+        $sel.empty();
+
+        if (Array.isArray(depts) && depts.length > 0) {
+          depts.forEach(d => $sel.append(new Option(d, d, false, false)));
+          $sel.val(depts[0]).trigger('change');
+          changeDept(depts[0]);
+        } else {
+          $sel.append(new Option("Không có dữ liệu", "", false, false));
+        }
+      } catch (e) {
+        console.error(e);
+        $('#deptSelect').empty().append(new Option("Lỗi tải khoa", "", false, false));
+      }
+    }
+
+    async function loadPatients() {
+      try {
+        const res = await fetch(API.bn);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          patientDatabase = data.map(bn => ({
+            id: bn.MABENHNHAN,
+            name: bn.HOVATEN,
+            phone: bn.SODIENTHOAI,
+            address: bn.DIACHI,
+            hometown: bn.QUEQUAN
+          }));
+        }
+      } catch (e) {
+        console.error(e);
+        patientDatabase = [];
+      }
+    }
+
+    async function changeDept(name) {
+      if (!name) return;
+      currentDept = name;
+      document.getElementById('currentDeptTitle').innerText = "Khoa: " + name;
+
+      try {
+        const res = await fetch(`${API.phong}?khoa=${encodeURIComponent(name)}`);
+        loadedRooms = await res.json();
+      } catch (e) {
+        console.error(e);
+        loadedRooms = [];
+      }
+      renderRooms();
+    }
+
+    function renderRooms() {
+      const container = document.getElementById('room-container');
+      if (!loadedRooms || !loadedRooms.length) {
+        container.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#999;padding:20px;">Chưa có phòng nào trong khoa này.</p>';
+        return;
+      }
+
+      container.innerHTML = loadedRooms.map((r, rIdx) => `
+        <div class="room-card">
+          <div class="room-header">
+            <span class="room-name"><i class="fa-solid fa-door-closed"></i> ${r.roomName}</span>
+            ${IS_ADMIN ? `<button class="btn-add-bed" onclick="addBed(${r.id}, ${r.beds.length})">+ Giường</button>` : ``}
+          </div>
+
+          <div class="bed-list">
+            ${r.beds.map((b, bIdx) => {
+              const occupied = !!b.patientId; // ✅ chỉ dựa vào patientId
+              return `
+                <div class="bed ${occupied ? 'occupied' : 'empty'}" onclick="handleBedClick(${rIdx}, ${bIdx})">
+                  <span class="bed-label">${b.id}</span>
+                  <span class="patient-name">${occupied ? (b.name || '---') : 'Trống'}</span>
+                  ${occupied && CAN_BED_ACTION
+                    ? `<button type="button" class="btn-discharge" onclick="dischargePatient(event, ${b.dbId})">Ra viện</button>`
+                    : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ===== Admin actions =====
+    async function addNewRoom() {
+      if (!IS_ADMIN) return alert("Bạn không có quyền.");
+      const name = document.getElementById('newRoomName').value.trim();
+      if (!name) return alert("Chưa nhập tên phòng");
+
+      const res = await fetchJSON(API.phong, {
+        method: "POST",
+        body: JSON.stringify({ ten: name, khoa: currentDept })
+      });
+
+      if (res.ok) {
+        document.getElementById('newRoomName').value = '';
+        closeModal('roomModal');
+        changeDept(currentDept);
+      } else {
+        alert("Lỗi tạo phòng: " + await readErrorText(res));
+      }
+    }
+
+    async function addBed(roomDbId, currentCount) {
+      if (!IS_ADMIN) return alert("Bạn không có quyền.");
+      const nextName = "G" + (currentCount + 1);
+
+      const res = await fetchJSON(API.giuongCreate, {
+        method: "POST",
+        body: JSON.stringify({ phong_id: roomDbId, ten_giuong: nextName })
+      });
+
+      if (res.ok) changeDept(currentDept);
+      else alert("Lỗi thêm giường: " + await readErrorText(res));
+    }
+
+    // ===== Bed click =====
+    function handleBedClick(roomIdx, bedIdx) {
+      const room = loadedRooms[roomIdx];
+      const bed = room.beds[bedIdx];
+
+      selectedBedDbId = bed.dbId || null;
+      if (!selectedBedDbId) {
+        alert("Giường thiếu dbId (backend chưa trả dbId).");
+        return;
+      }
+
+      // Đã có bệnh nhân -> info
+      if (bed.patientId) {
+        const p = patientDatabase.find(x => x.id === bed.patientId) || {
+          id: bed.patientId, name: bed.name || "---", phone: "", address: "", hometown: ""
+        };
+        showPatientInfo(p, bed);
+        openModal('infoModal');
+        return;
+      }
+
+      // Trống -> chọn BN
+      if (!CAN_BED_ACTION) return;
+
+      document.getElementById('patientSearch').value = "";
+      renderPatientList(patientDatabase.slice(0, 50));
+      openModal('patientModal');
+    }
+
+    // ===== Assign patient =====
+    async function selectPatient(id) {
+      if (!CAN_BED_ACTION) return alert("Không có quyền.");
+      if (!selectedBedDbId) return alert("Chưa chọn giường.");
+
+      const today = new Date().toISOString().split('T')[0];
+
+      // ✅ gửi nhiều key để backend kiểu nào cũng bắt
+      const payload = {
+        mabn: id,
+        MABENHNHAN: id,
+        patient_id: id,
+        benhnhan_id: id,
+        ngayvao: today,
+        NGAYVAO: today,
+        admissionDate: today,
+        ngayra: null,
+        NGAYRA: null,
+        dischargeDate: null
+      };
+
+      const res = await updateBedWithFallback(selectedBedDbId, payload);
+
+      if (res.ok) {
+        closeModal('patientModal');
+        changeDept(currentDept);
+      } else {
+        alert("Lỗi cập nhật giường: " + await readErrorText(res));
+      }
+    }
+
+    async function dischargePatient(e, bedDbId) {
+      e.stopPropagation();
+      if (!CAN_BED_ACTION) return alert("Không có quyền.");
+      if (!confirm("Xác nhận cho ra viện / trả giường?")) return;
+
+      const payload = {
+        mabn: null, MABENHNHAN: null, patient_id: null, benhnhan_id: null,
+        ngayvao: null, NGAYVAO: null, admissionDate: null,
+        ngayra: null, NGAYRA: null, dischargeDate: null
+      };
+
+      const res = await updateBedWithFallback(bedDbId, payload);
+      if (res.ok) changeDept(currentDept);
+      else alert("Lỗi thao tác: " + await readErrorText(res));
+    }
+
+    // ===== Save dates in info =====
+    async function saveBedDates() {
+      if (!CAN_BED_ACTION) return alert("Không có quyền.");
+      if (!selectedBedDbId) return alert("Chưa chọn giường.");
+
+      const admissionVal = (document.getElementById("admissionDateInput")?.value || "").trim() || null;
+      const dischargeVal = (document.getElementById("dischargeDateInput")?.value || "").trim() || null;
+
+      // Lấy patientId hiện tại từ loadedRooms
+      let currentMabn = null;
+      for (const r of loadedRooms) {
+        for (const b of r.beds) {
+          if (b.dbId === selectedBedDbId) { currentMabn = b.patientId; break; }
+        }
+      }
+
+      const payload = {
+        mabn: currentMabn,
+        MABENHNHAN: currentMabn,
+        patient_id: currentMabn,
+        benhnhan_id: currentMabn,
+        ngayvao: admissionVal,
+        NGAYVAO: admissionVal,
+        admissionDate: admissionVal,
+        ngayra: dischargeVal,
+        NGAYRA: dischargeVal,
+        dischargeDate: dischargeVal
+      };
+
+      const res = await updateBedWithFallback(selectedBedDbId, payload);
+      if (res.ok) {
+        closeModal("infoModal");
+        changeDept(currentDept);
+      } else {
+        alert("Lỗi lưu ngày: " + await readErrorText(res));
+      }
+    }
+
+    // ===== Patient list =====
+    function renderPatientList(list) {
+      const body = document.getElementById('patient-list-body');
+      if (!list || list.length === 0) {
+        body.innerHTML = `<tr><td colspan="4" style="text-align:center">Không tìm thấy</td></tr>`;
+        return;
+      }
+      body.innerHTML = list.map(p => `
+        <tr>
+          <td><span style="font-weight:800;color:#3498db">${p.id}</span></td>
+          <td>${p.name || ''}</td>
+          <td>${p.phone || ''}</td>
+          <td style="text-align:right"><button type="button" class="btn-select" onclick="selectPatient('${p.id}')">Chọn</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function filterPatients() {
+      const key = (document.getElementById('patientSearch').value || "").toLowerCase();
+      const filtered = patientDatabase.filter(p =>
+        (p.id && p.id.toLowerCase().includes(key)) ||
+        (p.name && p.name.toLowerCase().includes(key)) ||
+        (p.phone && String(p.phone).includes(key))
+      ).slice(0, 80);
+      renderPatientList(filtered);
+    }
+
+    function showPatientInfo(p, bed) {
+      const canEdit = CAN_BED_ACTION;
+      document.getElementById('patient-info-content').innerHTML = `
+        <div class="info-row"><div class="info-label">Mã BN:</div><div>${p.id || "---"}</div></div>
+        <div class="info-row"><div class="info-label">Họ Tên:</div><div style="font-weight:800;color:#3498db">${p.name || "---"}</div></div>
+        <div class="info-row"><div class="info-label">SĐT:</div><div>${p.phone || ""}</div></div>
+        <div class="info-row"><div class="info-label">Địa chỉ:</div><div>${p.address || ""}</div></div>
+
+        <div class="info-row" style="align-items:center;margin-top:12px;">
+          <div class="info-label">Ngày vào:</div>
+          <input type="date" id="admissionDateInput" class="search-box" style="margin-bottom:0;width:auto"
+                 value="${bed.admissionDate || ''}" ${canEdit ? "" : "disabled"}>
+        </div>
+
+        <div class="info-row" style="align-items:center;">
+          <div class="info-label">Ngày ra:</div>
+          <input type="date" id="dischargeDateInput" class="search-box" style="margin-bottom:0;width:auto"
+                 value="${bed.dischargeDate || ''}" ${canEdit ? "" : "disabled"}>
+        </div>
+      `;
+
+      // nút lưu nếu không có quyền thì ẩn
+      document.getElementById('btnSaveDates').style.display = canEdit ? 'inline-flex' : 'none';
+    }
+
+    // ===== Modal helpers =====
+    function openModal(id){ document.getElementById(id).classList.add('show'); }
+    function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+    window.onclick = (e) => {
+      if (e.target.classList && e.target.classList.contains('modal')) e.target.classList.remove('show');
+    };
+  </script>
+
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

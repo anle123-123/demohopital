@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý Thanh toán - HOPITAL</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* === 1. DASHBOARD LAYOUT STYLES === */
+    :root {
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --bg-body: #f4f7f6;
+      --sidebar-bg: #2c3e50;
+      --sidebar-text: #ecf0f1;
+      --active-item: #3498db;
+      --color-border: #e5e7eb;
+      --card-bg: #ffffff;
+      
+      /* Page Specific Colors */
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --danger: #ef4444;
+      --danger-bg: #fef2f2;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --warning: #f59e0b;
+      --warning-bg: #fffbeb;
+      --radius: 8px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    * { box-sizing: border-box; outline: none; }
+    
+    /* Sửa lỗi xung đột theme.css bằng cách khóa chặt thuộc tính body */
+    body.app { 
+      font-family: 'Inter', sans-serif; 
+      display: flex !important; 
+      margin: 0 !important; 
+      background: var(--bg-body); 
+      height: 100vh !important; 
+      overflow: hidden !important; 
+      color: var(--text-main); 
+      font-size: 14px; 
+    }
+
+    /* Bỏ gạch chân triệt để ở mọi liên kết */
+    a, a:hover, a:focus, a:active { text-decoration: none !important; }
+
+    /* Sidebar - Khóa chiều cao 100vh */
+    .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; z-index: 100; height: 100vh !important; }
+    .sidebar-brand { height: var(--header-height); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; text-decoration: none; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-item { display: flex; align-items: center; padding: 12px 25px; color: #bdc3c7; text-decoration: none; transition: 0.3s; border-left: 4px solid transparent; font-size: 0.95rem; }
+    .nav-item i { width: 25px; margin-right: 10px; text-align: center; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--active-item); }
+    
+    /* Submenu */
+    .nav-group-label { padding: 12px 25px; color: #bdc3c7; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+    .nav-group-label .left { display: flex; align-items: center; gap: 10px; }
+    .nav-group-label .left i { width: 25px; text-align: center; }
+    .nav-group-label:hover { color: white; background: rgba(255,255,255,0.05); }
+    .nav-group-content { display: none; background: rgba(0,0,0,0.2); }
+    .nav-group.is-open .nav-group-content { display: block; }
+    .nav-group-content .nav-item { padding-left: 55px; font-size: 0.9rem; }
+    .nav-group.is-open .nav-group-label i.fa-chevron-down { transform: rotate(180deg); transition: 0.2s; }
+
+    /* Main Content */
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh !important; }
+    .top-header { height: var(--header-height); background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); z-index: 10; flex-shrink: 0; }
+    .header-user { display: flex; align-items: center; gap: 15px; }
+    .btn-logout { color: #e74c3c; text-decoration: none; font-weight: 500; font-size: 0.9rem; border: 1px solid #e74c3c; padding: 5px 15px; border-radius: 20px; transition: 0.2s; }
+    .btn-logout:hover { background: #e74c3c; color: white; }
+
+    /* Content Body */
+    .content-body { flex: 1; overflow-y: auto; padding: 20px; }
+
+    /* === 2. STYLE RIÊNG QUẢN LÝ THANH TOÁN === */
+    
+    /* Toolbar */
+    .toolbar { background: var(--card-bg); padding: 15px 20px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--color-border); display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .toolbar-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    
+    input[type="text"] { padding: 9px 12px; border: 1px solid var(--color-border); border-radius: 6px; width: 280px; font-size: 14px; outline: none; transition: 0.2s; }
+    input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+    .chk-label { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-weight: 500; color: var(--text-main); }
+    input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+
+    /* Buttons */
+    .btn { padding: 9px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; transition: 0.2s; text-decoration: none; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 4px; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-light { background: white; border: 1px solid var(--color-border); color: var(--text-main); }
+    .btn-light:hover { background: #f9fafb; }
+    .btn-outline { background: transparent; border: 1px dashed var(--primary); color: var(--primary); }
+    .btn-outline:hover { background: #eff6ff; }
+    .btn-danger-light { background: var(--danger-bg); color: var(--danger); }
+    .btn-danger-light:hover { background: #fee2e2; }
+
+    /* Table */
+    .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--color-border); overflow: hidden; display: flex; flex-direction: column; }
+    .table-responsive { overflow-x: auto; width: 100%; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background: #f9fafb; padding: 12px 16px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+    tr:hover td { background-color: #f9fafb; }
+    tr:last-child td { border-bottom: none; }
+    
+    .right { text-align: right; }
+    .center { text-align: center; }
+    
+    /* Badges & Info */
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .badge.ok { background: var(--success-bg); color: var(--success); }
+    .badge.warn { background: var(--warning-bg); color: var(--warning); }
+    
+    .bn-name { font-weight: 600; color: var(--text-main); }
+    .bn-sub { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+    
+    .empty { padding: 40px; text-align: center; color: var(--text-muted); font-style: italic; }
+    .hidden { display: none !important; }
+
+    /* Modal */
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.2s; }
+    .modal.hidden { opacity: 0; pointer-events: none; }
+    .modal-body { background: white; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 450px; max-width: 90%; padding: 24px; animation: slideIn 0.3s ease-out; }
+    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-head h3 { margin: 0; font-size: 18px; color: var(--active-item); }
+    .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); }
+    .qrbox { text-align: center; margin: 16px 0; padding: 16px; border: 1px dashed var(--color-border); border-radius: 8px; background: #f9fafb; }
+    .qrbox img { max-width: 100%; border-radius: 4px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    
+    /* Spinner */
+    .spinner { border: 4px solid rgba(0,0,0,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: var(--primary); animation: spin 1s linear infinite; margin: 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+
+<body class="app">
+
+  <aside class="sidebar">
+    <a href="{{ url_for('trang_chu') }}" class="sidebar-brand">
+      <i class="fa-solid fa-hospital-user" style="margin-right: 10px;"></i> HOPITAL
+    </a>
+
+    <div class="sidebar-menu">
+      <a href="{{ url_for('trang_chu') }}" class="nav-item {{ 'active' if active=='trang_chu' else '' }}">
+        <i class="fa-solid fa-house"></i> Trang chủ
+      </a>
+
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('ql_bac_si') }}" class="nav-item {{ 'active' if active=='ql_bac_si' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i> Quản lý bác sĩ
+        </a>
+        <a href="/admin/khoa" class="nav-item {{ 'active' if active=='ql_khoa' else '' }}">
+          <i class="fa-solid fa-building-circle-check"></i> Quản lý Khoa
+        </a>
+        <a href="{{ url_for('admin_accounts_page_v2') }}" class="nav-item {{ 'active' if active=='ql_tai_khoan' else '' }}">
+          <i class="fa-solid fa-users-gear"></i> Tài khoản hệ thống
+        </a>
+        <a href="/admin/dich-vu" class="nav-item {{ 'active' if active=='ql_dich_vu' else '' }}">
+          <i class="fa-solid fa-receipt"></i> Quản lý Dịch vụ
+        </a>
+        <a href="/admin/xet-nghiem" class="nav-item {{ 'active' if active=='ql_xet_nghiem' else '' }}">
+          <i class="fa-solid fa-flask"></i> Quản lý Xét nghiệm
+        </a>
+        <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+          <i class="fa-solid fa-bed"></i> Phòng bệnh
+        </a>
+      {% endif %}
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+
+        <div class="nav-group {{ 'is-open' if active in ['ql_lich_hen','goi_so','lay_so_online'] else '' }}">
+          <div class="nav-group-label" onclick="this.parentElement.classList.toggle('is-open')">
+            <div class="left">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Lịch hẹn</span>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
+          </div>
+          
+          <div class="nav-group-content">
+            {% if session.role == 'doctor' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            <a href="{{ url_for('goi_so') }}" class="nav-item {{ 'active' if active=='goi_so' else '' }}">Danh sách thứ tự</a>
+            <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">Lấy số online</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('ql_kham_benh') }}" class="nav-item {{ 'active' if active=='ql_kham_benh' else '' }}">
+          <i class="fa-solid fa-stethoscope"></i> Khám bệnh
+        </a>
+
+        <a href="{{ url_for('benh_nhan') }}" class="nav-item {{ 'active' if active=='benh_nhan' else '' }}">
+          <i class="fa-solid fa-address-card"></i> Hồ sơ bệnh nhân
+        </a>
+
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('ql_thuoc_kho') }}" class="nav-item {{ 'active' if active=='thuoc_kho' else '' }}">
+            <i class="fa-solid fa-pills"></i> Thuốc & Kho
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('ql_thanh_toan') }}" class="nav-item active">
+          <i class="fa-solid fa-credit-card"></i> Thanh toán
+        </a>
+
+        <a href="{{ url_for('lich_lam_viec') }}" class="nav-item {{ 'active' if active=='lich_lam_viec' else '' }}">
+          <i class="fa-solid fa-calendar-days"></i> Lịch làm việc
+        </a>
+
+        {% if session.role == 'doctor' %}
+          <a href="{{ url_for('xet_lich_lam') }}" class="nav-item {{ 'active' if active=='xet_lich_lam' else '' }}">
+            <i class="fa-solid fa-user-clock"></i> Đăng ký lịch
+          </a>
+
+          <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+            <i class="fa-solid fa-bed"></i> Phòng bệnh
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('bao_cao_thong_ke') }}" class="nav-item {{ 'active' if active=='bao_cao' else '' }}">
+          <i class="fa-solid fa-chart-line"></i> Báo cáo
+        </a>
+
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+
+      {% else %}
+        <a href="{{ url_for('quansat_layso') }}" class="nav-item {{ 'active' if active=='quansat_layso' else '' }}">
+          <i class="fa-solid fa-eye"></i> Quan sát số
+        </a>
+        <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">
+          <i class="fa-solid fa-ticket"></i> Lấy số online
+        </a>
+        <a href="{{ url_for('dat_lich_page') }}" class="nav-item {{ 'active' if active=='dat_lich' else '' }}">
+          <i class="fa-solid fa-calendar-plus"></i> Đặt lịch khám
+        </a>
+        {% if session.mabn %}
+          <a href="{{ url_for('ho_so_benh_nhan', mabn=session.mabn) }}" class="nav-item {{ 'active' if active=='ho_so_toi' else '' }}">
+            <i class="fa-solid fa-file-medical"></i> Hồ sơ của tôi
+          </a>
+        {% endif %}
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="top-header">
+      <div style="font-weight: bold; font-size: 1.1rem; color: #2c3e50;">QUẢN LÝ TÀI CHÍNH</div>
+      <div class="header-user">
+        <span style="font-size: 0.9rem; color: #666; margin-right: 15px;"><i class="fa-regular fa-clock"></i> <span id="clock"></span></span>
+        <span>Xin chào, <b>{{ session.user }}</b></span>
+        <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+      </div>
+    </header>
+
+    <div class="content-body">
+      
+      <div class="toolbar">
+        <div class="toolbar-group">
+          <div style="position:relative">
+            <input id="q" type="text" placeholder="🔍 Tìm Mã BN / Tên / SĐT..." />
+          </div>
+          <button id="btnSearch" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+        </div>
+
+        <div class="toolbar-group">
+          <label class="chk-label">
+            <input id="onlyUnpaid" type="checkbox" />
+            <span>Chỉ hiện chưa thanh toán</span>
+          </label>
+
+          <div style="width: 1px; height: 24px; background: var(--color-border); margin: 0 8px;"></div>
+
+          <button id="btnSeed" class="btn btn-outline btn-sm" title="Tạo hóa đơn demo 50k">
+            <i class="fa-solid fa-plus"></i> Demo
+          </button>
+          <button id="btnDelSel" class="btn btn-danger-light btn-sm" title="Xóa các mục đã chọn">
+            <i class="fa-solid fa-trash-can"></i> Xóa chọn
+          </button>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0; overflow:hidden">
+        <div class="table-responsive" style="border:none">
+          <table id="tblHD">
+            <thead>
+              <tr>
+                <th class="center" style="width:40px"><input type="checkbox" id="chkAll" /></th>
+                <th>#</th>
+                <th>Thông tin Bệnh nhân</th>
+                <th>Ngày lập</th>
+                <th class="right">Tổng tiền</th>
+                <th class="center">Trạng thái</th>
+                <th class="center">Hành động</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div id="hdEmpty" class="empty hidden">
+            <i class="fa-solid fa-file-invoice-dollar" style="font-size:32px; margin-bottom:10px; display:block; opacity:0.5"></i>
+            Không tìm thấy hóa đơn phù hợp.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="payModal" class="modal hidden">
+    <div class="modal-body">
+      <div class="modal-head">
+        <h3><i class="fa-solid fa-qrcode"></i> Thanh toán VNPAY</h3>
+        <button class="close-btn" onclick="window.closePayModal()">×</button>
+      </div>
+
+      <div id="payInfo" style="font-size:14px; color:var(--text-main); margin-bottom:10px; line-height:1.6"></div>
+
+      <div class="qrbox">
+        <img id="qrImg" alt="Đang tạo QR..." />
+        <div style="margin-top:8px; font-size:12px; color:var(--text-muted)">Quét mã bằng ứng dụng Ngân hàng / Ví VNPAY</div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btnCopied" class="btn btn-light"><i class="fa-regular fa-copy"></i> Copy Link</button>
+        <a id="openVnp" class="btn btn-primary" target="_blank" rel="noopener">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Web VNPAY
+        </a>
+      </div>
+
+      <div style="margin-top:16px; padding-top:12px; border-top:1px dashed var(--color-border); display:flex; justify-content:space-between; align-items:center">
+        <small style="color:var(--text-muted)">Hệ thống sẽ tự cập nhật khi thanh toán xong.</small>
+        <button id="btnRefresh" class="btn btn-light btn-sm"><i class="fa-solid fa-rotate"></i> Tải lại DS</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Clock
+    document.getElementById('clock').textContent = new Date().toLocaleDateString('vi-VN');
+
+    // ===== Helpers =====
+    const $ = (s, root = document) => root.querySelector(s);
+    const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
+    const money = n => (Number(n || 0)).toLocaleString('vi-VN');
+    const makeQR = (url) => `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+
+    // ===== State =====
+    let LAST_PAY_URL = "";
+    let LAST_INVOICE = null;
+
+    window.closePayModal = function () {
+      const modal = $("#payModal");
+      if (!modal) return;
+      modal.classList.add("hidden");
+      LAST_PAY_URL = "";
+      LAST_INVOICE = null;
+      const img = $("#qrImg"); if (img) img.src = "";
+      const a = $("#openVnp"); if (a) a.removeAttribute("href");
+      const spin = $("#qrSpin"); if (spin) spin.style.display = "none";
+    };
+
+    // ===== Load danh sách hóa đơn =====
+    async function loadHoaDon() {
+      const q = $("#q").value.trim();
+      const unpaid = $("#onlyUnpaid").checked ? "1" : "0";
+      const url = `/api/hoadon?only_unpaid=${unpaid}&q=${encodeURIComponent(q)}`;
+
+      const tbody = $("#tblHD tbody");
+      const empty = $("#hdEmpty");
+      tbody.innerHTML = "";
+      empty.classList.add("hidden");
+
+      try {
+        const res = await fetch(url);
+        let data = [];
+        if (!res.ok) throw new Error("Lỗi API");
+        data = await res.json();
+
+        if (!Array.isArray(data) || data.length === 0) {
+          empty.classList.remove("hidden");
+          return;
+        }
+
+        data.forEach((hd, idx) => {
+          const tr = document.createElement("tr");
+          const isPaid = Number(hd.DATHANHTOAN) === 1;
+
+          tr.innerHTML = `
+            <td class="center">
+              <input type="checkbox" class="chkHD" value="${hd.ID}" ${isPaid ? 'disabled' : ''}>
+            </td>
+            <td style="color:var(--text-muted)">#${hd.ID}</td>
+            <td>
+              <div class="bn-name">${hd.BN_HOVATEN || "Khách lẻ"}</div>
+              <div class="bn-sub"><i class="fa-regular fa-id-card"></i> ${hd.BN_MABN || "---"}</div>
+            </td>
+            <td>${(hd.NGAYLAP || "").replace("T", " ").slice(0, 16)}</td>
+            <td class="right" style="font-weight:600; color:var(--text-main)">${money(hd.TONGTIEN)} ₫</td>
+            <td class="center">
+                <span class="badge ${isPaid ? 'ok' : 'warn'}">
+                    ${isPaid ? '<i class="fa-solid fa-check"></i> Đã TT' : '<i class="fa-solid fa-clock"></i> Chưa TT'}
+                </span>
+            </td>
+            <td class="center">
+              ${!isPaid
+              ? `<div style="display:flex;gap:8px;justify-content:center">
+                     <button class="btn btn-primary btn-sm"
+                             title="Thanh toán VNPAY"
+                             data-id="${hd.ID}"
+                             data-amt="${hd.TONGTIEN}"
+                             data-bn="${(hd.BN_HOVATEN || '')}"
+                             data-code="${(hd.BN_MABN || '')}">
+                             <i class="fa-solid fa-qrcode"></i> Pay
+                     </button>
+                     <button class="btn btn-danger-light btn-sm" title="Xóa hóa đơn" data-del="${hd.ID}">
+                        <i class="fa-solid fa-trash"></i>
+                     </button>
+                   </div>`
+              : `<span class="muted" title="Đã khóa"><i class="fa-solid fa-lock"></i></span>`
+            }
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Bind events
+        $$("#tblHD tbody button.btn-primary").forEach(btn => {
+          btn.addEventListener("click", () => openPay(btn.dataset));
+        });
+        $$("#tblHD tbody button[data-del]").forEach(btn => {
+          btn.addEventListener("click", () => delHoaDon(btn.dataset.del));
+        });
+
+      } catch (e) {
+        console.error(e);
+        empty.innerHTML = `<span style="color:var(--danger)">Lỗi kết nối: ${e.message}</span>`;
+        empty.classList.remove("hidden");
+      }
+    }
+
+    // ===== Mở modal thanh toán =====
+    async function openPay(info) {
+      const hdId = info.id;
+      LAST_INVOICE = info;
+      $("#payModal").classList.remove("hidden");
+
+      $("#payInfo").innerHTML = `
+         <div>Hóa đơn: <b>#${hdId}</b></div>
+         <div>Bệnh nhân: <b>${info.bn}</b> (ID: ${info.code})</div>
+         <div style="margin-top:4px; font-size:16px">Số tiền: <b style="color:var(--primary)">${money(info.amt)} VNĐ</b></div>
+      `;
+
+      const qrBox = $(".qrbox");
+      qrBox.innerHTML = `<div class="spinner"></div><div style="text-align:center; color:var(--text-muted); margin-top:8px">Đang tạo liên kết thanh toán...</div>`;
+      $("#openVnp").href = "#";
+      $("#openVnp").style.opacity = "0.5";
+      $("#openVnp").style.pointerEvents = "none";
+
+      try {
+        const r = await fetch("/api/pay-url", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hoadon_id: Number(hdId) })
+        });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error || "Lỗi tạo link VNPAY");
+
+        LAST_PAY_URL = j.url;
+        const qrUrl = j.qr_data_url || makeQR(LAST_PAY_URL);
+
+        qrBox.innerHTML = `
+          <div style="min-height:220px; display:flex; align-items:center; justify-content:center">
+             <div class="spinner" id="qrSpin"></div>
+             <img id="qrImg" alt="QR Code" style="display:none; max-width:100%; border-radius:4px" />
+          </div>
+          <div style="margin-top:8px; font-size:12px; color:var(--text-muted)">Quét mã bằng Camera hoặc mở link bên dưới</div>
+        `;
+
+        const img = $("#qrImg");
+        const spin = $("#qrSpin");
+
+        img.onload = () => {
+          if (spin) spin.style.display = "none";
+          img.style.display = "block";
+        };
+        img.onerror = () => {
+          qrBox.innerHTML = `<div style="color:red">Không tải được ảnh QR</div>`;
+        };
+        img.src = qrUrl;
+
+        $("#openVnp").href = LAST_PAY_URL;
+        $("#openVnp").style.opacity = "1";
+        $("#openVnp").style.pointerEvents = "auto";
+
+      } catch (err) {
+        qrBox.innerHTML = `<div style="color:var(--danger); padding:10px; text-align:center"><i class="fa-solid fa-circle-exclamation"></i> ${err.message}</div>`;
+      }
+    }
+
+    // ===== Actions =====
+    async function delHoaDon(id) {
+      if (!confirm(`Xóa hóa đơn #${id}?`)) return;
+      const r = await fetch(`/api/hoadon/${id}`, { method: "DELETE" });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) return alert(j.error || "Xóa thất bại");
+      loadHoaDon();
+    }
+
+    async function delSelected() {
+      const ids = $$(".chkHD:checked").map(c => Number(c.value));
+      if (!ids.length) return alert("Bạn chưa chọn hóa đơn nào.");
+      if (!confirm(`Xóa vĩnh viễn ${ids.length} hóa đơn đã chọn?`)) return;
+
+      const r = await fetch("/api/hoadon", {
+        method: "DELETE", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) return alert(j.error || "Có lỗi khi xóa");
+      loadHoaDon();
+    }
+
+    async function seedInvoice() {
+      try {
+        // Đảm bảo tạo Hóa đơn cho phiếu khám ID=1 (Demo)
+        const create = await fetch("/api/kham/1/hoadon", { 
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ TONGTIEN: 50000, DATHANHTOAN: 0, HINHTHUC: "VNPAY" })
+        });
+        const j = await create.json();
+        if (!create.ok) throw new Error(j.error || "Lỗi tạo demo");
+
+        await fetch(`/api/hoadon/${j.HOADON_ID || 0}/ct`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ LOAI: "DRUG", MOTA: "Demo Thuốc", SOLUONG: 1, DONGIA: 50000 })
+        }).catch(() => { });
+
+        loadHoaDon();
+      } catch (e) {
+        console.warn(e);
+        alert("Không thể tạo demo (cần phiếu khám #1): " + e.message);
+      }
+    }
+
+    // ===== UI Events =====
+    $("#btnSearch").addEventListener("click", loadHoaDon);
+    $("#q").addEventListener("keydown", (e) => { if (e.key === "Enter") loadHoaDon(); });
+    $("#onlyUnpaid").addEventListener("change", loadHoaDon);
+    $("#btnRefresh").addEventListener("click", loadHoaDon);
+    $("#btnSeed").addEventListener("click", seedInvoice);
+    $("#btnDelSel").addEventListener("click", delSelected);
+
+    // Checkbox All
+    $("#chkAll").addEventListener("change", (e) => {
+      $$(".chkHD").forEach(c => { if (!c.disabled) c.checked = e.target.checked; });
+    });
+
+    // Copy link
+    $("#btnCopied").addEventListener("click", async () => {
+      if (!LAST_PAY_URL) return;
+      try {
+        await navigator.clipboard.writeText(LAST_PAY_URL);
+        const oldText = $("#btnCopied").innerHTML;
+        $("#btnCopied").innerHTML = `<i class="fa-solid fa-check"></i> Đã Copy`;
+        setTimeout(() => $("#btnCopied").innerHTML = oldText, 2000);
+      } catch (_) { }
+    });
+
+    // Close Modal on click outside
+    $("#payModal").addEventListener("click", (e) => {
+      if (e.target === $("#payModal")) window.closePayModal();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") window.closePayModal();
+    });
+
+    // Init
+    document.addEventListener("DOMContentLoaded", loadHoaDon);
+  </script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

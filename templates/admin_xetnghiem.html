@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Quản lý Xét nghiệm - HOPITAL</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* === 1. DASHBOARD LAYOUT STYLES === */
+    :root {
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --bg-body: #f4f7f6;
+      --sidebar-bg: #2c3e50;
+      --sidebar-text: #ecf0f1;
+      --active-item: #3498db;
+      --color-border: #e5e7eb;
+      --card-bg: #ffffff;
+      
+      /* Colors specific to this page */
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --danger: #ef4444;
+      --radius: 10px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    /* Sửa lỗi xung đột theme.css bằng cách khóa chặt thuộc tính body */
+    body.app { 
+      font-family: 'Segoe UI', sans-serif; 
+      display: flex !important; 
+      margin: 0 !important; 
+      background: var(--bg-body); 
+      height: 100vh !important; 
+      overflow: hidden !important; 
+      color: var(--text);
+    }
+
+    /* Bỏ gạch chân triệt để ở mọi liên kết */
+    a, a:hover, a:focus, a:active { text-decoration: none !important; }
+
+    /* Sidebar - Khóa chiều cao 100vh */
+    .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; height: 100vh !important; }
+    .sidebar-brand { height: var(--header-height); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; text-decoration: none; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-item { display: flex; align-items: center; padding: 12px 25px; color: #bdc3c7; text-decoration: none; transition: 0.3s; border-left: 4px solid transparent; font-size: 0.95rem; }
+    .nav-item i { width: 25px; margin-right: 10px; text-align: center; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--active-item); }
+    
+    /* Submenu */
+    .nav-group { margin: 0; }
+    .nav-group-label { padding: 12px 25px; color: #bdc3c7; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+    .nav-group-label .left { display: flex; align-items: center; gap: 10px; }
+    .nav-group-label .left i { width: 25px; text-align: center; }
+    .nav-group-label:hover { color: white; background: rgba(255,255,255,0.05); }
+    .nav-group-content { display: none; background: rgba(0,0,0,0.2); }
+    .nav-group.is-open .nav-group-content { display: block; }
+    .nav-group-content .nav-item { padding-left: 55px; font-size: 0.9rem; }
+    
+    /* Icon xoay khi mở menu */
+    .nav-group.is-open .nav-group-label i.fa-chevron-down { transform: rotate(180deg); transition: transform 0.2s; }
+
+    /* Main Content */
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh !important; }
+    .top-header { height: var(--header-height); background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); z-index: 10; flex-shrink: 0; }
+    .header-user { display: flex; align-items: center; gap: 15px; }
+    .btn-logout { color: #e74c3c; text-decoration: none; font-weight: 500; font-size: 0.9rem; border: 1px solid #e74c3c; padding: 5px 15px; border-radius: 20px; transition: 0.2s; }
+    .btn-logout:hover { background: #e74c3c; color: white; }
+
+    /* Content Body */
+    .content-body { flex: 1; overflow-y: auto; padding: 30px; }
+
+    /* === 2. STYLE RIÊNG CHO TRANG XÉT NGHIỆM === */
+    .layout-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; height: calc(100vh - 140px); }
+    
+    .panel { background: white; border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--color-border); display: flex; flex-direction: column; overflow: hidden; }
+    .panel-head { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa; }
+    .panel-head h3 { margin: 0; font-size: 1.1rem; color: var(--sidebar-bg); }
+    
+    .panel-body { flex: 1; overflow-y: auto; padding: 0; }
+
+    .list-item { padding: 12px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+    .list-item:hover { background: #f8f9fa; }
+    .list-item.active { background: #e0f2fe; border-left: 4px solid var(--active-item); padding-left: 16px; }
+    .list-item b { color: #333; font-weight: 600; }
+    .list-item small { color: #888; display: block; margin-top: 2px; }
+
+    .item-actions { display: flex; gap: 5px; opacity: 0.6; transition: 0.2s; }
+    .list-item:hover .item-actions { opacity: 1; }
+    .btn-icon { background: none; border: none; cursor: pointer; padding: 5px; border-radius: 4px; font-size: 0.9rem; }
+    .btn-icon:hover { background: #eee; }
+    .btn-icon.del:hover { background: #fee2e2; color: var(--danger); }
+
+    .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 500; }
+    .btn-primary { background: var(--active-item); color: white; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+
+    .empty-msg { text-align: center; padding: 40px; color: #999; font-style: italic; }
+    .price-tag { color: #059669; font-weight: 600; font-size: 0.9rem; }
+
+    /* Modal Styles */
+    dialog.modal { padding: 0; border: none; border-radius: 10px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 450px; max-width: 90%; }
+    dialog::backdrop { background: rgba(0,0,0,0.5); }
+    .modal__panel { padding: 25px; background: white; display: flex; flex-direction: column; gap: 20px; }
+    .modal__header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+    .modal__header h3 { margin: 0; color: var(--sidebar-bg); font-size: 1.2rem; }
+    .modal__close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
+    .modal__close:hover { color: #ef4444; }
+    
+    .form-grid { display: flex; flex-direction: column; gap: 15px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.9rem; font-weight: 600; color: #374151; }
+    .field input { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; }
+    .field input:focus { border-color: var(--active-item); box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
+    
+    .modal__actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+    .btn-light { background: white; border: 1px solid #d1d5db; color: #374151; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    .btn-light:hover { background: #f3f4f6; }
+  </style>
+</head>
+
+<body class="app">
+
+  <aside class="sidebar">
+    <a href="{{ url_for('trang_chu') }}" class="sidebar-brand">
+      <i class="fa-solid fa-hospital-user" style="margin-right: 10px;"></i> HOPITAL
+    </a>
+
+    <div class="sidebar-menu">
+      <a href="{{ url_for('trang_chu') }}" class="nav-item {{ 'active' if active=='trang_chu' else '' }}">
+        <i class="fa-solid fa-house"></i> Trang chủ
+      </a>
+
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('ql_bac_si') }}" class="nav-item {{ 'active' if active=='ql_bac_si' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i> Quản lý bác sĩ
+        </a>
+        <a href="/admin/khoa" class="nav-item {{ 'active' if active=='ql_khoa' else '' }}">
+          <i class="fa-solid fa-building-circle-check"></i> Quản lý Khoa
+        </a>
+        <a href="{{ url_for('admin_accounts_page_v2') }}" class="nav-item {{ 'active' if active=='ql_tai_khoan' else '' }}">
+          <i class="fa-solid fa-users-gear"></i> Tài khoản hệ thống
+        </a>
+        <a href="/admin/dich-vu" class="nav-item {{ 'active' if active=='ql_dich_vu' else '' }}">
+          <i class="fa-solid fa-receipt"></i> Quản lý Dịch vụ
+        </a>
+        <a href="/admin/xet-nghiem" class="nav-item active">
+          <i class="fa-solid fa-flask"></i> Quản lý Xét nghiệm
+        </a>
+        <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+          <i class="fa-solid fa-bed"></i> Phòng bệnh
+        </a>
+      {% endif %}
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+
+        <div class="nav-group {{ 'is-open' if active in ['ql_lich_hen','goi_so','lay_so_online'] else '' }}">
+          <div class="nav-group-label" onclick="this.parentElement.classList.toggle('is-open')">
+            <div class="left">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Lịch hẹn</span>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
+          </div>
+          
+          <div class="nav-group-content">
+            {% if session.role == 'doctor' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            <a href="{{ url_for('goi_so') }}" class="nav-item {{ 'active' if active=='goi_so' else '' }}">Danh sách thứ tự</a>
+            <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">Lấy số online</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('ql_kham_benh') }}" class="nav-item {{ 'active' if active=='ql_kham_benh' else '' }}">
+          <i class="fa-solid fa-stethoscope"></i> Khám bệnh
+        </a>
+
+        <a href="{{ url_for('benh_nhan') }}" class="nav-item {{ 'active' if active=='benh_nhan' else '' }}">
+          <i class="fa-solid fa-address-card"></i> Hồ sơ bệnh nhân
+        </a>
+
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('ql_thuoc_kho') }}" class="nav-item {{ 'active' if active=='thuoc_kho' else '' }}">
+            <i class="fa-solid fa-pills"></i> Thuốc & Kho
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('ql_thanh_toan') }}" class="nav-item {{ 'active' if active=='thanh_toan' else '' }}">
+          <i class="fa-solid fa-credit-card"></i> Thanh toán
+        </a>
+
+        <a href="{{ url_for('lich_lam_viec') }}" class="nav-item {{ 'active' if active=='lich_lam_viec' else '' }}">
+          <i class="fa-solid fa-calendar-days"></i> Lịch làm việc
+        </a>
+
+        {% if session.role == 'doctor' %}
+          <a href="{{ url_for('xet_lich_lam') }}" class="nav-item {{ 'active' if active=='xet_lich_lam' else '' }}">
+            <i class="fa-solid fa-user-clock"></i> Đăng ký lịch
+          </a>
+
+          <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+            <i class="fa-solid fa-bed"></i> Phòng bệnh
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('bao_cao_thong_ke') }}" class="nav-item {{ 'active' if active=='bao_cao' else '' }}">
+          <i class="fa-solid fa-chart-line"></i> Báo cáo
+        </a>
+
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+
+      {% else %}
+        <a href="{{ url_for('quansat_layso') }}" class="nav-item {{ 'active' if active=='quansat_layso' else '' }}">
+          <i class="fa-solid fa-eye"></i> Quan sát số
+        </a>
+        <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">
+          <i class="fa-solid fa-ticket"></i> Lấy số online
+        </a>
+        <a href="{{ url_for('dat_lich_page') }}" class="nav-item {{ 'active' if active=='dat_lich' else '' }}">
+          <i class="fa-solid fa-calendar-plus"></i> Đặt lịch khám
+        </a>
+        {% if session.mabn %}
+          <a href="{{ url_for('ho_so_benh_nhan', mabn=session.mabn) }}" class="nav-item {{ 'active' if active=='ho_so_toi' else '' }}">
+            <i class="fa-solid fa-file-medical"></i> Hồ sơ của tôi
+          </a>
+        {% endif %}
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="top-header">
+      <div style="font-weight: bold; font-size: 1.1rem; color: #2c3e50;">QUẢN TRỊ HỆ THỐNG</div>
+      <div class="header-user">
+        <span>Xin chào, <b>{{ session.user }}</b></span>
+        <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+      </div>
+    </header>
+
+    <div class="content-body">
+      
+      <div class="layout-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <h3><i class="fa-solid fa-layer-group"></i> Nhóm Xét Nghiệm</h3>
+            <button class="btn-sm btn-primary" onclick="addLoai()"><i class="fa-solid fa-plus"></i> Thêm</button>
+          </div>
+          <div class="panel-body" id="listLoai">
+            <div class="empty-msg">Đang tải...</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3 id="lblChiDinh"><i class="fa-solid fa-list-check"></i> Chi tiết chỉ định</h3>
+            <button class="btn-sm btn-primary" onclick="addChiDinh()" id="btnAddCD" disabled>
+              <i class="fa-solid fa-plus"></i> Thêm chỉ định
+            </button>
+          </div>
+          <div class="panel-body" id="listChiDinh">
+            <div class="empty-msg">Vui lòng chọn nhóm xét nghiệm bên trái</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <dialog id="dlgLoai" class="modal">
+    <form method="dialog" id="frmLoai" class="modal__panel" onsubmit="return false;">
+      <header class="modal__header">
+        <h3 id="tLoai">Nhóm Xét Nghiệm</h3>
+        <button type="button" class="modal__close" onclick="$('dlgLoai').close()">✕</button>
+      </header>
+      <div class="form-grid">
+        <input type="hidden" id="lid">
+        <div class="field">
+          <label>Tên nhóm <span style="color:red">*</span></label>
+          <input id="lten" required placeholder="VD: Huyết học, Sinh hóa...">
+        </div>
+        <div class="field">
+          <label>Mô tả</label>
+          <input id="lmota" placeholder="Mô tả thêm...">
+        </div>
+      </div>
+      <footer class="modal__actions">
+        <button type="button" class="btn-light" onclick="$('dlgLoai').close()">Hủy</button>
+        <button type="button" class="btn-primary" onclick="saveLoai()">Lưu lại</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="dlgCD" class="modal">
+    <form method="dialog" id="frmCD" class="modal__panel" onsubmit="return false;">
+      <header class="modal__header">
+        <h3 id="tCD">Chi định xét nghiệm</h3>
+        <button type="button" class="modal__close" onclick="$('dlgCD').close()">✕</button>
+      </header>
+      <div class="form-grid">
+        <input type="hidden" id="cid">
+        <div class="field">
+          <label>Tên chỉ định <span style="color:red">*</span></label>
+          <input id="cten" required placeholder="VD: Công thức máu...">
+        </div>
+        <div class="field">
+          <label>Giá tham khảo (VNĐ)</label>
+          <input id="cgia" type="number" required placeholder="0">
+        </div>
+        <div class="field">
+          <label>Đơn vị tính</label>
+          <input id="cdonvi" placeholder="VD: Lần, Mẫu...">
+        </div>
+      </div>
+      <footer class="modal__actions">
+        <button type="button" class="btn-light" onclick="$('dlgCD').close()">Hủy</button>
+        <button type="button" class="btn-primary" onclick="saveChiDinh()">Lưu lại</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    let LOAIS = [];
+    let CUR_LOAI = null;
+
+    async function loadLoai() {
+      try {
+        const r = await fetch('/api/admin/loai-xn');
+        LOAIS = await r.json();
+        renderLoai();
+      } catch(e) { console.error(e); }
+    }
+
+    function renderLoai() {
+      const c = $('listLoai');
+      c.innerHTML = '';
+      if(!LOAIS.length) {
+        c.innerHTML = '<div class="empty-msg">Chưa có nhóm nào</div>';
+        return;
+      }
+      LOAIS.forEach(l => {
+        const div = document.createElement('div');
+        div.className = `list-item ${CUR_LOAI === l.id ? 'active' : ''}`;
+        div.onclick = (e) => {
+          if (e.target.closest('button')) return;
+          selectLoai(l.id);
+        };
+        div.innerHTML = `
+          <div>
+            <b>${l.ten}</b>
+            <small>${l.mota || 'Không có mô tả'}</small>
+          </div>
+          <div class="item-actions">
+            <button class="btn-icon" onclick="editLoai(${l.id})"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn-icon del" onclick="delLoai(${l.id})"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `;
+        c.appendChild(div);
+      });
+    }
+
+    async function selectLoai(id) {
+      CUR_LOAI = id;
+      renderLoai();
+      $('btnAddCD').disabled = false;
+      const loai = LOAIS.find(x => x.id === id);
+      $('lblChiDinh').innerHTML = loai ? `<i class="fa-solid fa-list-check"></i> ${loai.ten}` : 'Chi tiết chỉ định';
+      
+      $('listChiDinh').innerHTML = '<div class="empty-msg">Đang tải...</div>';
+      try {
+        const r = await fetch(`/api/admin/loai-xn/${id}/chi-dinh`);
+        const items = await r.json();
+        renderChiDinh(items);
+      } catch(e) { 
+        $('listChiDinh').innerHTML = '<div class="empty-msg">Lỗi tải dữ liệu</div>';
+      }
+    }
+
+    function renderChiDinh(items) {
+      const c = $('listChiDinh');
+      c.innerHTML = '';
+      if (!items.length) return c.innerHTML = '<div class="empty-msg">Chưa có chỉ định nào trong nhóm này</div>';
+
+      items.forEach(i => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        const giaFmt = new Intl.NumberFormat('vi-VN').format(i.gia);
+        div.innerHTML = `
+          <div>
+            <b>${i.ten}</b> 
+            <span style="color:#888; font-size:0.85em">(${i.donvi || '-'})</span>
+            <br>
+            <span class="price-tag">${giaFmt} đ</span>
+          </div>
+          <div class="item-actions">
+            <button class="btn-icon" onclick='editChiDinh(${JSON.stringify(i)})'><i class="fa-solid fa-pen"></i></button>
+            <button class="btn-icon del" onclick="delChiDinh(${i.id})"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `;
+        c.appendChild(div);
+      });
+    }
+
+    // --- CRUD LOAI ---
+    function addLoai() {
+      $('tLoai').innerText = 'Thêm Nhóm';
+      $('lid').value = ''; $('lten').value = ''; $('lmota').value = '';
+      $('dlgLoai').showModal();
+    }
+    function editLoai(id) {
+      const l = LOAIS.find(x => x.id === id);
+      if (!l) return;
+      $('tLoai').innerText = 'Sửa Nhóm';
+      $('lid').value = l.id; $('lten').value = l.ten; $('lmota').value = l.mota;
+      $('dlgLoai').showModal();
+    }
+    async function saveLoai() {
+      const id = $('lid').value;
+      const url = id ? `/api/admin/loai-xn/${id}` : '/api/admin/loai-xn';
+      const method = id ? 'PUT' : 'POST';
+      const ten = $('lten').value.trim();
+      if(!ten) return alert("Vui lòng nhập tên nhóm");
+
+      try {
+        await fetch(url, {
+          method, headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ten, mota: $('lmota').value })
+        });
+        $('dlgLoai').close(); loadLoai();
+      } catch (e) { alert('Lỗi kết nối'); }
+    }
+    async function delLoai(id) {
+      if (!confirm("CẢNH BÁO: Xóa nhóm sẽ xóa TẤT CẢ chỉ định bên trong!\nBạn có chắc chắn muốn xóa?")) return;
+      try {
+        await fetch(`/api/admin/loai-xn/${id}`, { method: 'DELETE' });
+        if (CUR_LOAI === id) { 
+          CUR_LOAI = null; 
+          $('listChiDinh').innerHTML = '<div class="empty-msg">Vui lòng chọn nhóm xét nghiệm bên trái</div>'; 
+          $('btnAddCD').disabled = true; 
+          $('lblChiDinh').innerText = 'Chi tiết chỉ định';
+        }
+        loadLoai();
+      } catch (e) { alert('Lỗi xóa'); }
+    }
+
+    // --- CRUD CHI DINH ---
+    function addChiDinh() {
+      if (!CUR_LOAI) return;
+      $('tCD').innerText = 'Thêm Chỉ định';
+      $('cid').value = ''; $('cten').value = ''; $('cgia').value = ''; $('cdonvi').value = '';
+      $('dlgCD').showModal();
+    }
+    function editChiDinh(item) {
+      $('tCD').innerText = 'Sửa Chỉ định';
+      $('cid').value = item.id; $('cten').value = item.ten; $('cgia').value = item.gia; $('cdonvi').value = item.donvi;
+      $('dlgCD').showModal();
+    }
+    async function saveChiDinh() {
+      const id = $('cid').value;
+      const ten = $('cten').value.trim();
+      if(!ten) return alert("Nhập tên chỉ định");
+
+      const url = id ? `/api/admin/chi-dinh-xn/${id}` : '/api/admin/chi-dinh-xn';
+      const method = id ? 'PUT' : 'POST';
+      try {
+        await fetch(url, {
+          method, headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            loai_id: CUR_LOAI,
+            ten,
+            gia: $('cgia').value,
+            donvi: $('cdonvi').value
+          })
+        });
+        $('dlgCD').close();
+        selectLoai(CUR_LOAI);
+      } catch (e) { alert('Lỗi lưu'); }
+    }
+    async function delChiDinh(id) {
+      if (!confirm("Bạn có chắc muốn xóa chỉ định này?")) return;
+      try {
+        await fetch(`/api/admin/chi-dinh-xn/${id}`, { method: 'DELETE' });
+        selectLoai(CUR_LOAI);
+      } catch (e) { alert('Lỗi xóa'); }
+    }
+
+    // Init
+    loadLoai();
+  </script>
+</body>
+</html>

@@ -1,0 +1,826 @@
+/* ========== CÀI ĐẶT CHUNG & GIAO DIỆN DARK MODE ========== */
+
+/* :root variables moved to theme.css */
+
+/* Reset cơ bản */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--color-bg-darkest);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+a {
+  color: var(--color-accent-blue);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ========== NAVBAR (DÙNG CHO home.html) ========== */
+
+.navbar {
+  display: flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--color-bg-darkest);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.navbar .brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-text-white);
+  text-decoration: none;
+  margin-right: 2rem;
+}
+
+.menu {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-right: auto;
+  /* Cần thiết cho dropdown */
+  overflow: visible;
+}
+
+.menu a {
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  padding: 0.5rem 0;
+  position: relative;
+}
+
+.menu a.active {
+  color: var(--color-accent-blue);
+  font-weight: 600;
+}
+
+.menu a:hover {
+  color: var(--color-text-white);
+  text-decoration: none;
+}
+
+/* Dropdown */
+.menu .dropdown {
+  position: relative;
+}
+
+.menu .dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  background-color: var(--color-bg-dark);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  z-index: 100;
+  margin-top: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.menu .dropdown.is-active .dropdown-content {
+  display: block;
+}
+
+.menu .dropdown-content a {
+  display: block;
+  padding: 0.75rem 1.25rem;
+  color: var(--color-text-primary);
+  font-weight: 400;
+}
+
+.menu .dropdown-content a:hover {
+  background-color: var(--color-bg-medium);
+  color: var(--color-text-white);
+}
+
+.menu .dropdown-content .btn-hero {
+
+  font-weight: 500;
+}
+
+/* Search & Logout */
+.home-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-search input[type='text'] {
+  background: var(--color-bg-dark);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-white);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.home-search input[type='text']::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.home-search button[type='submit'] {
+  background: var(--color-bg-dark);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.home-search button[type='submit']:hover {
+  background: var(--color-bg-medium);
+  color: var(--color-text-primary);
+}
+
+a.btn-login {
+  background: var(--color-accent-blue);
+  color: var(--color-text-white);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+a.btn-login:hover {
+  background: var(--color-accent-blue-hover);
+  text-decoration: none;
+}
+
+
+/* ========== NỘI DUNG TRANG CHỦ (LOGGED IN) ========== */
+
+/* Style chung cho các loại nút */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  text-decoration: none;
+}
+
+/* Nút "Lấy số online" */
+.btn-primary {
+  background-color: var(--color-accent-blue);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent-blue-hover);
+  color: #FFFFFF;
+}
+
+/* Nút "Quan sát" */
+.btn-secondary {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-bg-medium);
+  color: var(--color-text-white);
+}
+
+/* Nút "Đặt lịch" */
+/* Nút "Đặt lịch" (Màu Cam) */
+.btn-hero {
+  background-color: var(--color-accent-orange);
+  /* <== THÊM DÒNG NÀY */
+  color: #FFFFFF;
+}
+
+.btn-hero:hover {
+  background-color: var(--color-accent-orange-hover);
+  /* <== THÊM DÒNG NÀY */
+  color: #FFFFFF;
+}
+
+/* Khu vực Hero CTA */
+.hero-cta {
+  text-align: center;
+  padding: 4rem 2rem 3rem 2rem;
+  background-color: var(--color-bg-dark);
+  /* Một lớp nền hơi khác */
+  border-bottom: 1px solid var(--color-border);
+}
+
+.hero-cta h1 {
+  font-size: 2.25rem;
+  color: var(--color-text-white);
+  margin: 0 0 0.5rem 0;
+}
+
+.hero-cta p {
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 2rem;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Wrapper cho Quick Actions và Stats */
+.home-wrap {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  display: grid;
+  gap: 2rem;
+}
+
+/* Quick Actions */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.quick-actions .qa {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-primary);
+  padding: 1.25rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s, transform 0.2s;
+  border: 1px solid var(--color-border);
+}
+
+.quick-actions .qa:hover {
+  background-color: var(--color-bg-medium);
+  color: var(--color-text-white);
+  transform: translateY(-3px);
+  text-decoration: none;
+}
+
+/* Stats */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stats .card {
+  background-color: var(--color-bg-dark);
+  padding: 1.5rem 2rem;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid var(--color-border);
+}
+
+.stats .card .num {
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: var(--color-text-white);
+  line-height: 1.1;
+}
+
+.stats .card .lbl {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
+
+/* ========== NỘI DUNG TRANG CHỦ (GUEST) ========== */
+/* Áp dụng theme dark cho các phần landing page */
+
+.guest-hero {
+  padding: 4rem 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: center;
+  max-width: 1200px;
+  margin: 2rem auto;
+}
+
+.guest-hero__content h1 {
+  font-size: 3rem;
+  color: var(--color-text-white);
+}
+
+.guest-hero__content h1 em {
+  color: var(--color-accent-blue);
+  font-style: normal;
+}
+
+.guest-hero__content p {
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
+  max-width: 500px;
+}
+
+.pill {
+  display: inline-block;
+  background-color: var(--color-bg-medium);
+  color: var(--color-accent-blue);
+  padding: 0.25rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.cta-row {
+  margin-top: 1.5rem;
+}
+
+.cta-row--guest {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.trusts {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+}
+
+/* Các mục features, tools, faq */
+.features,
+.guest-tools,
+.faq {
+  max-width: 1000px;
+  margin: 4rem auto;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.features h2,
+.guest-tools h2,
+.faq h2 {
+  font-size: 2rem;
+  color: var(--color-text-white);
+  margin-bottom: 2rem;
+}
+
+.features .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.feat {
+  background-color: var(--color-bg-dark);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.feat .icon {
+  font-size: 2rem;
+}
+
+.feat h3 {
+  color: var(--color-text-primary);
+}
+
+.guest-tools__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.tool {
+  background-color: var(--color-bg-dark);
+  padding: 2rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.tool:hover {
+  background-color: var(--color-bg-medium);
+  transform: translateY(-5px);
+  text-decoration: none;
+}
+
+.tool .ico {
+  font-size: 2.5rem;
+}
+
+.tool h3 {
+  color: var(--color-text-primary);
+}
+
+.tool p {
+  color: var(--color-text-secondary);
+}
+
+.faq {
+  max-width: 800px;
+  text-align: left;
+}
+
+.faq details {
+  background-color: var(--color-bg-dark);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.faq summary {
+  padding: 1rem 1.5rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.faq p {
+  padding: 0 1.5rem 1rem 1.5rem;
+  margin: 0;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+}
+
+
+/* ========== FOOTER (GIỐNG NHAU 2 TRANG) ========== */
+
+.site-footer {
+  background: var(--color-bg-darkest);
+  color: var(--color-text-secondary);
+  padding: 3rem 2rem 2rem;
+  border-top: 1px solid var(--color-border);
+  margin-top: 4rem;
+}
+
+.site-footer .cols {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.site-footer .brand-mini {
+  font-weight: bold;
+  color: var(--color-text-white);
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.site-footer h4 {
+  color: var(--color-text-white);
+  font-size: 1.1rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.site-footer ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.site-footer ul li {
+  margin-bottom: 0.5rem;
+}
+
+.site-footer ul li a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.site-footer ul li a:hover {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+}
+
+.site-footer .copy {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-border);
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 0.9rem;
+}
+
+
+/* ========== TOASTS (Thông báo) ========== */
+.toasts {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.toast {
+  background: var(--color-bg-medium);
+  color: var(--color-text-white);
+  padding: 1rem 1.25rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s ease-out;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast.hide {
+  opacity: 0;
+  transform: translateX(120%);
+}
+
+.toast .title {
+  font-weight: bold;
+  color: var(--color-accent-blue);
+  margin-bottom: 0.25rem;
+}
+
+.menu .dropdown-content a.btn-hero:hover {
+  background-color: var(--color-bg-medium);
+  /* Màu nền hover tối (bình thường) */
+  color: var(--color-text-white);
+  /* Màu chữ trắng khi hover */
+}
+
+/* ========== HIỆU ỨNG XUẤT HIỆN (GUEST) ========== */
+
+/* 1. Định nghĩa 2 kiểu hiệu ứng */
+@keyframes fadeUp {
+
+  /* Hiệu ứng trượt từ dưới lên và mờ dần */
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    /* Bắt đầu từ vị trí thấp hơn 20px */
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+
+  /* Hiệu ứng mờ dần đơn giản */
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* 2. Áp dụng chung cho các mục nội dung bên trái */
+/* Chỉ chạy khi body có class="guest" */
+body.guest .guest-hero__content>* {
+  opacity: 0;
+  /* Ẩn ban đầu */
+  animation-name: fadeUp;
+  animation-duration: 0.8s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+  /* Giữ trạng thái cuối cùng (hiện ra) */
+}
+
+/* 3. Đặt thời gian trễ khác nhau để tạo hiệu ứng nối tiếp */
+body.guest .guest-hero__content .pill {
+  animation-delay: 0.1s;
+}
+
+body.guest .guest-hero__content h1 {
+  animation-delay: 0.2s;
+}
+
+body.guest .guest-hero__content p {
+  animation-delay: 0.3s;
+}
+
+body.guest .guest-hero__content .cta-row--guest {
+  animation-delay: 0.4s;
+}
+
+/* 3 nút chính */
+body.guest .guest-hero__content .cta-row:not(.cta-row--guest) {
+  animation-delay: 0.5s;
+}
+
+/* Nút đăng nhập */
+body.guest .guest-hero__content .trusts {
+  animation-delay: 0.6s;
+}
+
+/* 4. Áp dụng cho ảnh mockup bên phải (chỉ mờ dần) */
+body.guest .guest-hero__mockup {
+  opacity: 0;
+  animation-name: fadeIn;
+  animation-duration: 1s;
+  animation-delay: 0.4s;
+  /* Xuất hiện cùng lúc với các nút */
+  animation-fill-mode: forwards;
+}
+
+/* CSS cho ảnh minh họa bác sĩ */
+.guest-hero__mockup {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.guest-hero__mockup img {
+  max-width: 90%;
+  /* Kích thước ảnh tối đa */
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* ========== CSS CHO MODULE CHATBOT ========== */
+
+.hidden {
+  display: none !important;
+}
+
+/* Nút bubble */
+#chat-bubble {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background-color: var(--color-accent-blue, #38BDF8);
+  /* Dùng màu xanh của bạn */
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  transition: transform 0.2s ease;
+}
+
+#chat-bubble:hover {
+  transform: scale(1.1);
+}
+
+/* Module chat (khi hiện) */
+#chat-module {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 350px;
+  height: 500px;
+  background: var(--color-bg-dark, #1E293B);
+  /* Dùng nền tối của bạn */
+  border: 1px solid var(--color-border, #334155);
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Giúp bo góc header */
+}
+
+.chat-header {
+  padding: 1rem;
+  background: var(--color-bg-medium, #2C3A4F);
+  /* Nền header */
+  border-bottom: 1px solid var(--color-border, #334155);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header h5 {
+  margin: 0;
+  color: var(--color-text-white, #FFFFFF);
+}
+
+#close-chat-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary, #94A3B8);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+#close-chat-btn:hover {
+  color: var(--color-text-white, #FFFFFF);
+}
+
+#chat-messages {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.message {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  max-width: 85%;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.message.bot {
+  background: var(--color-bg-medium, #2C3A4F);
+  color: var(--color-text-primary, #E2E8F0);
+  align-self: flex-start;
+}
+
+.message.user {
+  background: var(--color-accent-blue, #38BDF8);
+  color: var(--color-text-white, #FFFFFF);
+  align-self: flex-end;
+}
+
+#chat-form {
+  display: flex;
+  padding: 1rem;
+  border-top: 1px solid var(--color-border, #334155);
+  background: var(--color-bg-medium, #2C3A4F);
+}
+
+#chat-input {
+  flex: 1;
+  border: 1px solid var(--color-border, #334155);
+  background: var(--color-bg-dark, #1E293B);
+  /* Nền ô input */
+  color: var(--color-text-white, #FFFFFF);
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-right: 0.5rem;
+  font-size: 1rem;
+}
+
+#chat-input:focus {
+  outline: 2px solid var(--color-accent-blue, #38BDF8);
+  border-color: var(--color-accent-blue, #38BDF8);
+}
+
+#chat-form button {
+  background: var(--color-accent-blue, #38BDF8);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+#chat-form button:hover {
+  background: var(--color-accent-blue-hover, #0EA5E9);
+}

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bảng số theo khoa</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='quansatlaysochobenhnhan.css') }}">
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="head">
+      <div class="title">
+        <div class="logo">🔔</div>
+        <div>
+          <h1>Bảng số theo khoa</h1>
+          <p class="muted">Tự động cập nhật từ hệ thống gọi số</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label for="selKhoa">Khoa:</label>
+        <select id="selKhoa">
+          </select>
+        <button id="btnFullscreen" class="btn">Toàn màn hình</button>
+      </div>
+    </header>
+
+    <section class="nowbox">
+      <div class="nowlabel">Đang gọi</div>
+      <div class="nowrow">
+        <div class="big number" id="nowNum">—</div>
+        <div class="info">
+          <div class="name" id="nowName">&nbsp;</div>
+          <div class="khoa" id="nowKhoa">&nbsp;</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <div class="cardtitle">Sắp tới</div>
+        <table class="table" id="tblNext">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Họ tên</th>
+              <th>Giờ tạo</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <div class="cardtitle">Danh sách hôm nay</div>
+        <table class="table" id="tblToday">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Họ tên</th>
+              <th>Trạng thái</th>
+              <th>Giờ tạo</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </div>
+
+    <div id="msg" class="msg"></div>
+  </div>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const msg = $("#msg");
+    const tblNext = $("#tblNext tbody");
+    const tblToday = $("#tblToday tbody");
+    const nowNum = $("#nowNum");
+    const nowName = $("#nowName");
+    const nowKhoa = $("#nowKhoa");
+    const selKhoa = $("#selKhoa");
+
+    let poll; // interval id
+
+    // --- 1. HÀM MỚI: Tải danh sách khoa từ API ---
+    async function initKhoaList() {
+      try {
+        const res = await fetch('/api/khoa');
+        if (!res.ok) throw new Error("Không tải được danh sách khoa");
+        
+        const listKhoa = await res.json();
+        
+        selKhoa.innerHTML = ''; // Xóa cũ
+        
+        if (listKhoa.length === 0) {
+           selKhoa.innerHTML = '<option value="">Chưa có dữ liệu</option>';
+           return;
+        }
+
+        listKhoa.forEach(tenKhoa => {
+          const opt = document.createElement('option');
+          opt.value = tenKhoa;
+          opt.textContent = tenKhoa;
+          selKhoa.appendChild(opt);
+        });
+
+        // Xử lý lấy khoa từ URL (?khoa=...) sau khi đã nạp xong danh sách
+        const u = new URL(window.location.href);
+        const k = u.searchParams.get("khoa");
+        if (k) {
+            selKhoa.value = k;
+        }
+        
+        // Cập nhật text hiển thị khoa hiện tại
+        nowKhoa.textContent = selKhoa.value;
+
+        // Bắt đầu tải dữ liệu bảng số
+        startPolling();
+
+      } catch (e) {
+        msg.textContent = e.message || "Lỗi tải danh sách khoa";
+      }
+    }
+
+    $("#selKhoa").onchange = () => { 
+        nowKhoa.textContent = $("#selKhoa").value; 
+        loadAll(); 
+    };
+
+    // Toàn màn hình
+    $("#btnFullscreen").onclick = () => {
+      const doc = document.documentElement;
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (doc.requestFullscreen) doc.requestFullscreen();
+        else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+    };
+
+    async function safeFetch(url, options) {
+      try {
+        const res = await fetch(url, options);
+        let data = null;
+        try { data = await res.json(); } catch (_) { }
+        if (!res.ok) throw new Error((data && data.error) || `Lỗi ${res.status}`);
+        return data;
+      } catch (e) {
+        msg.textContent = e.message || "Lỗi mạng";
+        return null;
+      }
+    }
+
+    function badge(st) { return `<span class="badge b-${st}">${st}</span>` }
+
+    async function loadCurrent() {
+      const khoa = $("#selKhoa").value;
+      if(!khoa) return;
+
+      const d = await safeFetch(`/api/lay-so-online/current?khoa=${encodeURIComponent(khoa)}`);
+      if (d && d.so_thu_tu) {
+        nowNum.textContent = d.so_thu_tu;
+        nowName.textContent = d.hovaten || "";
+      } else {
+        nowNum.textContent = "—";
+        nowName.textContent = "";
+      }
+    }
+
+    async function loadToday() {
+      const khoa = $("#selKhoa").value;
+      if(!khoa) return;
+
+      const list = await safeFetch(`/api/lay-so-online/today?khoa=${encodeURIComponent(khoa)}`);
+      if (!list) return;
+
+      // Danh sách sắp tới = các WAITING đầu tiên (tối đa 6)
+      const nexts = list.filter(r => r.STATUS === "WAITING").slice(0, 6);
+      tblNext.innerHTML = nexts.map(r => `
+    <tr>
+      <td><b>${r.SO_THU_TU}</b></td>
+      <td>${r.HOVATEN || ""}</td>
+      <td>${r.CREATED_AT || ""}</td>
+    </tr>
+  `).join("");
+
+      // Bảng hôm nay: tất cả, có huy hiệu trạng thái
+      tblToday.innerHTML = list.map(r => `
+    <tr>
+      <td><b>${r.SO_THU_TU}</b></td>
+      <td>${r.HOVATEN || ""}</td>
+      <td>${badge(r.STATUS)}</td>
+      <td>${r.CREATED_AT || ""}</td>
+    </tr>
+  `).join("");
+    }
+
+    async function loadAll() {
+      msg.textContent = "";
+      await Promise.all([loadCurrent(), loadToday()]);
+    }
+
+    function startPolling() {
+        loadAll();
+        if (poll) clearInterval(poll);
+        poll = setInterval(loadAll, 3000);
+    }
+
+    // Khởi tạo ứng dụng
+    initKhoaList();
+
+  </script>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+
+</html>

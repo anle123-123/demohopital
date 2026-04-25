@@ -1,0 +1,274 @@
+/* =========================
+   THUỐC & KHO – CSS HOÀN CHỈNH
+   ========================= */
+
+/* Màu & nền cơ bản (khớp theme tối) */
+:root {
+  --bg: var(--color-bg-darkest);
+  --text: var(--color-text-primary);
+  --muted: var(--color-text-secondary);
+  --card: var(--color-bg-dark);
+  --line: var(--color-border);
+  --accent: var(--color-accent-blue);
+  --accent-2: var(--color-accent-blue-hover);
+  --warn: var(--color-accent-orange);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px 20px;
+}
+
+h2 {
+  text-align: center;
+  margin: 0 0 22px;
+  color: var(--accent);
+  letter-spacing: .5px;
+  font-weight: 800;
+}
+
+/* ===== Layout: bảng trái rộng, form phải gọn ===== */
+.grid {
+  display: grid;
+  grid-template-columns: 2.2fr 0.8fr;
+  /* bảng ~73%, form ~27% */
+  gap: 28px;
+  align-items: start;
+}
+
+/* ===== Card chung ===== */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .25);
+}
+
+/* ===== Header card bên trái ===== */
+.table-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.table-head b {
+  font-size: 16px;
+}
+
+.table-head input {
+  width: 280px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #0b1220;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+}
+
+/* ===== BẢNG DANH SÁCH THUỐC ===== */
+#tblThuoc {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+#tblThuoc th,
+#tblThuoc td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#tblThuoc th {
+  background: #1e293b;
+  color: #c7d2fe;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+#tblThuoc tbody tr:nth-child(even) {
+  background: rgba(30, 41, 59, .35);
+}
+
+#tblThuoc tbody tr:hover {
+  background: rgba(37, 99, 235, .22);
+}
+
+#tblThuoc .right {
+  text-align: right;
+}
+
+#tblThuoc .center {
+  text-align: center;
+}
+
+/* Phân bổ chiều rộng từng cột (thoáng & 1 dòng) */
+#tblThuoc th:nth-child(1),
+#tblThuoc td:nth-child(1) {
+  width: 10%;
+}
+
+/* Mã */
+#tblThuoc th:nth-child(2),
+#tblThuoc td:nth-child(2) {
+  width: 28%;
+}
+
+/* Tên thuốc */
+#tblThuoc th:nth-child(3),
+#tblThuoc td:nth-child(3) {
+  width: 10%;
+}
+
+/* Đơn vị */
+#tblThuoc th:nth-child(4),
+#tblThuoc td:nth-child(4) {
+  width: 15%;
+}
+
+/* HSD */
+#tblThuoc th:nth-child(5),
+#tblThuoc td:nth-child(5) {
+  width: 12%;
+}
+
+/* Giá */
+#tblThuoc th:nth-child(6),
+#tblThuoc td:nth-child(6) {
+  width: 10%;
+}
+
+/* Tồn */
+#tblThuoc th:nth-child(7),
+#tblThuoc td:nth-child(7) {
+  width: 10%;
+}
+
+/* Tồn tối thiểu */
+#tblThuoc th:nth-child(8),
+#tblThuoc td:nth-child(8) {
+  width: 8%;
+}
+
+/* Nút chọn */
+
+.warn-row {
+  background: rgba(245, 158, 11, .18);
+}
+
+/* Nút trong bảng */
+#tblThuoc button {
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+#tblThuoc button:hover {
+  background: var(--accent-2);
+}
+
+/* ===== FORM THUỐC / KHO (bên phải) ===== */
+.form-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #0b1220;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+  outline: none;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.btn {
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--accent-2);
+}
+
+.btn-light {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+.btn-light:hover {
+  background: #334155;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.btn-outline:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-sm {
+  padding: 6px 10px;
+  font-size: 12.5px;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 12px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .table-head {
+    flex-wrap: wrap;
+  }
+
+  .table-head input {
+    width: 100%;
+  }
+}

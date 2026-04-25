@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>{{ title or 'Lấy số online' }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='layso.css') }}">
+</head>
+
+<body>
+
+  <div class="ticket-container">
+    <h1>🎫 Lấy số khám bệnh online</h1>
+
+    <form id="ticketForm" novalidate>
+      <label for="hovaten">Họ tên</label>
+      <input type="text" id="hovaten" name="hovaten" placeholder="Nhập họ tên..." required />
+
+      <label for="khoa">Khoa khám</label>
+      <select id="khoa" name="khoa" required>
+        <option value="">-- Chọn khoa --</option>
+        </select>
+
+      <button type="submit" id="btnSubmit">Lấy số</button>
+      <div id="formMsg" class="form-msg" aria-live="polite"></div>
+    </form>
+
+    <div id="ticketResult" class="result-box" style="display:none;">
+      <h2>Số thứ tự của bạn là:</h2>
+      <div class="ticket-num" id="ticketNum">—</div>
+      <p id="queueInfo" class="muted"></p>
+      <p>Vui lòng chờ đến lượt gọi số! <br> Xin chân thành cảm ơn quý khách</p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('ticketForm');
+    const btn = document.getElementById('btnSubmit');
+    const msg = document.getElementById('formMsg');
+    const box = document.getElementById('ticketResult');
+    const num = document.getElementById('ticketNum');
+    const qInfo = document.getElementById('queueInfo');
+    const selectKhoa = document.getElementById('khoa');
+
+    // --- 1. HÀM MỚI: Tải danh sách khoa từ Database ---
+    async function loadActiveKhoas() {
+      try {
+        const res = await fetch('/api/khoa'); // Gọi API lấy khoa (đã lọc TRANG_THAI=1)
+        if (!res.ok) throw new Error('Không tải được danh sách khoa');
+        
+        const listKhoa = await res.json();
+        
+        // Xóa cũ (giữ lại option đầu tiên) và thêm mới
+        selectKhoa.innerHTML = '<option value="">-- Chọn khoa --</option>';
+        
+        listKhoa.forEach(tenKhoa => {
+          const opt = document.createElement('option');
+          opt.value = tenKhoa;
+          opt.textContent = tenKhoa;
+          selectKhoa.appendChild(opt);
+        });
+
+      } catch (e) {
+        console.error(e);
+        showMsg('❌ Lỗi tải danh sách khoa. Vui lòng tải lại trang.', 'error');
+      }
+    }
+
+    // Gọi hàm này ngay khi trang tải xong
+    document.addEventListener('DOMContentLoaded', loadActiveKhoas);
+    // --------------------------------------------------
+
+    function setBusy(state, text) {
+      btn.disabled = state;
+      btn.textContent = state ? (text || 'Đang xử lý...') : 'Lấy số';
+    }
+
+    function showMsg(text, type = '') {
+      msg.textContent = text || '';
+      msg.className = 'form-msg ' + (type || '');
+    }
+
+    async function fetchQueueCount(khoa) {
+      try {
+        const res = await fetch(`/api/lay-so-online/today?khoa=${encodeURIComponent(khoa)}`);
+        if (!res.ok) return null;
+        const data = await res.json();
+        return Array.isArray(data) ? data.length : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showMsg('');
+
+      const hovaten = document.getElementById('hovaten').value.trim();
+      const khoa = selectKhoa.value;
+
+      if (!hovaten) { showMsg('Vui lòng nhập họ tên.', 'error'); return; }
+      if (!khoa) { showMsg('Vui lòng chọn khoa khám.', 'error'); return; }
+
+      setBusy(true);
+
+      try {
+        const res = await fetch('/api/lay-so-online', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ HOVATEN: hovaten, KHOA: khoa })
+        });
+
+        // Nếu backend trả lỗi HTTP
+        if (!res.ok) {
+          let errText = 'Không thể cấp số. Vui lòng thử lại.';
+          try {
+            const err = await res.json();
+            if (err && err.error) errText = err.error;
+          } catch (_) { }
+          showMsg('❌ ' + errText, 'error');
+          setBusy(false);
+          return;
+        }
+
+        const data = await res.json();
+
+        if (data.error) {
+          showMsg('❌ ' + data.error, 'error');
+          setBusy(false);
+          return;
+        }
+
+        // Hiện số thứ tự
+        num.textContent = data.so_thu_tu ?? '—';
+        box.style.display = 'block';
+        showMsg('✅ Cấp số thành công!', 'ok');
+
+        // (Tuỳ chọn) hiển thị tổng số phiếu hôm nay của khoa
+        const count = await fetchQueueCount(khoa);
+        if (typeof count === 'number') {
+          qInfo.textContent = `Hôm nay có tổng ${count} lượt đã lấy số tại khoa ${khoa}.`;
+        } else {
+          qInfo.textContent = '';
+        }
+
+        // Có thể reset form (giữ khoa cho tiện)
+        // form.reset();
+        // document.getElementById('khoa').value = khoa;
+
+      } catch (err) {
+        showMsg('❌ Lỗi mạng hoặc máy chủ. Vui lòng thử lại.', 'error');
+      } finally {
+        setBusy(false);
+      }
+    });
+  </script>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+
+</html>

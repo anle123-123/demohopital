@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>{{ title or 'Xét lịch làm' }}</title>
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* === 1. DASHBOARD LAYOUT STYLES === */
+    :root {
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --bg-body: #f4f7f6;
+      --sidebar-bg: #2c3e50;
+      --sidebar-text: #ecf0f1;
+      --active-item: #3498db;
+      --color-border: #e5e7eb;
+      --card-bg: #ffffff;
+      
+      /* Colors specific */
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --danger: #ef4444;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --radius: 8px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    body { font-family: 'Segoe UI', sans-serif; display: flex; margin: 0; background: var(--bg-body); height: 100vh; overflow: hidden; color: var(--text); }
+
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; z-index: 100; }
+    .sidebar-brand { height: var(--header-height); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; text-decoration: none; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-item { display: flex; align-items: center; padding: 12px 25px; color: #bdc3c7; text-decoration: none; transition: 0.3s; border-left: 4px solid transparent; font-size: 0.95rem; }
+    .nav-item i { width: 25px; margin-right: 10px; text-align: center; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--active-item); }
+    
+    /* Submenu */
+    .nav-group-label { padding: 12px 25px; color: #bdc3c7; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+    .nav-group-label:hover { color: white; }
+    .nav-group-content { display: none; background: rgba(0,0,0,0.2); }
+    .nav-group.is-open .nav-group-content { display: block; }
+    .nav-group-content .nav-item { padding-left: 55px; font-size: 0.9rem; }
+    .nav-group.is-open .nav-group-label i.fa-chevron-down { transform: rotate(180deg); transition: 0.2s; }
+
+    /* Main Content */
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .top-header { height: var(--header-height); background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); z-index: 10; }
+    .header-user { display: flex; align-items: center; gap: 15px; }
+    .btn-logout { color: #e74c3c; text-decoration: none; font-weight: 500; font-size: 0.9rem; border: 1px solid #e74c3c; padding: 5px 15px; border-radius: 20px; transition: 0.2s; }
+    .btn-logout:hover { background: #e74c3c; color: white; }
+
+    /* Content Body */
+    .content-body { flex: 1; overflow-y: auto; padding: 30px; }
+
+    /* === 2. STYLE RIÊNG TRANG LỊCH LÀM === */
+    .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 25px; margin-bottom: 24px; border: 1px solid var(--color-border); }
+    .card-title { margin-top: 0; margin-bottom: 20px; font-size: 1.1rem; color: var(--sidebar-bg); border-bottom: 1px solid #eee; padding-bottom: 10px; }
+
+    .schedule-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; table-layout: fixed; border: 1px solid var(--color-border); }
+    .schedule-table th, .schedule-table td { padding: 10px; text-align: center; border: 1px solid var(--color-border); vertical-align: top; }
+    .schedule-table th { background: #f8f9fa; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; color: var(--muted); }
+    
+    .shift-header { width: 80px; font-weight: bold; background: #f1f5f9; vertical-align: middle; color: var(--sidebar-bg); }
+    .current-day { background-color: rgba(52, 152, 219, 0.05); }
+
+    .shift-card { background: #fff; border: 1px solid #e2e8f0; border-left: 3px solid var(--active-item); border-radius: 6px; padding: 8px; margin-bottom: 6px; font-size: 0.85rem; text-align: left; color: #333; box-shadow: 0 1px 2px rgba(0,0,0,0.05); position: relative; transition: 0.2s; }
+    .shift-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    
+    .btn-cancel { position: absolute; top: 5px; right: 5px; background: #fee2e2; color: var(--danger); border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; opacity: 0.7; transition: 0.2s; }
+    .btn-cancel:hover { opacity: 1; background: var(--danger); color: white; }
+
+    .register-panel { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+    .form-control { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--color-border); outline: none; }
+    .form-control:focus { border-color: var(--active-item); }
+    
+    .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; }
+    .btn-primary { background: var(--active-item); color: white; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-light { background: white; border: 1px solid var(--color-border); color: var(--text); }
+    .btn-light:hover { background: #f3f4f6; }
+
+    .controls { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+  </style>
+</head>
+
+<body>
+
+  <aside class="sidebar">
+    <a href="{{ url_for('trang_chu') }}" class="sidebar-brand">
+      <i class="fa-solid fa-hospital-user" style="margin-right: 10px;"></i> HOPITAL
+    </a>
+
+    <div class="sidebar-menu">
+      <a href="{{ url_for('trang_chu') }}" class="nav-item {{ 'active' if active=='trang_chu' else '' }}">
+        <i class="fa-solid fa-house"></i> Trang chủ
+      </a>
+
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('ql_bac_si') }}" class="nav-item {{ 'active' if active=='ql_bac_si' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i> Quản lí bác sĩ
+        </a>
+        <a href="/admin/khoa" class="nav-item {{ 'active' if active=='ql_khoa' else '' }}">
+          <i class="fa-solid fa-building-circle-check"></i> Quản lý Khoa
+        </a>
+        <a href="{{ url_for('admin_accounts_page_v2') }}" class="nav-item {{ 'active' if active=='ql_tai_khoan' else '' }}">
+          <i class="fa-solid fa-users-gear"></i> Tài khoản hệ thống
+        </a>
+        <a href="/admin/dich-vu" class="nav-item {{ 'active' if active=='ql_dich_vu' else '' }}">
+          <i class="fa-solid fa-receipt"></i> Quản lý Dịch vụ
+        </a>
+        <a href="/admin/xet-nghiem" class="nav-item {{ 'active' if active=='ql_xet_nghiem' else '' }}">
+          <i class="fa-solid fa-flask"></i> Quản lý Xét nghiệm
+        </a>
+        <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+          <i class="fa-solid fa-bed"></i> Phòng bệnh
+        </a>
+      {% endif %}
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+
+        <!-- LỊCH HẸN dạng dropdown (giống ảnh bạn gửi) -->
+        <div class="nav-group {{ 'is-open' if active in ['ql_lich_hen','goi_so','lay_so_online'] else '' }}">
+          <div class="nav-group-label" onclick="this.parentElement.classList.toggle('is-open')">
+            <div class="left">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Lịch hẹn</span>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
+          </div>
+          
+          <div class="nav-group-content">
+            {% if session.role == 'doctor' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            <a href="{{ url_for('goi_so') }}" class="nav-item {{ 'active' if active=='goi_so' else '' }}">Danh sách thứ tự</a>
+            <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">Lấy số online</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('ql_kham_benh') }}" class="nav-item {{ 'active' if active=='ql_kham_benh' else '' }}">
+          <i class="fa-solid fa-stethoscope"></i> Khám bệnh
+        </a>
+
+        <a href="{{ url_for('benh_nhan') }}" class="nav-item {{ 'active' if active=='benh_nhan' else '' }}">
+          <i class="fa-solid fa-address-card"></i> Hồ sơ bệnh nhân
+        </a>
+
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('ql_thuoc_kho') }}" class="nav-item {{ 'active' if active=='thuoc_kho' else '' }}">
+            <i class="fa-solid fa-pills"></i> Thuốc & Kho
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('ql_thanh_toan') }}" class="nav-item {{ 'active' if active=='thanh_toan' else '' }}">
+          <i class="fa-solid fa-credit-card"></i> Thanh toán
+        </a>
+
+        <a href="{{ url_for('lich_lam_viec') }}" class="nav-item {{ 'active' if active=='lich_lam_viec' else '' }}">
+          <i class="fa-solid fa-calendar-days"></i> Lịch làm việc
+        </a>
+
+        <!-- ✅ MỞ CHO BÁC SĨ: Đăng ký lịch + Phòng bệnh -->
+        {% if session.role == 'doctor' %}
+          <a href="{{ url_for('xet_lich_lam') }}" class="nav-item {{ 'active' if active=='xet_lich_lam' else '' }}">
+            <i class="fa-solid fa-user-clock"></i> Đăng ký lịch
+          </a>
+
+          <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+            <i class="fa-solid fa-bed"></i> Phòng bệnh
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('bao_cao_thong_ke') }}" class="nav-item {{ 'active' if active=='bao_cao' else '' }}">
+          <i class="fa-solid fa-chart-line"></i> Báo cáo
+        </a>
+
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+
+      {% else %}
+        <!-- MENU BỆNH NHÂN -->
+        <a href="{{ url_for('quansat_layso') }}" class="nav-item {{ 'active' if active=='quansat_layso' else '' }}">
+          <i class="fa-solid fa-eye"></i> Quan sát số
+        </a>
+        <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">
+          <i class="fa-solid fa-ticket"></i> Lấy số online
+        </a>
+        <a href="{{ url_for('dat_lich_page') }}" class="nav-item {{ 'active' if active=='dat_lich' else '' }}">
+          <i class="fa-solid fa-calendar-plus"></i> Đặt lịch khám
+        </a>
+        {% if session.mabn %}
+          <a href="{{ url_for('ho_so_benh_nhan', mabn=session.mabn) }}" class="nav-item {{ 'active' if active=='ho_so_toi' else '' }}">
+            <i class="fa-solid fa-file-medical"></i> Hồ sơ của tôi
+          </a>
+        {% endif %}
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="top-header">
+      <div style="font-weight: bold; font-size: 1.1rem; color: #2c3e50;">QUẢN LÝ LỊCH LÀM VIỆC CÁ NHÂN</div>
+      <div class="header-user">
+        <span>Xin chào, <b>{{ session.user }}</b></span>
+        <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+      </div>
+    </header>
+
+    <div class="content-body">
+
+      <div class="card">
+        <h3 class="card-title"><i class="fa-solid fa-pen-to-square"></i> Đăng ký ca làm việc mới</h3>
+        <div class="register-panel">
+          <div style="flex:1; min-width: 200px;">
+            <label style="display:block; font-weight:600; margin-bottom:5px; font-size:0.9rem;">Ngày làm việc:</label>
+            <input type="date" id="regDate" class="form-control">
+          </div>
+          <div style="flex:1; min-width: 200px;">
+            <label style="display:block; font-weight:600; margin-bottom:5px; font-size:0.9rem;">Ca làm việc:</label>
+            <select id="regShift" class="form-control">
+              <option value="Sáng">Sáng (07:00 - 11:30)</option>
+              <option value="Chiều">Chiều (13:30 - 17:00)</option>
+            </select>
+          </div>
+          <div>
+            <button id="btnRegister" class="btn btn-primary" style="height: 42px;">
+              <i class="fa-solid fa-plus"></i> Đăng ký
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+          <h3 style="margin:0; font-size:1.1rem; color: var(--sidebar-bg);"><i class="fa-solid fa-calendar-week"></i> Lịch làm việc của tôi</h3>
+          <div class="controls" style="margin:0;">
+             <label for="weekPicker" style="font-weight:600;">Tuần:</label>
+             <input type="date" id="weekPicker" class="form-control" style="width: auto;">
+             <button id="btnRefresh" class="btn btn-light"><i class="fa-solid fa-sync"></i></button>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 15px; text-align: center;">
+          <span id="weekRangeDisplay" style="font-weight: 600; color: var(--active-item); font-size: 1.1rem;"></span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="schedule-table">
+            <thead>
+              <tr id="headerRow">
+                <th style="width: 80px;">CA</th>
+                </tr>
+            </thead>
+            <tbody id="scheduleBody">
+              </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API_MY_SCHEDULE = '/api/doctor/my-schedule';
+    const API_REGISTER = '/api/doctor/schedule/register';
+    const API_CANCEL = '/api/doctor/schedule/cancel';
+
+    const weekPicker = document.getElementById('weekPicker');
+    const weekRangeDisplay = document.getElementById('weekRangeDisplay');
+    const headerRow = document.getElementById('headerRow');
+    const tbody = document.getElementById('scheduleBody');
+    const btnRefresh = document.getElementById('btnRefresh');
+    const regDate = document.getElementById('regDate');
+    const regShift = document.getElementById('regShift');
+    const btnRegister = document.getElementById('btnRegister');
+
+    let currentStartDate = null;
+    let currentEndDate = null;
+
+    // Set min date for registration to today
+    regDate.min = new Date().toISOString().split('T')[0];
+    regDate.value = new Date().toISOString().split('T')[0];
+
+    function getMonday(d) {
+      d = new Date(d);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day == 0 ? -6 : 1);
+      return new Date(d.setDate(diff));
+    }
+
+    function formatDate(d) {
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      return `${dd}/${mm}`;
+    }
+
+    function formatDateFull(d) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function updateWeekDisplay(dateStr) {
+      const d = dateStr ? new Date(dateStr) : new Date();
+      const monday = getMonday(d);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+
+      currentStartDate = formatDateFull(monday);
+      currentEndDate = formatDateFull(sunday);
+
+      weekRangeDisplay.textContent = `(Từ ${formatDate(monday)} đến ${formatDate(sunday)} năm ${sunday.getFullYear()})`;
+
+      let headers = '<th class="shift-header">CA</th>';
+      const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
+
+      for (let i = 0; i < 7; i++) {
+        const curr = new Date(monday);
+        curr.setDate(monday.getDate() + i);
+        const isToday = formatDateFull(curr) === formatDateFull(new Date());
+        const cls = isToday ? 'current-day' : '';
+        headers += `<th class="${cls}">${days[i]}<br><span style="font-weight:400; font-size:0.8rem;">${formatDate(curr)}</span></th>`;
+      }
+      headerRow.innerHTML = headers;
+    }
+
+    async function loadSchedule() {
+      if (!currentStartDate || !currentEndDate) return;
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Đang tải dữ liệu...</td></tr>';
+
+      try {
+        const res = await fetch(`${API_MY_SCHEDULE}?start=${currentStartDate}&end=${currentEndDate}`);
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+
+        const grid = {
+          'Sáng': Array(7).fill().map(() => []),
+          'Chiều': Array(7).fill().map(() => []),
+          'Tối': Array(7).fill().map(() => [])
+        };
+
+        data.forEach(item => {
+          const d = new Date(item.ngay);
+          let dayIdx = d.getDay() - 1;
+          if (dayIdx === -1) dayIdx = 6;
+
+          let ca = item.ca;
+          if (ca.toLowerCase().includes('sáng')) ca = 'Sáng';
+          else if (ca.toLowerCase().includes('chiều')) ca = 'Chiều';
+          else ca = 'Tối';
+
+          if (grid[ca] && grid[ca][dayIdx]) {
+            grid[ca][dayIdx].push(item);
+          }
+        });
+
+        let html = '';
+        ['Sáng', 'Chiều'].forEach(ca => {
+          html += `<tr>`;
+          html += `<td class="shift-header">${ca.toUpperCase()}</td>`;
+          for (let i = 0; i < 7; i++) {
+            const items = grid[ca][i];
+            html += `<td>`;
+            if (items.length > 0) {
+              items.forEach(it => {
+                html += `
+                  <div class="shift-card">
+                    <button class="btn-cancel" onclick="cancelSchedule(${it.id})" title="Hủy lịch">×</button>
+                    <div><i class="fa-regular fa-clock"></i> ${it.batdau}-${it.ketthuc}</div>
+                    <div style="font-weight:500; color:var(--active-item); margin-top:2px;">${it.phong || 'Chưa xếp'}</div>
+                  </div>`;
+              });
+            }
+            html += `</td>`;
+          }
+          html += `</tr>`;
+        });
+        tbody.innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red;">Lỗi tải dữ liệu</td></tr>`;
+      }
+    }
+
+    async function registerSchedule() {
+      const ngay = regDate.value;
+      const ca = regShift.value;
+      if (!ngay) return alert("Vui lòng chọn ngày");
+
+      btnRegister.disabled = true;
+      try {
+        const res = await fetch(API_REGISTER, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ ngay, ca })
+        });
+        const js = await res.json();
+        if (res.ok && js.success) {
+          alert("Đăng ký thành công!");
+          loadSchedule();
+        } else {
+          alert("Lỗi: " + (js.error || "Không thể đăng ký"));
+        }
+      } catch (e) { alert("Lỗi kết nối"); } 
+      finally { btnRegister.disabled = false; }
+    }
+
+    window.cancelSchedule = async function (id) {
+      if (!confirm("Bạn có chắc muốn hủy lịch này?")) return;
+      try {
+        const res = await fetch(API_CANCEL, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ id })
+        });
+        if (res.ok) {
+          loadSchedule();
+        } else {
+          alert("Không thể hủy lịch");
+        }
+      } catch (e) { alert("Lỗi kết nối"); }
+    }
+
+    btnRegister.addEventListener('click', registerSchedule);
+    weekPicker.addEventListener('change', (e) => {
+      updateWeekDisplay(e.target.value);
+      loadSchedule();
+    });
+    btnRefresh.addEventListener('click', loadSchedule);
+
+    // Init
+    const todayStr = new Date().toISOString().split('T')[0];
+    weekPicker.value = todayStr;
+    updateWeekDisplay(todayStr);
+    loadSchedule();
+
+    // Sidebar Logic
+   
+  </script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+flask
+pyodbc
+openpyxl
+reportlab
+python-dotenv
+argon2-cffi
+pyotp
+google-generativeai
+chromadb
+sentence-transformers
+uvicorn

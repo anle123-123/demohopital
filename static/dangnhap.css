@@ -1,0 +1,247 @@
+/* ===== Tone đồng bộ với trang chủ (không hiệu ứng) ===== */
+:root {
+  --bg: var(--color-bg-dark);
+  --bg2: var(--color-bg-darkest);
+  --grad1: #22d3ee;
+  /* cyan */
+  --grad2: #f472b6;
+  /* pink */
+  --text: var(--color-text-primary);
+  /* dark text */
+  --muted: var(--color-text-secondary);
+  /* slate 500 */
+  --surface: var(--color-bg-dark);
+  --border: var(--color-border);
+  --border-strong: var(--color-text-secondary);
+  --primary-txt: white;
+  /* Button text white on bright gradient */
+  --primary: #22d3ee;
+  --primary2: #f472b6;
+  --error: var(--color-accent-red);
+  --ok: #22c55e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(1000px 700px at 15% -10%, rgba(34, 211, 238, .14), transparent 60%),
+    radial-gradient(900px 600px at 110% 0%, rgba(244, 114, 182, .14), transparent 55%),
+    linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
+  font: 14px/1.6 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+}
+
+/* Khung chính giữa */
+.page {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px 20px 18px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Brand nhỏ trên card */
+.brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.brand-link {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 800;
+  font-size: 16px;
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+/* Tiêu đề */
+.title {
+  margin: 8px 0 12px;
+  font-size: 20px;
+  text-align: center;
+  font-weight: 800;
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  padding: 0 12px;
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--border-strong);
+}
+
+/* Nút chính – phẳng, không glow */
+.actions {
+  margin-top: 6px;
+}
+
+.btn-primary {
+  width: 100%;
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  color: var(--primary-txt);
+  background: linear-gradient(90deg, var(--grad1), var(--grad2));
+  cursor: pointer;
+}
+
+.btn-primary:disabled {
+  opacity: .6;
+  cursor: default;
+}
+
+/* Thông điệp */
+.msg {
+  min-height: 20px;
+  margin: 10px 0 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.msg.error {
+  color: var(--error);
+}
+
+.msg.ok {
+  color: var(--ok);
+}
+
+/* Gợi ý link */
+.hint {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.link {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--border);
+}
+
+/* Responsive nhỏ */
+@media (max-width: 400px) {
+  .login-card {
+    padding: 18px 16px 16px;
+  }
+}
+
+/* ==== Appear animations (respect reduced motion) ==== */
+@media (prefers-reduced-motion: no-preference) {
+
+  /* Khi đang preload thì tắt animation để không bị nháy */
+  html.preload *,
+  html.preload *::before,
+  html.preload *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Keyframes */
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(.98);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Toàn trang mờ dần */
+  body.enter .page {
+    animation: fade .36s ease-out both;
+  }
+
+  /* Card trượt nhẹ lên + mờ dần */
+  body.enter .login-card {
+    will-change: transform, opacity;
+    animation: fadeUp .42s cubic-bezier(.2, .8, .2, 1) .06s both;
+  }
+
+  /* Stagger các phần tử bên trong card */
+  body.enter .login-card .brand {
+    animation: fadeUp .38s ease-out .10s both;
+  }
+
+  body.enter .login-card .title {
+    animation: fadeUp .38s ease-out .14s both;
+  }
+
+  body.enter .login-card .form-group:nth-of-type(1) {
+    animation: fadeUp .38s ease-out .18s both;
+  }
+
+  body.enter .login-card .form-group:nth-of-type(2) {
+    animation: fadeUp .38s ease-out .22s both;
+  }
+
+  body.enter .login-card .actions {
+    animation: fadeUp .38s ease-out .26s both;
+  }
+
+  body.enter .login-card .hint {
+    animation: fadeUp .38s ease-out .30s both;
+  }
+}
+
+/* Nếu người dùng hạn chế chuyển động: tắt hết */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

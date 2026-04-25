@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Báo cáo & Thống kê - HOPITAL</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    /* === 1. DASHBOARD LAYOUT STYLES (ĐỒNG BỘ) === */
+    :root {
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --bg-body: #f4f7f6;
+      --sidebar-bg: #2c3e50;
+      --sidebar-text: #ecf0f1;
+      --active-item: #3498db;
+      --color-border: #ddd;
+
+      /* Report specific */
+      --card: #ffffff;
+      --text: #333333;
+      --muted: #6b7280;
+      --primary: #3498db;
+      --shadow: 0 2px 5px rgba(0,0,0,0.05);
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body.app { 
+      font-family: 'Segoe UI', sans-serif; 
+      display: flex !important; 
+      margin: 0 !important; 
+      background: var(--bg-body); 
+      height: 100vh !important; 
+      overflow: hidden !important; 
+      color: var(--text);
+    }
+
+    a, a:hover, a:focus, a:active { text-decoration: none !important; }
+
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; height: 100vh !important; }
+    .sidebar-brand { height: var(--header-height); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-item { display: flex; align-items: center; padding: 12px 25px; color: #bdc3c7; transition: 0.3s; border-left: 4px solid transparent; font-size: 0.95rem; }
+    .nav-item i { width: 25px; margin-right: 10px; text-align: center; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--active-item); }
+    
+    /* Submenu */
+    .nav-group-label { padding: 12px 25px; color: #bdc3c7; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;}
+    .nav-group-label .left { display: flex; align-items: center; gap: 10px; }
+    .nav-group-label .left i { width: 25px; text-align: center; }
+    .nav-group-label:hover { color: white; }
+    .nav-group-content { display: none; background: rgba(0,0,0,0.2); }
+    .nav-group.is-open .nav-group-content { display: block; }
+    .nav-group-content .nav-item { padding-left: 55px; font-size: 0.9rem; }
+    .nav-group.is-open .nav-group-label i.fa-chevron-down { transform: rotate(180deg); transition: transform 0.2s; }
+
+    /* Main Content */
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh !important; }
+    .top-header { height: var(--header-height); background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; flex-shrink: 0; }
+    .header-user { display: flex; align-items: center; gap: 15px; }
+    .btn-logout { color: #e74c3c; font-weight: 500; font-size: 0.9rem; border: 1px solid #e74c3c; padding: 5px 15px; border-radius: 20px; transition: 0.2s; }
+    .btn-logout:hover { background: #e74c3c; color: white; }
+
+    .content-body { flex: 1; overflow-y: auto; padding: 30px; }
+
+    /* === 2. STYLE BÁO CÁO === */
+    .report-container { max-width: 1200px; margin: 0 auto; }
+    .page-title { font-size: 1.5rem; margin: 0 0 5px 0; color: #2c3e50; }
+    .page-desc { color: var(--muted); font-size: 0.95rem; margin-bottom: 20px; }
+
+    .panel { background: var(--card); border: 1px solid var(--color-border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 20px; }
+
+    .filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .filters label { font-size: 0.9rem; color: #555; font-weight: 600;}
+    .filters select, .filters input[type="number"] { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 6px; outline: none; font-family: inherit; }
+    .filters button { padding: 8px 15px; border: none; border-radius: 6px; background: var(--active-item); color: #fff; cursor: pointer; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .filters button:hover { opacity: 0.9; }
+    
+    .btn-excel { background: #10b981 !important; }
+    .btn-excel:hover { background: #059669 !important; }
+
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 15px; margin-top: 20px; }
+    .stat { grid-column: span 3; background: #f8f9fa; border: 1px solid #eee; border-radius: var(--radius); padding: 15px; display: flex; flex-direction: column; justify-content: center; }
+    .stat .k { font-size: 0.85rem; color: var(--muted); margin: 0 0 5px 0; font-weight: 600; text-transform: uppercase; }
+    .stat .v { font-size: 1.8rem; font-weight: 800; margin: 0; color: #2c3e50; }
+    .stat .sub { margin: 5px 0 0 0; font-size: 0.75rem; color: #888; }
+    
+    .stat.full-width { grid-column: span 12; background: #e0f2fe; border-color: #bae6fd; }
+    .stat.full-width .v { color: var(--active-item); }
+
+    .chartWrap { background: var(--card); border: 1px solid var(--color-border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+    .chartTitle { margin-bottom: 15px; }
+    .chartTitle h2 { margin: 0; font-size: 1.2rem; color: #2c3e50; }
+    .chartTitle .hint { font-size: 0.85rem; color: var(--muted); margin-top: 5px;}
+
+    @media (max-width: 980px) { .stat { grid-column: span 6; } }
+    @media (max-width: 520px) { .stat { grid-column: span 12; } }
+  </style>
+</head>
+
+<body class="app">
+
+  <aside class="sidebar">
+    <a href="{{ url_for('trang_chu') }}" class="sidebar-brand">
+      <i class="fa-solid fa-hospital-user" style="margin-right: 10px;"></i> HOPITAL
+    </a>
+
+    <div class="sidebar-menu">
+      <a href="{{ url_for('trang_chu') }}" class="nav-item {{ 'active' if active=='trang_chu' else '' }}">
+        <i class="fa-solid fa-house"></i> Trang chủ
+      </a>
+
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('ql_bac_si') }}" class="nav-item {{ 'active' if active=='ql_bac_si' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i> Quản lý bác sĩ
+        </a>
+        <a href="/admin/khoa" class="nav-item {{ 'active' if active=='ql_khoa' else '' }}">
+          <i class="fa-solid fa-building-circle-check"></i> Quản lý Khoa
+        </a>
+        <a href="{{ url_for('admin_accounts_page_v2') }}" class="nav-item {{ 'active' if active=='ql_tai_khoan' else '' }}">
+          <i class="fa-solid fa-users-gear"></i> Tài khoản hệ thống
+        </a>
+        <a href="/admin/dich-vu" class="nav-item {{ 'active' if active=='ql_dich_vu' else '' }}">
+          <i class="fa-solid fa-receipt"></i> Quản lý Dịch vụ
+        </a>
+        <a href="/admin/xet-nghiem" class="nav-item {{ 'active' if active=='ql_xet_nghiem' else '' }}">
+          <i class="fa-solid fa-flask"></i> Quản lý Xét nghiệm
+        </a>
+        <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+          <i class="fa-solid fa-bed"></i> Phòng bệnh
+        </a>
+      {% endif %}
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+
+        <div class="nav-group {{ 'is-open' if active in ['ql_lich_hen','goi_so','lay_so_online'] else '' }}">
+          <div class="nav-group-label" onclick="this.parentElement.classList.toggle('is-open')">
+            <div class="left">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Lịch hẹn</span>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
+          </div>
+          
+          <div class="nav-group-content">
+            {% if session.role == 'doctor' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            <a href="{{ url_for('goi_so') }}" class="nav-item {{ 'active' if active=='goi_so' else '' }}">Danh sách thứ tự</a>
+            <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">Lấy số online</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('ql_kham_benh') }}" class="nav-item {{ 'active' if active=='ql_kham_benh' else '' }}">
+          <i class="fa-solid fa-stethoscope"></i> Khám bệnh
+        </a>
+
+        <a href="{{ url_for('benh_nhan') }}" class="nav-item {{ 'active' if active=='benh_nhan' else '' }}">
+          <i class="fa-solid fa-address-card"></i> Hồ sơ bệnh nhân
+        </a>
+
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('ql_thuoc_kho') }}" class="nav-item {{ 'active' if active=='thuoc_kho' else '' }}">
+            <i class="fa-solid fa-pills"></i> Thuốc & Kho
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('ql_thanh_toan') }}" class="nav-item {{ 'active' if active=='thanh_toan' else '' }}">
+          <i class="fa-solid fa-credit-card"></i> Thanh toán
+        </a>
+
+        <a href="{{ url_for('lich_lam_viec') }}" class="nav-item {{ 'active' if active=='lich_lam_viec' else '' }}">
+          <i class="fa-solid fa-calendar-days"></i> Lịch làm việc
+        </a>
+
+        {% if session.role == 'doctor' %}
+          <a href="{{ url_for('xet_lich_lam') }}" class="nav-item {{ 'active' if active=='xet_lich_lam' else '' }}">
+            <i class="fa-solid fa-user-clock"></i> Đăng ký lịch
+          </a>
+
+          <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+            <i class="fa-solid fa-bed"></i> Phòng bệnh
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('bao_cao_thong_ke') }}" class="nav-item active">
+          <i class="fa-solid fa-chart-line"></i> Báo cáo
+        </a>
+
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+
+      {% else %}
+        {% endif %}
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="top-header">
+      <div style="font-weight: bold; font-size: 1.1rem; color: #2c3e50;">BÁO CÁO & THỐNG KÊ</div>
+      <div class="header-user">
+        <span>Xin chào, <b>{{ session.user }}</b></span>
+        <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+      </div>
+    </header>
+
+    <div class="content-body">
+      <div class="report-container">
+
+        <h1 class="page-title"><i class="fa-solid fa-chart-pie" style="color:var(--active-item)"></i> Tổng quan hoạt động</h1>
+        <p class="page-desc">Lọc thống kê doanh thu và lượt khám theo tháng/năm.</p>
+
+        <div class="panel">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap: 15px;">
+            <div>
+              <div style="font-weight:800; font-size:1.1rem; color:#2c3e50;">Báo cáo tháng {{ month|default('') }}/{{ year|default('') }}</div>
+            </div>
+
+            <form method="GET" class="filters">
+              <label for="month">Tháng</label>
+              <select id="month" name="month">
+                {% for i in range(1, 13) %}
+                <option value="{{ i }}" {% if i==(month|default(0)) %}selected{% endif %}>
+                  Tháng {{ i }}
+                </option>
+                {% endfor %}
+              </select>
+
+              <label for="year">Năm</label>
+              <input id="year" type="number" name="year" value="{{ year|default('') }}" min="2000" max="2100" />
+
+              <button type="submit"><i class="fa-solid fa-filter"></i> Xem báo cáo</button>
+              
+              <button type="button" class="btn-excel" onclick="exportToExcel()"><i class="fa-solid fa-file-excel"></i> Xuất Excel</button>
+            </form>
+          </div>
+
+          <div class="grid">
+            <div class="stat">
+              <p class="k">Tổng bệnh nhân (hệ thống)</p>
+              <p class="v">{{ tong_benh_nhan | default(0) }}</p>
+              <p class="sub">Hồ sơ bệnh nhân lưu trữ</p>
+            </div>
+
+            <div class="stat">
+              <p class="k">Số lượt khám trong tháng</p>
+              <p class="v">{{ tong_luot_kham_thang | default(0) }}</p>
+              <p class="sub">Đếm theo phiếu khám</p>
+            </div>
+
+            <div class="stat">
+              <p class="k">Bệnh nhân khám trong tháng</p>
+              <p class="v">{{ benh_nhan_kham_thang | default(0) }}</p>
+              <p class="sub">Số lượng người thực tế</p>
+            </div>
+
+            <div class="stat">
+              <p class="k">Hóa đơn đã thanh toán</p>
+              <p class="v">{{ tong_hoa_don_thang | default(0) }}</p>
+              <p class="sub">Đã thanh toán thành công</p>
+            </div>
+
+            <div class="stat full-width">
+              <p class="k">Tổng doanh thu trong tháng</p>
+              <p class="v">{{ (tong_doanh_thu_thang | default(0)) | round(0) }} VNĐ</p>
+              <p class="sub">Tổng tiền từ các hóa đơn đã thanh toán</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chartWrap">
+          <div class="chartTitle">
+            <h2>Doanh thu theo ngày (Tháng {{ month|default('') }}/{{ year|default('') }})</h2>
+            <div class="hint">Biểu đồ thể hiện tổng doanh thu thu được theo từng ngày trong tháng.</div>
+          </div>
+          <canvas id="reportChart" height="90"></canvas>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ✅ 1. Vẽ Biểu đồ
+    const ctx = document.getElementById('reportChart').getContext('2d');
+    const chartData = ({{ chart_data | default ({ "labels": [], "values": [] }) | tojson }}) || { labels: [], values: [] };
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: chartData.labels || [],
+        datasets: [{
+          label: 'Doanh thu (VNĐ)',
+          data: chartData.values || [],
+          backgroundColor: 'rgba(52, 152, 219, 0.7)',
+          borderColor: 'rgba(41, 128, 185, 1)',
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+
+    // ✅ 2. Hàm Xuất File Excel (SheetJS)
+    function exportToExcel() {
+      // Dữ liệu Sheet 1: Bảng tổng quan
+      const overviewData = [
+        ["BÁO CÁO THỐNG KÊ HOẠT ĐỘNG PHÒNG KHÁM"],
+        ["Tháng/Năm", "{{ month|default('') }}/{{ year|default('') }}"],
+        [],
+        ["CHỈ TIÊU", "SỐ LƯỢNG / GIÁ TRỊ"],
+        ["Tổng bệnh nhân trên hệ thống", Number("{{ tong_benh_nhan | default(0) }}")],
+        ["Số lượt khám trong tháng", Number("{{ tong_luot_kham_thang | default(0) }}")],
+        ["Số lượng bệnh nhân khám trong tháng", Number("{{ benh_nhan_kham_thang | default(0) }}")],
+        ["Số hóa đơn đã thanh toán trong tháng", Number("{{ tong_hoa_don_thang | default(0) }}")],
+        ["Tổng doanh thu trong tháng (VNĐ)", Number("{{ (tong_doanh_thu_thang | default(0)) | round(0) }}")]
+      ];
+
+      const wsOverview = XLSX.utils.aoa_to_sheet(overviewData);
+
+      // Dữ liệu Sheet 2: Doanh thu theo ngày (Lấy từ biến chartData của biểu đồ)
+      const dailyData = [["Ngày", "Doanh thu (VNĐ)"]];
+      if (chartData.labels && chartData.labels.length > 0) {
+        for (let i = 0; i < chartData.labels.length; i++) {
+          dailyData.push([ chartData.labels[i], Number(chartData.values[i]) ]);
+        }
+      } else {
+        dailyData.push(["Không có dữ liệu", 0]);
+      }
+      const wsDaily = XLSX.utils.aoa_to_sheet(dailyData);
+
+      // Tạo File Excel (Workbook)
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, wsOverview, "Tổng quan");
+      XLSX.utils.book_append_sheet(wb, wsDaily, "Doanh thu ngày");
+
+      // Tải xuống file
+      const fileName = `BaoCao_DoanhThu_Thang{{ month|default('') }}_{{ year|default('') }}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+    }
+  </script>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+
+</html>

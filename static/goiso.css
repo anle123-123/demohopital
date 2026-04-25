@@ -1,0 +1,172 @@
+/* ⭐ BỔ SUNG: Reset và style body */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--color-bg-darkest);
+  color: var(--color-text-primary);
+  margin: 0;
+  padding: 10px;
+  /* Thêm đệm cho body */
+}
+
+/* -------------------------- */
+
+.wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  /* Đổi từ 24px auto */
+  background: var(--color-bg-dark);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .08);
+}
+
+/* ... skipped ... */
+select,
+button {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  font-size: 16px;
+  /* ⭐ THÊM: Ngăn auto-zoom trên iOS */
+  color: var(--color-text-primary);
+  background: var(--color-bg-medium);
+}
+
+/* ⭐ THÊM: Giúp select và button linh hoạt hơn */
+.row label {
+  flex-shrink: 0;
+  color: var(--color-text-primary);
+}
+
+.row select {
+  flex-grow: 1;
+  min-width: 150px;
+}
+
+.row button.primary {
+  flex-grow: 1;
+  min-width: 180px;
+}
+
+
+button.primary {
+  background: var(--color-accent-blue);
+  color: #fff;
+  border: 0;
+  cursor: pointer
+}
+
+button.primary:hover {
+  filter: brightness(.96)
+}
+
+/* ========================================= */
+/* ⭐ SỬA LỖI BẢNG BỊ CO LẠI (NHƯ ĐÃ HƯỚNG DẪN) */
+/* ========================================= */
+table {
+  width: 100%;
+  /* Giữ lại width 100% để nó dãn ra */
+  border-collapse: collapse;
+  background: var(--color-bg-dark);
+  /* Đã xóa: display: block, overflow-x, margin-top */
+}
+
+th,
+td {
+  padding: 10px;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  /* ⭐ GIỮ: Giữ cho nội dung cell không bị vỡ */
+  color: var(--color-text-primary);
+}
+
+th {
+  background: var(--color-bg-medium);
+  text-align: left;
+  color: var(--color-text-primary);
+}
+
+/* Div bọc này sẽ chịu trách nhiệm cuộn ngang trên mobile */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  /* Chỉ cuộn ngang khi cần (trên mobile) */
+  margin-top: 12px;
+
+  /* (Tùy chọn) Thêm viền/bo góc cho đẹp */
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+/* ========================================= */
+
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px
+}
+
+.b-WAITING {
+  background: #e0f2fe;
+  color: #0369a1
+}
+
+.b-CALLING {
+  background: #fee2e2;
+  color: #b91c1c
+}
+
+.b-DONE {
+  background: #dcfce7;
+  color: #166534
+}
+
+.b-SKIPPED {
+  background: #fef3c7;
+  color: #92400e
+}
+
+.now {
+  font-size: 48px;
+  font-weight: 800;
+  margin: 8px 0;
+  color: var(--color-accent-blue);
+}
+
+.muted {
+  color: var(--color-text-secondary)
+}
+
+.current-box {
+  padding: 12px;
+  border: 1px dashed var(--color-border);
+  border-radius: 10px
+}
+
+.current-actions {
+  margin-top: 8px;
+  /* ⭐ THAY ĐỔI: Dùng grid cho 2 nút luôn đều */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.btn-done {
+  background: var(--color-accent-green) !important
+}
+
+.btn-skip {
+  background: var(--color-accent-orange) !important
+}
+
+.mt20 {
+  margin-top: 20px
+}
+
+/* Dấu } thừa ở cuối file gốc đã bị xóa */

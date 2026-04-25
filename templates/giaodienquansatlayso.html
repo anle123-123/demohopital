@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title or 'Gọi số' }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='goiso.css') }}">
+</head>
+
+<body>
+  <div class="wrap">
+    <h2>📣 Gọi số theo khoa</h2>
+    
+    <div class="row">
+      <label>Chọn Khoa:</label>
+      <select id="selKhoa">
+        </select>
+      
+      <button class="primary" id="btnNext">
+        <i class="fa-solid fa-bullhorn"></i> Gọi số tiếp theo
+      </button>
+      <span id="msg" class="muted"></span>
+    </div>
+
+    <div id="currentBox" class="current-box">
+      <div class="muted">Đang gọi:</div>
+      <div class="now" id="currentNum">—</div>
+      <div id="currentName" class="muted">...</div>
+      
+      <div class="current-actions">
+        <button id="btnReCall" class="primary" style="background:#f39c12; border-color:#e67e22" disabled>
+           <i class="fa-solid fa-rotate-left"></i> Gọi lại
+        </button>
+        <button id="btnDone" class="primary btn-done" disabled>
+          <i class="fa-solid fa-check"></i> Hoàn tất
+        </button>
+        <button id="btnSkip" class="primary btn-skip" disabled>
+          <i class="fa-solid fa-forward"></i> Bỏ qua
+        </button>
+      </div>
+    </div>
+
+    <h3 class="mt20">Danh sách chờ - <span id="lblKhoa" style="color:var(--active-item)">...</span></h3>
+    <div class="table-container">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Họ tên</th>
+            <th>Trạng thái</th>
+            <th>Giờ lấy số</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const tbody = $("#tbl tbody");
+    const selKhoa = $("#selKhoa");
+    let currentId = null;
+    let isBusy = false;
+    let pollTimer = null;
+    let voices = []; 
+
+    // --- 1. HÀM MỚI: Tải danh sách khoa từ API ---
+    async function initKhoaList() {
+      try {
+        const res = await fetch('/api/khoa'); // API lấy danh sách tên khoa đang hoạt động
+        if (!res.ok) throw new Error("Không tải được danh sách khoa");
+        
+        const listKhoa = await res.json();
+        
+        selKhoa.innerHTML = ''; // Xóa cũ
+        
+        if (listKhoa.length === 0) {
+           selKhoa.innerHTML = '<option value="">Chưa có khoa nào</option>';
+           return;
+        }
+
+        listKhoa.forEach(tenKhoa => {
+          const opt = document.createElement('option');
+          opt.value = tenKhoa;
+          opt.textContent = tenKhoa;
+          selKhoa.appendChild(opt);
+        });
+        
+        // Sau khi nạp xong khoa, mới bắt đầu tải dữ liệu hàng đợi
+        loadList();
+
+      } catch (e) {
+        console.error(e);
+        $("#msg").textContent = "Lỗi tải danh sách khoa";
+      }
+    }
+
+    // --- CẤU HÌNH GIỌNG NÓI ---
+    function loadVoices() { voices = window.speechSynthesis.getVoices(); }
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function speak(text) {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const msg = new SpeechSynthesisUtterance(text);
+      
+      // Tìm giọng tiếng Việt
+      const viVoice = voices.find(v => v.lang.includes('vi'));
+      if (viVoice) msg.voice = viVoice;
+      msg.lang = "vi-VN"; 
+      msg.rate = 0.9; 
+
+      window.speechSynthesis.speak(msg);
+    }
+
+    // --- LOGIC GIAO DIỆN ---
+
+    function fmtBadge(st) { return `<span class="badge b-${st}">${st}</span>` }
+
+    function formatTime(dtStr) {
+        if (!dtStr) return "";
+        if (dtStr.includes(' ')) {
+            return dtStr.split(' ')[1];
+        }
+        return dtStr;
+    }
+
+    function setBusy(b) {
+      isBusy = b;
+      $("#btnNext").disabled = b;
+      const hasCurrent = !!currentId;
+      $("#btnDone").disabled = b || !hasCurrent;
+      $("#btnSkip").disabled = b || !hasCurrent;
+      $("#btnReCall").disabled = b || !hasCurrent;
+    }
+
+    async function safeFetch(url, options) {
+      try {
+        const res = await fetch(url, options);
+        let data = null;
+        try { data = await res.json(); } catch (_) { }
+        if (!res.ok) throw new Error((data && data.error) || `Lỗi ${res.status}`);
+        return data;
+      } catch (err) {
+        console.error(err);
+        $("#msg").textContent = err.message || "Lỗi kết nối";
+        return null;
+      }
+    }
+
+    async function loadList() {
+      if (isBusy) return;
+      const khoa = selKhoa.value;
+      if (!khoa) return; // Chưa có khoa thì không tải
+
+      $("#lblKhoa").textContent = khoa;
+
+      const data = await safeFetch(`/api/lay-so-online/today?khoa=${encodeURIComponent(khoa)}`);
+      if (!data) return;
+
+      tbody.innerHTML = data.map(r => `
+        <tr data-id="${r.ID}" class="${r.STATUS === 'CALLING' ? 'row-current' : ''}">
+          <td><b>${r.SO_THU_TU}</b></td>
+          <td>${r.HOVATEN || ""}</td>
+          <td>${fmtBadge(r.STATUS)}</td>
+          <td>${formatTime(r.CREATED_AT)}</td> <td>
+             ${r.STATUS === 'WAITING' ? `<button onclick="callSpecific('${khoa}')" class="btn-call">Gọi ngay</button>` : ""}
+          </td>
+        </tr>
+      `).join("");
+
+      await refreshCurrent();
+    }
+
+    async function refreshCurrent() {
+      const khoa = selKhoa.value;
+      if (!khoa) return;
+
+      const d = await safeFetch(`/api/lay-so-online/current?khoa=${encodeURIComponent(khoa)}`);
+      
+      if (d && d.so_thu_tu) {
+        currentId = d.id;
+        $("#currentNum").textContent = d.so_thu_tu;
+        $("#currentName").textContent = d.hovaten || "Không có tên";
+      } else {
+        currentId = null;
+        $("#currentNum").textContent = "—";
+        $("#currentName").textContent = "Chưa có bệnh nhân";
+      }
+      setBusy(false);
+    }
+
+    // --- CÁC NÚT BẤM ---
+
+    $("#btnNext").onclick = async () => {
+      if (isBusy) return;
+      setBusy(true);
+      const khoa = selKhoa.value;
+      
+      const ok = await safeFetch("/api/lay-so-online/next", {
+        method: "POST", headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ KHOA: khoa })
+      });
+      
+      setBusy(false);
+      if (!ok) return;
+      
+      await refreshCurrent();
+      if (currentId) {
+        const so = $("#currentNum").textContent;
+        const ten = $("#currentName").textContent;
+        speak(`Mời bệnh nhân số ${so}, ${ten}, vào ${khoa}`);
+      }
+      await loadList();
+    };
+
+    $("#btnReCall").onclick = () => {
+      if(!currentId) return;
+      const khoa = selKhoa.value;
+      const so = $("#currentNum").textContent;
+      const ten = $("#currentName").textContent;
+      speak(`Mời lại, bệnh nhân số ${so}, ${ten}, vào ${khoa}`);
+    };
+
+    $("#btnDone").onclick = async () => {
+      if (!currentId || isBusy) return;
+      setBusy(true);
+      await safeFetch("/api/lay-so-online/set-status", {
+        method: "POST", headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentId, status: "DONE" })
+      });
+      setBusy(false);
+      currentId = null;
+      await refreshCurrent(); await loadList();
+    };
+
+    $("#btnSkip").onclick = async () => {
+      if (!currentId || isBusy) return;
+      setBusy(true);
+      await safeFetch("/api/lay-so-online/set-status", {
+        method: "POST", headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentId, status: "SKIPPED" })
+      });
+      setBusy(false);
+      currentId = null;
+      await refreshCurrent(); await loadList();
+    };
+
+    window.callSpecific = async (khoa) => { $("#btnNext").click(); }
+    selKhoa.onchange = () => { loadList(); refreshCurrent(); };
+
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(() => { loadList(); }, 5000);
+
+    // Bắt đầu ứng dụng bằng việc tải danh sách khoa
+    initKhoaList();
+
+  </script>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

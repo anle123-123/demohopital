@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>RAG OpenAI Web Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:40px;color:#111}
+    h1{font-size:32px;margin-bottom:8px}
+    .wrap{max-width:860px;margin:0 auto}
+    textarea{width:100%;height:140px;font-size:16px;padding:12px;border:1px solid #ccc;border-radius:6px}
+    button{padding:10px 16px;border:1px solid #111;background:#111;color:#fff;border-radius:6px;cursor:pointer}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .answer{white-space:pre-wrap;border:1px solid #e5e5e5;border-radius:8px;padding:12px;margin-top:16px;background:#fafafa}
+    .src{font-size:12px;color:#555;margin-top:6px}
+    .err{color:#b00020;margin-top:10px}
+  </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  </head>
+<body>
+  <div class="wrap">
+    <h1>RAG OpenAI Web Demo</h1>
+    <p>Đặt câu hỏi về tài liệu <code>.txt</code> bạn đã nạp (ingest) vào <code>vectordb/</code>.</p>
+
+    <textarea id="q" placeholder="ví dụ: Quy trình khám ngoại trú gồm những bước nào?"></textarea>
+    <div style="margin-top:10px">
+      <button id="ask">Hỏi</button>
+      <span id="status" style="margin-left:10px;color:#666"></span>
+    </div>
+
+    <div id="out" class="answer" style="display:none"></div>
+    <div id="src" class="src" style="display:none"></div>
+    <div id="err" class="err"></div>
+
+    <p style="margin-top:24px;font-size:12px;color:#666">
+      Lưu ý: Nội dung chỉ tham khảo, không thay thế chẩn đoán của bác sĩ.
+    </p>
+  </div>
+
+  <script>
+    const qEl   = document.getElementById('q');
+    const btn   = document.getElementById('ask');
+    const out   = document.getElementById('out');
+    const srcEl = document.getElementById('src');
+    const errEl = document.getElementById('err');
+    const statusEl = document.getElementById('status');
+
+    async function ask() {
+      errEl.textContent = '';
+      out.style.display = 'none';
+      srcEl.style.display = 'none';
+      statusEl.textContent = 'Đang gửi...';
+      btn.disabled = true;
+
+      const question = qEl.value.trim();
+      if (!question) {
+        statusEl.textContent = '';
+        btn.disabled = false;
+        errEl.textContent = 'Vui lòng nhập câu hỏi.';
+        return;
+      }
+
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ question, top_k: 5 })
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(`HTTP ${res.status} - ${txt}`);
+        }
+
+        const data = await res.json();
+        out.textContent = data.answer || '(Không có câu trả lời)';
+        out.style.display = 'block';
+
+        if (data.contexts && data.contexts.length) {
+          const refs = data.contexts.map((c, i) => `[${i+1}] ${c.source}`).join('  •  ');
+          srcEl.textContent = 'Nguồn: ' + refs;
+          srcEl.style.display = 'block';
+        } else {
+          srcEl.style.display = 'none';
+        }
+      } catch (e) {
+        errEl.textContent = 'Lỗi khi gọi /chat: ' + e.message;
+        console.error(e);
+      } finally {
+        statusEl.textContent = '';
+        btn.disabled = false;
+      }
+    }
+
+    btn.addEventListener('click', ask);
+    qEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) ask();
+    });
+  </script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

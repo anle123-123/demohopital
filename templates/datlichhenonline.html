@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Đặt lịch khám online</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='datlichhen.css') }}">
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <a href="/" class="iconbtn" style="width:44px;height:44px;margin-right:10px;text-decoration:none">
+        <span style="font-size:20px; line-height:1">⬅</span>
+      </a>
+      <div class="logo">🗓️</div>
+      <div>
+        <div class="title">Đặt lịch khám online</div>
+        <div class="subtitle">Nhanh gọn – không cần xếp hàng – xác nhận tức thì</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <form id="f" autocomplete="off">
+        <div class="grid-2">
+          <div>
+            <label>Họ và tên <span style="color:#ef4444">*</span></label>
+            <input name="HOVATEN" required placeholder="Ví dụ: Nguyễn Văn A" />
+          </div>
+          <div>
+            <label>Số điện thoại <span style="color:#ef4444">*</span></label>
+            <input name="SODIENTHOAI" required inputmode="numeric" pattern="[0-9]{9,11}"
+              placeholder="09xxxxxxxx / 03xxxxxxxx" />
+            <div class="hint">Nhập 9–11 chữ số, không khoảng trắng.</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label>Email <span style="color:#666; font-size: 0.9em;">(để nhận tài khoản đăng nhập)</span></label>
+          <input name="EMAIL" type="email" placeholder="Nhập email..."
+            style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" />
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Ngày khám <span style="color:#ef4444">*</span></label>
+            <input name="NGAY" id="inpNgay" type="date" required />
+          </div>
+          <div>
+            <label>Giờ khám <span style="color:#ef4444">*</span></label>
+            <input name="GIO" id="inpGio" type="time" step="60" required />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Khoa <span style="color:#ef4444">*</span></label>
+            <select name="KHOA" id="selKhoa">
+              <option value="">— Chọn khoa —</option>
+            </select>
+            <div class="hint">Vui lòng chọn khoa trước khi chọn bác sĩ.</div>
+          </div>
+          <div>
+            <label>Bác sĩ (nếu chọn)</label>
+            <div class="input-group">
+              <select name="MANHANVIEN" id="selBacSi">
+                <option value="">— Chọn bác sĩ —</option>
+              </select>
+              <button type="button" id="btnReloadBS" style="display:none" class="iconbtn sm"
+                title="Tải lại danh sách bác sĩ">⟳</button>
+            </div>
+            <div class="hint">Để trống nếu muốn hệ thống sắp xếp tự động.</div>
+          </div>
+
+        </div>
+
+        <div>
+          <label>Ghi chú</label>
+          <textarea name="GHICHU" rows="3" placeholder="Triệu chứng, yêu cầu, ..."></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="btnSubmit" type="submit">Gửi yêu cầu</button>
+          <button class="btn btn-light" type="reset">Xóa</button>
+        </div>
+
+        <div id="msg" class="msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const selKhoa = document.getElementById('selKhoa');
+    const f = document.getElementById("f");
+    const msg = document.getElementById("msg");
+    const selBacSi = document.getElementById('selBacSi');
+    const btnReload = document.getElementById('btnReloadBS');
+    const inpNgay = document.getElementById('inpNgay');
+    const inpGio = document.getElementById('inpGio');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    // Helper: set mặc định ngày = hôm nay, và chặn quá khứ
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function todayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+    function nowTimeStr() {
+      const d = new Date();
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    (function initDateTime() {
+      const t = todayStr();
+      inpNgay.min = t;
+      if (!inpNgay.value) inpNgay.value = t;
+      // nếu là hôm nay thì giờ min = hiện tại (làm tròn lên 1 phút)
+      function enforceTimeMin() {
+        if (inpNgay.value === todayStr()) {
+          inpGio.min = nowTimeStr();
+        } else {
+          inpGio.removeAttribute('min');
+        }
+      }
+      enforceTimeMin();
+      enforceTimeMin();
+      inpNgay.addEventListener('change', () => {
+        enforceTimeMin();
+        if (selKhoa.value) loadBacSi();
+      });
+    })();
+
+
+    // Submit form
+    f.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.className = "msg";
+      msg.style.display = "none";
+      btnSubmit.classList.add('disabled'); btnSubmit.textContent = "Đang gửi...";
+
+      const data = Object.fromEntries(new FormData(f).entries());
+
+      // chuẩn hoá khoảng trắng
+      ["HOVATEN", "SODIENTHOAI", "KHOA", "MANHANVIEN", "GHICHU", "EMAIL"].forEach(k => {
+        if (data[k]) data[k] = data[k].toString().trim();
+      });
+
+      try {
+        const res = await fetch("/api/dat-lich", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const js = await res.json().catch(() => ({ ok: false, error: "Máy chủ trả dữ liệu không hợp lệ" }));
+
+        if (res.ok && js.ok) {
+          // ước tính thời gian chờ theo STT (mỗi lượt 30p)
+          const waitMin = (js.stt && js.stt > 0) ? (js.stt - 1) * 30 : 0;
+          msg.className = "msg ok";
+          msg.innerHTML = `✅ Đặt lịch thành công.
+            Mã BN: <b>${js.mabn}</b> —
+            Giờ khám dự kiến: <b>${js.batdau}</b>
+            (kết thúc khoảng <b>${js.ketthuc}</b>${waitMin ? `, ước tính chờ ~ <b>${waitMin} phút</b>` : ''}).
+            STT: <b>${js.stt ?? '-'}</b>.`;
+          f.reset();
+          // Reset select states
+          selBacSi.innerHTML = `<option value="">— Chọn bác sĩ —</option>`;
+          selBacSi.disabled = true;
+
+          // reset min giờ theo ngày hôm nay
+          const t = todayStr(); inpNgay.min = t; inpNgay.value = t; inpGio.min = nowTimeStr();
+        } else {
+          msg.className = "msg err";
+          // Nếu backend gợi ý khung giờ khác
+          if (js && js.suggested_start) {
+            const sug = `${js.suggested_start} → ${js.suggested_end || ''}`;
+            msg.innerHTML = `❌ ${js.error || 'Không đặt được lịch.'} Gợi ý: <b>${sug}</b>
+              <button id="btnAccept" class="light" style="margin-left:8px;border:1px solid #ddd;">Chấp nhận</button>`;
+            setTimeout(() => {
+              const btn = document.getElementById('btnAccept');
+              if (btn) {
+                btn.onclick = async () => {
+                  const d2 = { ...data };
+                  d2.NGAY = js.suggested_start.slice(0, 10);
+                  d2.GIO = js.suggested_start.slice(11, 16);
+                  const r2 = await fetch("/api/dat-lich", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(d2)
+                  });
+                  const j2 = await r2.json();
+                  if (r2.ok && j2.ok) {
+                    msg.className = "msg ok";
+                    const wait2 = (j2.stt && j2.stt > 0) ? (j2.stt - 1) * 30 : 0;
+                    msg.innerHTML = `✅ Đặt lịch thành công. Mã BN: <b>${j2.mabn}</b> — Giờ khám: <b>${j2.batdau}</b> (kết thúc <b>${j2.ketthuc}</b>${wait2 ? `, chờ ~ <b>${wait2} phút</b>` : ''}). STT: <b>${j2.stt ?? '-'}</b>.`;
+                    f.reset();
+                    selBacSi.innerHTML = `<option value="">— Chọn bác sĩ —</option>`;
+                    selBacSi.disabled = true;
+                  } else {
+                    msg.className = "msg err";
+                    msg.textContent = "❌ " + (j2.error || "Không đặt được lịch");
+                  }
+                };
+              }
+            }, 0);
+          } else {
+            msg.textContent = "❌ " + ((js && js.error) || "Không đặt được lịch");
+          }
+        }
+      } catch (err) {
+        msg.className = "msg err";
+        msg.textContent = "❌ Lỗi kết nối máy chủ";
+      } finally {
+        msg.style.display = "block";
+        btnSubmit.classList.remove('disabled'); btnSubmit.textContent = "Gửi yêu cầu";
+      }
+    });
+
+    // Load danh sách Khoa
+    async function loadKhoa() {
+      try {
+        const res = await fetch('/api/khoa');
+        const items = await res.json();
+        if (Array.isArray(items)) {
+          // Xóa cũ, giữ placeholder
+          selKhoa.innerHTML = '<option value="">— Chọn khoa —</option>';
+          items.forEach(k => {
+            const opt = document.createElement('option');
+            opt.value = k;
+            opt.textContent = k;
+            selKhoa.appendChild(opt);
+          });
+        }
+      } catch (e) {
+        console.error('Load khoa lỗi', e);
+      }
+    }
+
+    // Load Bác sĩ theo Khoa
+    async function loadBacSi() {
+      const khoa = selKhoa.value;
+
+      // Reset bác sĩ list
+      selBacSi.innerHTML = `<option value="">— Chọn bác sĩ —</option>`;
+
+      if (!khoa) {
+        selBacSi.disabled = true;
+        return;
+      }
+
+      selBacSi.disabled = false;
+      const ngay = inpNgay.value;
+      const url = `/api/bac-si?khoa=${encodeURIComponent(khoa)}&ngay=${ngay}`;
+
+      try {
+        const res = await fetch(url);
+        const js = await res.json();
+        if (js && js.ok) {
+          js.items.forEach(it => {
+            const opt = document.createElement('option');
+            opt.value = it.MANHANVIEN || '';
+            opt.textContent = `${it.MANHANVIEN || ''} — ${it.HOVATEN || ''}`;
+            selBacSi.appendChild(opt);
+          });
+        } else {
+          console.warn('API /api/bac-si trả về không hợp lệ:', js);
+        }
+      } catch (e) {
+        console.error('Load bác sĩ lỗi', e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadKhoa();
+      selBacSi.disabled = true; // Mặc định disable
+    });
+
+    selKhoa.addEventListener('change', loadBacSi);
+
+    // Nút reload chỉ load lại bác sĩ nếu đã chọn khoa
+    btnReload.addEventListener('click', () => {
+      if (selKhoa.value) loadBacSi();
+    });
+  </script>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+
+</html>

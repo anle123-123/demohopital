@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Đội ngũ bác sĩ - Hopital AZC</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* === CSS CHUNG (COPY TỪ CÁC FILE TRƯỚC) === */
+    :root {
+      --primary-color: #0093E9;
+      --primary-dark: #005b9f;
+      --topbar-bg: #004ebc;
+      --text-color: #333;
+      --bg-light: #f9fbfd;
+    }
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; color: var(--text-color); line-height: 1.6; background-color: #fff; }
+    a { text-decoration: none; }
+    ul { list-style: none; padding: 0; }
+    
+    /* Top Bar & Header */
+    .top-info-bar { background-color: var(--topbar-bg); color: white; padding: 8px 0; font-size: 0.9rem; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+    .top-flex { display: flex; justify-content: space-between; align-items: center; }
+    .social-icons i { margin-left: 15px; cursor: pointer; transition: 0.2s; }
+    .landing-header { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+    .nav-container { height: 80px; display: flex; align-items: center; justify-content: space-between; }
+    .logo-brand { font-size: 1.8rem; font-weight: bold; color: var(--topbar-bg); display: flex; align-items: center; gap: 10px; }
+    .main-menu { display: flex; gap: 25px; height: 100%; align-items: center; }
+    .main-menu > a { color: #333; font-weight: 500; font-size: 1rem; transition: 0.3s; padding: 10px 0; }
+    .main-menu > a:hover { color: var(--primary-color); }
+    .btn-appointment { background-color: #d32f2f; color: white; padding: 10px 25px; border-radius: 30px; font-weight: bold; transition: 0.3s; }
+    .btn-appointment:hover { background-color: #b71c1c; transform: translateY(-2px); }
+
+    /* Dropdown CSS */
+    .dropdown { position: relative; height: 100%; display: flex; align-items: center; }
+    .dropdown > a { color: #333; font-weight: 500; font-size: 1rem; transition: 0.3s; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    .dropdown:hover > a { color: var(--primary-color); }
+    .dropdown-content { display: none; position: absolute; top: 60px; left: -100px; background-color: white; min-width: 600px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border-radius: 8px; padding: 20px; z-index: 1000; grid-template-columns: 1fr 1fr; gap: 15px; border-top: 4px solid var(--primary-color); animation: fadeIn 0.3s ease; }
+    .dropdown:hover .dropdown-content { display: grid; }
+    .menu-sub-item { display: flex !important; align-items: center; color: #555 !important; padding: 10px; border-radius: 6px; transition: 0.2s; }
+    .menu-sub-item:hover { background-color: #f0f8ff; color: var(--primary-color) !important; padding-left: 15px; text-decoration: none; }
+    .menu-sub-item i { width: 25px; color: var(--primary-color); margin-right: 10px; text-align: center; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* === CSS RIÊNG CHO TRANG BÁC SĨ (MỚI) === */
+    
+    /* 1. Hero Banner: Ảnh Full Width */
+    .doctor-hero {
+      position: relative;
+      height: 400px;
+      /* Ảnh background đội ngũ bác sĩ */
+      background: linear-gradient(rgba(0, 147, 233, 0.2), rgba(0, 147, 233, 0.4)), url('https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=1600'); 
+      background-size: cover;
+      background-position: center 30%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #003366;
+    }
+    .doctor-hero h1 { font-size: 3rem; font-weight: 800; margin: 0; text-transform: uppercase; text-shadow: 0 2px 10px rgba(255,255,255,0.8); }
+    .doctor-hero h2 { font-size: 1.5rem; font-weight: 600; margin-top: 10px; background: rgba(255,255,255,0.8); padding: 5px 20px; border-radius: 20px; }
+
+    /* 2. Intro Text */
+    .doc-intro { padding: 60px 0 40px; text-align: justify; }
+    .doc-intro h2 { font-size: 2.2rem; color: #2c3e50; margin-bottom: 20px; font-weight: 700; }
+    .doc-intro p { font-size: 1.05rem; color: #555; line-height: 1.8; margin-bottom: 15px; }
+
+    /* 3. Doctor List (Layout Ngang giống mẫu) */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* 2 Cột */
+      gap: 30px;
+      padding-bottom: 80px;
+    }
+
+    .team-card {
+      display: flex; /* Flex ngang */
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+      border: 1px solid #eee;
+      transition: 0.3s;
+      align-items: stretch; /* Căng đều chiều cao */
+    }
+    .team-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+      border-color: var(--primary-color);
+    }
+
+    .team-img {
+      width: 40%;
+      min-width: 180px;
+      overflow: hidden;
+    }
+    .team-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* Đảm bảo ảnh full ô không méo */
+      object-position: top center;
+    }
+
+    .team-info {
+      padding: 25px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+    .team-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--topbar-bg);
+      margin: 0 0 15px 0;
+    }
+    
+    .team-detail li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      color: #555;
+      line-height: 1.4;
+    }
+    .team-detail li i {
+      color: var(--primary-color);
+      margin-top: 3px;
+    }
+
+    /* Footer & Floating Buttons */
+    .main-footer { background-color: #004ebc; color: white; padding: 60px 0 20px; }
+    .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.5fr; gap: 40px; }
+    .footer-col h4 { font-size: 1.1rem; margin-bottom: 20px; font-weight: 700; text-transform: uppercase; }
+    .footer-col p, .footer-col a { color: rgba(255,255,255,0.8); display: block; margin-bottom: 8px; font-size: 0.9rem; }
+    .copyright { text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; margin-top: 40px; font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+
+    .floating-btns { position: fixed; left: 30px; bottom: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; }
+    .float-btn { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.4rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    .btn-phone { background: #d32f2f; }
+    .btn-zalo { background: #0068ff; }
+
+    /* Responsive Mobile */
+    @media (max-width: 768px) {
+      .top-info-bar, .main-menu { display: none; }
+      .team-grid { grid-template-columns: 1fr; } /* 1 Cột trên mobile */
+      .team-card { flex-direction: column; } /* Dọc trên mobile */
+      .team-img { width: 100%; height: 300px; }
+      .doctor-hero h1 { font-size: 2rem; }
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="top-info-bar">
+    <div class="container top-flex">
+      <div class="contact-info">
+        <span style="margin-right:20px"><i class="fa-solid fa-phone"></i> Hotline: 0888999777</span>
+        <span><i class="fa-solid fa-clock"></i> 7:30 - 17:00 (T2-T7)</span>
+      </div>
+      <div class="social-icons">
+        <i class="fa-brands fa-facebook"></i>
+        <i class="fa-brands fa-tiktok"></i>
+        <a href="{{ url_for('login_page') }}" style="color:white; margin-left: 20px; font-weight: bold;"><i class="fa-solid fa-user"></i> Đăng nhập</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="landing-header">
+    <div class="container nav-container">
+      <a href="{{ url_for('trang_chu') }}" class="logo-brand">
+        <i class="fa-solid fa-hospital-user"></i> HOPITAL AZC
+      </a>
+      
+      <nav class="main-menu">
+        <a href="{{ url_for('trang_chu') }}">Trang chủ</a>
+        <a href="{{ url_for('gioi_thieu_page') }}">Giới thiệu</a>
+        
+        <div class="dropdown">
+          <a href="#">Dịch vụ <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem;"></i></a>
+          <div class="dropdown-content" style="min-width: 250px; grid-template-columns: 1fr; left: 0;">
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-stethoscope"></i> Khám Chuyên khoa</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-user-clock"></i> Khám theo yêu cầu</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-file-medical"></i> Khám sức khỏe tổng quát</a>
+          </div>
+        </div>
+        
+        <div class="dropdown">
+          <a href="#">Chuyên khoa <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem;"></i></a>
+          <div class="dropdown-content">
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-bone"></i> Cơ Xương Khớp</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-brain"></i> Thần Kinh</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-utensils"></i> Tiêu Hoá</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-heart-pulse"></i> Tim Mạch</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-ear-listen"></i> Tai Mũi Họng</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-tooth"></i> Răng Hàm Mặt</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-eye"></i> Nhãn Khoa</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-baby"></i> Nhi Khoa</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-person-pregnant"></i> Sản Phụ Khoa</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-hand-dots"></i> Da Liễu</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('bac_si_page') }}" style="color:var(--primary-color);">Bác sĩ</a> <a href="#">Liên hệ</a>
+      </nav>
+      
+      <a href="{{ url_for('dat_lich_page') }}" class="btn-appointment">Đặt lịch khám</a>
+    </div>
+  </header>
+
+  <section class="doctor-hero">
+    <h1>ĐỘI NGŨ BÁC SĨ CỦA CHÚNG TÔI</h1>
+    <h2>Cơ hữu & Chuyên gia</h2>
+  </section>
+
+  <section class="container doc-intro">
+    <h2>Đội ngũ chuyên gia</h2>
+    <p>Bệnh viện Đa khoa AZC quy tụ đội ngũ chuyên gia, bác sĩ, dược sĩ và điều dưỡng được đào tạo bài bản đến chuyên sâu tại Việt Nam và nhiều nước có nền y học phát triển như Mỹ, Anh, Pháp...</p>
+    <p>Luôn lấy người bệnh làm trung tâm, AZC cam kết mang lại dịch vụ chăm sóc sức khỏe toàn diện và chất lượng cao cho khách hàng.</p>
+  </section>
+
+  <section class="container team-grid">
+    
+    <div class="team-card">
+      <div class="team-img">
+        <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=400" alt="Doctor 1">
+      </div>
+      <div class="team-info">
+        <div class="role-badge"><i class="fa-solid fa-user-doctor"></i> Bác sĩ</div>
+        <h3 class="team-name">Bác sĩ CKI. Nguyễn Khắc Thành</h3>
+        <ul class="team-detail">
+          <li><i class="fa-solid fa-briefcase"></i> Nguyên bác sĩ Bệnh viện Đa khoa tỉnh Lào Cai</li>
+          <li><i class="fa-solid fa-stethoscope"></i> Chuyên khoa Ngoại & Phụ sản</li>
+          <li><i class="fa-solid fa-graduation-cap"></i> Học viện Quân y – Chuyên ngành Y khoa</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="team-card">
+      <div class="team-img">
+        <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?q=80&w=400" alt="Doctor 2">
+      </div>
+      <div class="team-info">
+        <div class="role-badge"><i class="fa-solid fa-user-doctor"></i> Bác sĩ</div>
+        <h3 class="team-name">Bác sĩ Võ Mạnh Sơn</h3>
+        <ul class="team-detail">
+          <li><i class="fa-solid fa-briefcase"></i> Chuyên khoa Răng – Hàm – Mặt</li>
+          <li><i class="fa-solid fa-certificate"></i> Chứng chỉ Cấy ghép Implant chuyên sâu</li>
+          <li><i class="fa-solid fa-graduation-cap"></i> Tốt nghiệp Đại học Y Hà Nội</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="team-card">
+      <div class="team-img">
+        <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=400" alt="Doctor 3">
+      </div>
+      <div class="team-info">
+        <div class="role-badge"><i class="fa-solid fa-user-doctor"></i> Thạc sĩ</div>
+        <h3 class="team-name">ThS. BSNT. Nguyễn Thị Kim Dung</h3>
+        <ul class="team-detail">
+          <li><i class="fa-solid fa-briefcase"></i> Chuyên khoa Chẩn đoán hình ảnh</li>
+          <li><i class="fa-solid fa-hospital"></i> Công tác tại Bệnh viện Bạch Mai</li>
+          <li><i class="fa-solid fa-graduation-cap"></i> Tốt nghiệp Bác sĩ Nội trú loại Giỏi</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="team-card">
+      <div class="team-img">
+        <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=400" alt="Doctor 4">
+      </div>
+      <div class="team-info">
+        <div class="role-badge"><i class="fa-solid fa-user-doctor"></i> Bác sĩ</div>
+        <h3 class="team-name">Bác sĩ CKI. Lương Thị Tuyết</h3>
+        <ul class="team-detail">
+          <li><i class="fa-solid fa-briefcase"></i> Chuyên khoa Y học cổ truyền – Siêu âm</li>
+          <li><i class="fa-solid fa-clock"></i> 10 năm kinh nghiệm khám chữa bệnh</li>
+          <li><i class="fa-solid fa-graduation-cap"></i> Tốt nghiệp Đại học Y Dược Thái Nguyên</li>
+        </ul>
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="main-footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <div style="font-size:1.5rem; font-weight:bold; margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+          <i class="fa-solid fa-hospital-user"></i> HOPITAL AZC
+        </div>
+        <p>ĐKKD số: ......</p>
+        <p>Sở Tài Chính cấp ngày .....</p>
+        <div style="margin-top:20px;">
+          <span style="background:red; padding:5px 10px; border-radius:5px; font-size:0.8rem; font-weight:bold;">ĐÃ ĐĂNG KÝ BỘ CÔNG THƯƠNG</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Địa chỉ & Giờ làm</h4>
+        <p><i class="fa-solid fa-location-dot"></i> 358 Đường Lê Thanh Nghị, Cẩm Phả, Quảng Ninh</p>
+        <p><i class="fa-solid fa-clock"></i> T2 - T7: 7h00 - 17h00</p>
+        <h4>Liên hệ</h4>
+        <p>Cấp cứu: 0888999777</p>
+        <p>Đặt lịch: 0777999888</p>
+      </div>
+      <div class="footer-col">
+        <h4>Liên kết</h4>
+        <a href="#">Giới thiệu</a>
+        <a href="#">Liên hệ</a>
+        <div class="social-icons" style="margin-top:20px; font-size:1.2rem;">
+          <i class="fa-brands fa-facebook"></i>
+          <i class="fa-brands fa-tiktok"></i>
+          <i class="fa-brands fa-youtube"></i>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Đăng ký tư vấn</h4>
+        <form class="footer-form">
+          <input type="text" placeholder="Nhập số điện thoại của bạn...">
+          <button type="button">Gửi</button>
+        </form>
+      </div>
+    </div>
+    <div class="copyright">Copyright 2025 © Hopital Clinic</div>
+  </footer>
+
+  <div class="floating-btns">
+    <div class="float-btn btn-phone"><i class="fa-solid fa-phone"></i></div>
+    <div class="float-btn btn-zalo"><i class="fa-solid fa-comment-dots"></i></div>
+  </div>
+
+  <div id="chat-bubble">💬</div>
+  <div id="chat-module" class="hidden">
+    <div class="chat-header"><h5>🏥 Trợ lý ảo Y tế</h5><button id="close-chat-btn">×</button></div>
+    <div id="chat-messages"><div class="message bot">Xin chào! Tôi có thể giúp gì cho bạn?</div></div>
+    <form id="chat-form"><input type="text" id="chat-input" placeholder="Nhập câu hỏi..."><button type="submit">Gửi</button></form>
+  </div>
+
+  <script>
+    const IS_LOGGED_IN = {{ 'true' if session.user else 'false' }};
+    const CHATBOT_API_URL = '/api/chat';
+
+    (function(){
+      const bubble = document.getElementById('chat-bubble');
+      const module = document.getElementById('chat-module');
+      const closeBtn = document.getElementById('close-chat-btn');
+      if(bubble && module){
+        bubble.onclick = () => { module.classList.remove('hidden'); bubble.classList.add('hidden'); };
+        closeBtn.onclick = () => { module.classList.add('hidden'); bubble.classList.remove('hidden'); };
+      }
+      const form = document.getElementById('chat-form');
+      if(form){
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const inp = document.getElementById('chat-input');
+          const txt = inp.value.trim();
+          if(!txt) return;
+          addMsg(txt, 'user');
+          inp.value = '';
+          try{
+            const r = await fetch(CHATBOT_API_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:txt})});
+            const j = await r.json();
+            addMsg(j.answer || j.error, 'bot');
+          }catch(e){ addMsg('Lỗi kết nối', 'bot'); }
+        };
+      }
+      function addMsg(txt, role){
+        const d = document.createElement('div');
+        d.className = `message ${role}`;
+        d.innerText = txt;
+        document.getElementById('chat-messages').appendChild(d);
+      }
+    })();
+  </script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

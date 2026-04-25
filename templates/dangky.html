@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng ký tài khoản - Quản lý bệnh viện</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+        }
+
+        .register-container {
+            background: var(--surface);
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            margin: 0 0 0.5rem 0;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .header p {
+            margin: 0;
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            background: #fdfdfd;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            background: #fff;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .login-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+    </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  </head>
+
+<body>
+    <div class="register-container">
+        <div class="header">
+            <h1><i class="fa-solid fa-user-plus"></i> Đăng Ký</h1>
+            <p>Tạo tài khoản để đặt lịch & xem hồ sơ</p>
+        </div>
+
+        <div id="error-msg" class="alert alert-error"></div>
+
+        <form id="register-form" onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label class="form-label">Họ và Tên</label>
+                <input type="text" id="hoten" class="form-input" placeholder="Nguyễn Văn A" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Ngày sinh</label>
+                <input type="date" id="ngaysinh" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Địa chỉ</label>
+                <input type="text" id="diachi" class="form-input" placeholder="Số nhà, đường, phường/xã..." required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Quê quán</label>
+                <input type="text" id="quequan" class="form-input" placeholder="Tỉnh/Thành phố" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email (Tài khoản)</label>
+                <input type="email" id="email" class="form-input" placeholder="name@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Số điện thoại</label>
+                <input type="tel" id="phone" class="form-input" placeholder="09xxx..." required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Mật khẩu</label>
+                <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Xác nhận mật khẩu</label>
+                <input type="password" id="confirm_password" class="form-input" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                Đăng Ký
+            </button>
+        </form>
+
+        <div class="login-link">
+            Đã có tài khoản? <a href="/login">Đăng nhập ngay</a>
+        </div>
+    </div>
+
+    <script>
+        async function handleRegister(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const errorDiv = document.getElementById('error-msg');
+
+            // Reset state
+            errorDiv.style.display = 'none';
+
+            const hoten = document.getElementById('hoten').value.trim();
+            const ngaysinh = document.getElementById('ngaysinh').value;
+            const diachi = document.getElementById('diachi').value.trim();
+            const quequan = document.getElementById('quequan').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+
+            // 1. Validate Password Match
+            if (password !== confirm) {
+                showError("Mật khẩu xác nhận không khớp!");
+                return;
+            }
+
+            // 2. Validate Password Length
+            if (password.length < 6) {
+                showError("Mật khẩu phải có ít nhất 6 ký tự!");
+                return;
+            }
+
+            // 3. Validate Phone (VN format: 10-11 digits, starts with 0)
+            const phoneRegex = /^(0[2-9][0-9]{8,9})/;
+            // Simple check: starts with 0, 10-11 digits total.
+            // Improved regex: ^0\d{9,10}$
+            if (!/^0\d{9,10}$/.test(phone)) {
+                showError("Số điện thoại không hợp lệ (10-11 số, bắt đầu bằng 0)");
+                return;
+            }
+
+            // 4. Validate Date of Birth (Not in Future)
+            const dob = new Date(ngaysinh);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Ignore time
+            if (dob >= today) {
+                showError("Ngày sinh không hợp lệ (phải nhỏ hơn ngày hiện tại)");
+                return;
+            }
+
+            // Disable button after basic validation passes
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hoten, ngaysinh, diachi, quequan, email, phone, password })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    window.location.href = "/verify-email";
+                } else {
+                    showError(data.error || "Có lỗi xảy ra");
+                }
+            } catch (err) {
+                showError("Lỗi kết nối server: " + err);
+            } finally {
+                btn.innerHTML = 'Đăng Ký';
+                btn.disabled = false;
+            }
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('error-msg');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+    </script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Xác thực OTP - Quản lý bệnh viện</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --text-main: #1e293b;
+            --border: #e2e8f0;
+            --background: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .otp-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h2 {
+            color: var(--text-main);
+            margin-top: 0;
+        }
+
+        p {
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        .otp-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .otp-field {
+            width: 3rem;
+            height: 3rem;
+            text-align: center;
+            font-size: 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: 0.5rem;
+            font-weight: bold;
+        }
+
+        .otp-field:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-verify {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .alert-error {
+            color: #ef4444;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        .resend-link {
+            margin-top: 1rem;
+            display: block;
+            font-size: 0.9rem;
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  </head>
+
+<body>
+    <div class="otp-container">
+        <h2>Xác thực Email</h2>
+        <p>Nhập mã OTP 6 số đã được gửi tới email của bạn</p>
+
+        <div id="error-msg" class="alert-error"></div>
+
+        <form onsubmit="handleVerify(event)">
+            <div class="otp-inputs">
+                <input type="text" maxlength="1" class="otp-field" onkeyup="moveNext(this, 1)"
+                    onkeydown="moveBack(this, event)">
+                <input type="text" maxlength="1" class="otp-field" onkeyup="moveNext(this, 2)"
+                    onkeydown="moveBack(this, event)">
+                <input type="text" maxlength="1" class="otp-field" onkeyup="moveNext(this, 3)"
+                    onkeydown="moveBack(this, event)">
+                <input type="text" maxlength="1" class="otp-field" onkeyup="moveNext(this, 4)"
+                    onkeydown="moveBack(this, event)">
+                <input type="text" maxlength="1" class="otp-field" onkeyup="moveNext(this, 5)"
+                    onkeydown="moveBack(this, event)">
+                <input type="text" maxlength="1" class="otp-field" onkeyup="moveNext(this, 6)"
+                    onkeydown="moveBack(this, event)">
+            </div>
+
+            <button type="submit" class="btn-verify">Xác nhận</button>
+        </form>
+
+        <a onclick="resendOtp()" class="resend-link">Gửi lại mã?</a>
+    </div>
+
+    <script>
+        // Auto focus first input
+        document.querySelector('.otp-field').focus();
+
+        function moveNext(input, index) {
+            if (input.value.length === 1) {
+                const next = input.nextElementSibling;
+                if (next) next.focus();
+            }
+        }
+
+        function moveBack(input, event) {
+            if (event.key === "Backspace" && input.value.length === 0) {
+                const prev = input.previousElementSibling;
+                if (prev) prev.focus();
+            }
+        }
+
+        async function handleVerify(e) {
+            e.preventDefault();
+            const inputs = document.querySelectorAll('.otp-field');
+            let otp = "";
+            inputs.forEach(i => otp += i.value);
+
+            if (otp.length < 6) {
+                document.getElementById('error-msg').textContent = "Vui lòng nhập đủ 6 số";
+                document.getElementById('error-msg').style.display = "block";
+                return;
+            }
+
+            const btn = document.querySelector('.btn-verify');
+            btn.innerHTML = 'Đang kiểm tra...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/confirm-registration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ otp })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert("Đăng ký thành công! Vui lòng đăng nhập.");
+                    window.location.href = "/login";
+                } else {
+                    document.getElementById('error-msg').textContent = data.error;
+                    document.getElementById('error-msg').style.display = "block";
+                }
+            } catch (err) {
+                document.getElementById('error-msg').textContent = "Lỗi hệ thống";
+                document.getElementById('error-msg').style.display = "block";
+            } finally {
+                btn.innerHTML = 'Xác nhận';
+                btn.disabled = false;
+            }
+        }
+
+        async function resendOtp() {
+            // Logic gọi API gửi lại OTP (có thể implement sau)
+            alert("Chức năng gửi lại đang cập nhật");
+        }
+    </script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+
+</html>

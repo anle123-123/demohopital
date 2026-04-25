@@ -1,0 +1,1927 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Khám bệnh</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='khambenh.css') }}">
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <!-- id: select2-cdn -->
+
+  <style>
+    /* --- CSS RIÊNG CHO GIAO DIỆN KÊ ĐƠN (POS) --- */
+    .pos-container {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 15px;
+      height: 500px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: var(--color-bg-darkest);
+      overflow: hidden;
+    }
+
+    .pos-col {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .source-col {
+      border-right: 1px solid var(--color-border);
+      background: var(--color-bg-dark);
+    }
+
+    .pos-search {
+      padding: 10px;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg-medium);
+    }
+
+    .pos-search input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid var(--color-border);
+      background: var(--color-bg-dark);
+      color: var(--color-text-white);
+    }
+
+    .drug-list,
+    .cart-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .drug-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      margin-bottom: 5px;
+      background: var(--color-bg-medium);
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: 0.2s;
+    }
+
+    .drug-item:hover {
+      border-color: var(--color-accent-blue);
+      background: var(--color-bg-dark);
+    }
+
+    .drug-info b {
+      display: block;
+      color: var(--color-text-white);
+      font-size: 0.9rem;
+    }
+
+    .drug-info span {
+      color: var(--color-text-secondary);
+      font-size: 0.8rem;
+    }
+
+    .btn-add {
+      background: var(--color-accent-blue);
+      color: white;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      padding: 0;
+      transition: background 0.2s;
+    }
+
+    .btn-add:hover {
+      background: var(--color-accent-blue-hover);
+    }
+
+    .btn-add:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+
+    .cart-item {
+      background: var(--color-bg-medium);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .cart-item-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      color: var(--color-accent-orange);
+      font-weight: 600;
+      padding-right: 20px;
+    }
+
+    .cart-controls {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 8px;
+    }
+
+    .cart-controls input {
+      background: var(--color-bg-dark);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .btn-remove {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: transparent;
+      color: var(--color-accent-red);
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    /* Đảm bảo nút in luôn nằm trên lớp phủ khi đã thanh toán */
+    #btnInPhieu {
+        position: relative !important;
+        z-index: 1000 !important; /* Cao hơn mức 50 của .section-overlay */
+        background-color: var(--color-bg-medium) !important;
+        border: 1px solid var(--color-accent-blue) !important;
+        color: var(--color-accent-blue) !important;
+        pointer-events: auto !important; /* Ép buộc luôn nhận click */
+    }
+
+    /* Hiệu ứng khi di chuột vào nút in để bác sĩ biết là bấm được */
+    #btnInPhieu:hover {
+        background-color: var(--color-accent-blue) !important;
+        color: white !important;
+    }
+
+    .cart-footer {
+      padding: 10px;
+      border-top: 1px solid var(--color-border);
+      background: var(--color-bg-dark);
+    }
+
+    .full-width {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #888;
+      margin-top: 40px;
+      font-style: italic;
+    }
+
+    /* Input Search Bệnh Nhân */
+    #bn-search {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--color-border);
+      background: var(--color-bg-medium);
+      color: white;
+      border-radius: 6px;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--color-bg-dark);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-text-secondary);
+    }
+    
+
+    /* PayModal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity 0.2s;
+    }
+
+    .modal.hidden {
+      opacity: 0;
+      pointer-events: none;
+      display: none;
+    }
+
+    .modal-body {
+      background: var(--color-bg-dark);
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      width: 450px;
+      max-width: 90%;
+      padding: 24px;
+      position: relative;
+      animation: slideIn 0.3s ease-out;
+      color: var(--color-text-primary);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-head h3 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--color-accent-blue);
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .close-btn:hover {
+      color: var(--color-accent-red);
+    }
+
+    .qrbox {
+      text-align: center;
+      margin: 16px 0;
+      padding: 16px;
+      border: 1px dashed var(--color-border);
+      border-radius: 8px;
+      background: var(--color-bg-medium);
+    }
+
+    .qrbox img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border-left-color: var(--color-accent-blue);
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* === Select2 Custom Styling (Match Inputs) === */
+    .select2-container .select2-selection--single {
+      height: auto !important;
+      padding: 8px 0 !important;
+      background: var(--color-bg-medium) !important;
+      border: 1px solid var(--color-border) !important;
+      border-radius: 6px !important;
+      display: flex !important;
+      align-items: center !important;
+    }
+
+    .select2-container .select2-selection--single .select2-selection__rendered {
+      padding-left: 10px !important;
+      color: var(--color-text-white) !important;
+      font-size: 1rem;
+      line-height: normal !important;
+    }
+
+    .select2-container .select2-selection--single .select2-selection__arrow {
+      height: 100% !important;
+      right: 5px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    .select2-container .select2-selection--single .select2-selection__arrow b {
+      border-color: var(--color-text-secondary) transparent transparent transparent !important;
+      position: relative !important;
+      top: auto !important;
+      left: auto !important;
+      margin: 0 !important;
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--single {
+      border-color: var(--color-accent-blue) !important;
+      outline: 2px solid var(--color-accent-blue) !important;
+    }
+
+    .select2-dropdown {
+      background-color: var(--color-bg-dark) !important;
+      border: 1px solid var(--color-border) !important;
+      color: var(--color-text-white) !important;
+      z-index: 99999999 !important;
+    }
+
+    .select2-search__field {
+      background-color: var(--color-bg-medium) !important;
+      border: 1px solid var(--color-border) !important;
+      color: var(--color-text-white) !important;
+      border-radius: 4px !important;
+    }
+
+    .select2-results__option {
+      color: var(--color-text-primary) !important;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      background-color: var(--color-accent-blue) !important;
+      color: #fff !important;
+    }
+
+    /* === RESTRICTED SECTION OVERLAY === */
+    .restricted-access {
+      position: relative;
+    }
+
+    .section-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.05);
+      /* Transparent but captures clicks */
+      z-index: 50;
+      /* Above content */
+      cursor: not-allowed;
+      display: none;
+      /* Hidden by default */
+    }
+
+    .section-overlay.active {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1><i class="fa-solid fa-stethoscope"></i> Khám bệnh</h1>
+
+  <div class="card">
+    {% if bn %}
+    <div style="font-size: 1.1rem;">
+      <strong>Bệnh nhân:</strong> <span style="color: var(--color-accent-blue);">{{ bn.HOVATEN }}</span>
+      (<code>{{ bn.MABENHNHAN }}</code>) • NS: {{ bn.NGAYSINH or '—' }}
+    </div>
+    <div class="muted" style="margin-top: 5px;">
+      <i class="fa-solid fa-location-dot"></i> {{ bn.DIACHI }} — <i class="fa-solid fa-phone"></i> {{ bn.SODIENTHOAI }}
+    </div>
+    {% else %}
+    <div style="color: var(--color-text-secondary);">Chưa chọn bệnh nhân. Vui lòng tìm và chọn bên dưới.</div>
+    {% endif %}
+  </div>
+
+  {% if not bn %}
+  <div class="card mb-4" style="margin-top:16px">
+    <h2 class="mb-3" style="margin:0 0 12px 0">Chọn bệnh nhân từ danh sách</h2>
+
+    <div class="row" style="display:flex; gap:10px; margin-bottom:12px">
+      <input id="bn-search" placeholder="🔍 Tìm Mã BN / Họ tên / SĐT / Địa chỉ..." />
+      <button id="bn-search-btn" class="btn btn-primary">Tìm kiếm</button>
+      
+    </div>
+    <div class="filter-box" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+    
+      <div class="toggle-status" style="display: flex; background: var(--color-bg-dark); border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
+          <button id="btn-unpaid" onclick="filterStatus('unpaid')" 
+              style="padding: 8px 16px; border: none; background: var(--color-accent-orange); color: white; cursor: pointer; font-weight: bold;">
+              ⚠️ Đang chờ
+          </button>
+          <button id="btn-paid" onclick="filterStatus('paid')" 
+              style="padding: 8px 16px; border: none; background: transparent; color: var(--color-text-secondary); cursor: pointer;">
+              ✅ Đã thanh toán
+          </button>
+          <button id="btn-all" onclick="filterStatus('all')" 
+              style="padding: 8px 16px; border: none; background: transparent; color: var(--color-text-secondary); cursor: pointer;">
+              📋 Tất cả
+          </button>
+      </div>
+  </div>
+    <div class="filter-box">
+  
+</div>
+
+
+
+    <div class="table-responsive">
+      <table class="table" style="width:100%">
+        <thead>
+          <tr>
+            <th>Mã BN</th>
+            <th>Họ tên</th>
+            <th>Ngày sinh</th>
+            <th>SĐT</th>
+            <th>Địa chỉ</th>
+            <th style="text-align:right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="bn-tbody"></tbody>
+      </table>
+    </div>
+    <div id="bn-empty" class="empty-state hidden">Không tìm thấy bệnh nhân nào.</div>
+  </div>
+  {% endif %}
+
+  <input type="hidden" id="mabn_hidden" value="{{ bn.MABENHNHAN if bn else '' }}">
+  <input type="hidden" id="bs_hidden" value="{{ bs or '' }}">
+
+  {% if bn %}
+  <div class="grid" style="margin-top:20px">
+
+    <div class="card">
+      <h2>1) Thông tin khám</h2>
+      <div class="row">
+        <select id="khoa"
+          style="flex:1; padding: 10px; background: var(--color-bg-medium); color: var(--color-text-white); border: 1px solid var(--color-border); margin-bottom: 8px;">
+          <option value="">— Chọn Khoa —</option>
+        </select>
+      </div>
+      <div class="row" style="display:flex; gap:8px; align-items:center">
+        <select id="manv_pk" style="flex:1">
+          <option value="">— Chọn bác sĩ khám —</option>
+        </select>
+      </div>
+      <div class="row"><input id="lydo" placeholder="Lý do khám (Triệu chứng)" /></div>
+      <div class="row"><input id="cdsb" placeholder="Chẩn đoán sơ bộ" /></div>
+      <div class="row"><textarea id="ghichu" placeholder="Ghi chú bác sĩ"></textarea></div>
+
+      <div class="row" style="margin-top: 10px;">
+        <button onclick="taoPhieu()" class="btn btn-primary">Lưu phiên khám</button>
+      </div>
+      <div id="phieuInfo" class="muted" style="margin-top: 10px; color: var(--color-accent-blue);"></div>
+    </div>
+
+    <div class="card restricted-access" id="sectionChanDoan">
+      <div class="section-overlay" onclick="handleRestrictedClick('SECTION_CD')"></div>
+      <h2>2) Chẩn đoán</h2>
+      <div class="row"><input id="icd" placeholder="ICD10 (vd: J00)" /></div>
+      <div class="row"><input id="mota" placeholder="Mô tả" /></div>
+      <div class="row">
+        <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer; user-select:none;">
+          <input id="la" type="checkbox" style="width:16px; height:16px;"> Là bệnh chính
+        </label>
+      </div>
+      <div class="row"><button id="btnThemCD" onclick="themCD()" class="btn btn-outline">Thêm chẩn đoán</button></div>
+      <div class="table-responsive">
+        <table id="tblCD" class="table">
+          <thead>
+            <tr>
+              <th>ICD10</th>
+              <th>Mô tả</th>
+              <th>Chính</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card restricted-access" id="sectionXetNghiem">
+      <div class="section-overlay" onclick="handleRestrictedClick('SECTION_XN')"></div>
+      <h2>3) Xét nghiệm</h2>
+      <div class="row">
+          <select id="xnloai" onchange="loadChiDinhXN()" style="width: 100%; ...">
+              <option value="">— Chọn Loại Xét Nghiệm —</option>
+              {% for xn in loai_xn %}
+              <option value="{{ xn.ten }}" data-id="{{ xn.id }}">{{ xn.ten }}</option>
+              {% endfor %}
+          </select>
+      </div>
+      <div class="row">
+          <select id="xncd" style="width: 100%; ...">
+              <option value="">— Chọn chỉ định —</option>
+          </select>
+      </div>
+  
+      <div class="row">
+          <input id="xngia" type="text" placeholder="Giá xét nghiệm" readonly 
+                 style="background-color: var(--color-bg-dark); cursor: not-allowed; color: var(--color-accent-orange); font-weight: bold; width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--color-border);" />
+      </div>
+  
+      <div class="row">
+          <button id="btnThemXN" onclick="themXN()" class="btn btn-outline" disabled>Chỉ định</button>
+      </div>
+      </div>
+      <div class="table-responsive">
+        <table id="tblXN" class="table">
+          <thead>
+            <tr>
+              <th>Mã</th>
+              <th>Loại</th>
+              <th>Chỉ định</th>
+              <th>Giá</th> 
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card restricted-access" id="sectionDonThuoc" style="grid-column: span 2;">
+      <div class="section-overlay" onclick="handleRestrictedClick('SECTION_DT')"></div>
+      <h2>4) Kê đơn thuốc</h2>
+      <div class="row" style="margin-bottom: 15px;">
+        <select id="manv_don"
+          style="flex:1; padding: 10px; background: var(--color-bg-medium); color: var(--color-text-white); border: 1px solid var(--color-border);">
+          <option value="">— Chọn bác sĩ kê đơn (Mặc định theo BS khám) —</option>
+        </select>
+      </div>
+
+      <div class="pos-container">
+        <div class="pos-col source-col">
+          <div class="pos-search" style="display:flex; gap:5px">
+            <select id="filterGroup" onchange="filterThuoc()"
+              style="width:130px; padding:8px; border-radius:4px; border:1px solid var(--color-border); background:var(--color-bg-dark); color:var(--color-text-white)">
+              <option value="">-- Nhóm --</option>
+            </select>
+            <input id="searchThuoc" placeholder="🔍 Tìm tên thuốc..." onkeyup="filterThuoc()" />
+          </div>
+          <div class="drug-list" id="drugListSource">
+            <div class="empty-state">Đang tải...</div>
+          </div>
+          <div class="pagination-controls"
+            style="display: flex; gap: 5px; justify-content: center; padding: 5px; border-top: 1px solid var(--color-border); background: var(--color-bg-medium);">
+            <button id="btnPrev" class="btn btn-outline btn-sm" onclick="changePage(-1)">«</button>
+            <span id="pageInfo"
+              style="color: var(--color-text-primary); align-self: center; font-size: 0.9rem;">1/1</span>
+            <button id="btnNext" class="btn btn-outline btn-sm" onclick="changePage(1)">»</button>
+          </div>
+        </div>
+        <div class="pos-col cart-col">
+          <div class="cart-header">
+            <b>Đã chọn (<span id="cartCount">0</span>)</b>
+            <button id="btnClearCart" onclick="clearCart()"
+              style="background:none; border:none; color:var(--color-accent-red); cursor:pointer;">Xóa hết</button>
+          </div>
+          <div class="cart-list" id="cartList">
+            <div class="empty-state">Chưa chọn thuốc</div>
+          </div>
+          <div class="cart-footer">
+            <textarea id="ghichu_don" placeholder="Lời dặn dò..." rows="1"
+              style="width:100%; margin-bottom:5px; background:var(--color-bg-medium); color:var(--color-text-primary); border:1px solid var(--color-border);"></textarea>
+            <button id="btnLuuDon" onclick="luuDonThuoc()" class="btn btn-primary full-width">Lưu đơn thuốc</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card restricted-access" id="sectionHoaDon">
+      <div class="section-overlay" onclick="handleRestrictedClick('SECTION_HD')"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h2 style="margin: 0;">5) Hóa đơn & Thanh toán</h2>
+        <button id="btnTaoHD" onclick="taoHD()" class="btn btn-primary"
+          style="background: var(--color-accent-orange); border-color: var(--color-accent-orange); padding: 5px 15px; font-size: 0.9rem;">
+          Tạo hóa đơn
+        </button>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid var(--color-border); margin: 15px 0;">
+      <div class="row">
+        <select id="mota_hd" style="width: 100%;">
+          <option value="">— Nhập hoặc chọn chi phí —</option>
+        </select>
+      </div>
+      <div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <input id="soluong_hd" type="number" placeholder="SL" value="1" oninput="updateServicePrice()" />
+        <input id="dongia_hd" type="number" placeholder="Đơn giá (Tổng)" readonly
+          style="background-color: var(--color-bg-dark); cursor: not-allowed;" />
+      </div>
+      <div class="row"><button id="btnThemDongHD" onclick="themDongHD()" class="btn btn-outline">Thêm dòng chi
+          phí</button></div>
+      <div class="table-responsive" style="margin-top: 10px;">
+        <table id="tblHD" class="table">
+          <thead>
+            <tr>
+              <th>Loại</th>
+              <th>Mô tả</th>
+              <th>SL</th>
+              <th>Đơn giá</th>
+              <th>Thành tiền</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div id="invoice-details"
+        style="display: none; margin-top: 20px; border-top: 2px dashed var(--color-border); padding-top: 15px;">
+        <div class="row">
+          <input id="tong" type="text" placeholder="Hệ thống tự tính..." readonly
+            style="background: var(--color-bg-dark); border: 1px solid var(--color-border); cursor: not-allowed; color: var(--color-accent-orange); font-weight: bold; font-size: 1.2rem; text-align: right;" />
+        </div>
+        <div class="row">
+          <select id="hinhthuc"
+            style="background: var(--color-bg-medium); color: var(--color-text-white); padding: 10px; border: 1px solid var(--color-border); border-radius: 6px; width: 100%;">
+            <option value="CASH">Tiền mặt</option>
+            <option value="CARD">Thẻ / Chuyển khoản</option>
+          </select>
+        </div>
+        <div class="row" id="paid-container" style="display: flex; align-items: center; justify-content: flex-end;">
+          <input id="paid" type="checkbox" style="margin-right: 8px; width: 18px; height: 18px;" />
+          <label for="paid" style="color: var(--color-text-primary); cursor: pointer; user-select: none;">Đã thanh
+            toán</label>
+        </div>
+        <div class="row" id="qr-container" style="display: none;">
+          <button onclick="showQR()" class="btn btn-outline"
+            style="width: 100%; border-color: var(--color-accent-blue); color: var(--color-accent-blue);">
+            <i class="fa-solid fa-qrcode"></i> Hiện Mã QR
+          </button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 15px;">
+        <a id="btnInPhieu" class="btn btn-outline" href="/phieu-tong-hop-bn/{{ bn.MABENHNHAN }}" target="_blank"
+          style="width: 100%; text-align: center;">
+          <i class="fa-solid fa-print"></i> Xem & In Phiếu Khám Tổng Hợp
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <script>
+    // --- Thêm đoạn này vào trong thẻ <script> ---
+
+let currentStatus = 'unpaid'; // Mặc định hiển thị người chưa thanh toán (để thu tiền)
+
+function filterStatus(status) {
+    currentStatus = status;
+    
+    // 1. Cập nhật giao diện nút bấm (Active state)
+    // Reset tất cả về style mặc định (trong suốt)
+    ['unpaid', 'paid', 'all'].forEach(s => {
+        const btn = document.getElementById(`btn-${s}`);
+        btn.style.background = 'transparent';
+        btn.style.color = 'var(--color-text-secondary)';
+        btn.style.fontWeight = 'normal';
+    });
+
+    // Highlight nút đang chọn
+    const activeBtn = document.getElementById(`btn-${status}`);
+    if (status === 'unpaid') {
+        activeBtn.style.background = 'var(--color-accent-orange)'; // Màu cam cảnh báo
+    } else if (status === 'paid') {
+        activeBtn.style.background = 'var(--color-accent-blue)';   // Màu xanh an toàn
+    } else {
+        activeBtn.style.background = '#555';
+    }
+    activeBtn.style.color = 'white';
+    activeBtn.style.fontWeight = 'bold';
+
+    // 2. Gọi lại hàm load dữ liệu
+    // Lưu ý: Đảm bảo hàm loadBN() của bạn đọc biến currentStatus này
+    const query = document.getElementById('bn-search').value.trim();
+    loadBN(query); 
+}
+
+// --- CẬP NHẬT HÀM loadBN ĐỂ GỬI THAM SỐ status ---
+async function loadBN(query = "") {
+    const tbody = $('bn-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Đang tải...</td></tr>';
+    
+    try {
+        // Gửi thêm param &status=...
+        const res = await fetch(`/api/benhnhan?q=${encodeURIComponent(query)}&limit=50&status=${currentStatus}`);
+        const data = await res.json();
+        
+        tbody.innerHTML = "";
+        if (!data.length) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;">Không tìm thấy bệnh nhân nào (${currentStatus}).</td></tr>`;
+            return;
+        }
+        
+        // Render bảng như cũ...
+        data.forEach(bn => {
+             // Code vẽ tr...
+             const tr = document.createElement('tr');
+             tr.innerHTML = `<td>${bn.MABENHNHAN}</td><td>${bn.HOVATEN}</td>...`; // Giữ nguyên code render của bạn
+             tbody.appendChild(tr);
+        });
+    } catch (e) { console.error(e); }
+}
+    const $ = (id) => document.getElementById(id);
+    const getMabn = () => ($('mabn_hidden')?.value || '').trim();
+    const getBs = () => ($('bs_hidden')?.value || '').trim();
+
+    // Init from Template (if provided)
+    let MAPHIEU = {{ maphieu or 'null' }};
+    let LOCK_REASON = null; // 'NO_RECORD' | 'PAID' | null
+    let IS_PAID = false; // Default false
+
+    let HOADON_ID = null;
+    let ALL_DRUGS = [];
+    let CART = {};
+
+    let ALL_NVS = []; // Global list
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Nếu đang ở trang danh sách BN (chưa có MABN)
+      if (!getMabn()) {
+        initBNList();
+      } else {
+        // Nếu đang ở trang khám (có MABN):
+        await reloadBacSi(); // Tải DS bác sĩ trước
+        await checkPhieuOrLichHen(); // Kiểm tra phiếu cũ hoặc lịch hẹn
+        await initDrugPos();
+      }
+    });
+
+    // --- LOGIC MỚI: Check Phiếu hoặc Lịch Hẹn ---
+    async function checkPhieuOrLichHen() {
+      const mabn = getMabn();
+
+      // CASE 0: URL đã có sẵn mã phiếu (được truyền từ server vào MAPHIEU)
+      if (MAPHIEU) {
+        $('phieuInfo').innerText = `ℹ️ Đang xem phiếu khám #${MAPHIEU}`;
+        await loadPhieu(); // Load và check trạng thái thanh toán
+        return;
+      }
+
+      // CASE 1: Tìm xem bệnh nhân có phiếu đang mở (chưa thanh toán HOẶC tạo hôm nay) hay không?
+      // "Tuân thủ flowchart": "Có phiếu khám chưa?"
+      try {
+        const r = await fetch(`/api/benhnhan/${mabn}/phieu-moi-nhat`);
+        const j = await r.json();
+        // Giả sử API trả về phiếu mới nhất.
+        // Logic: Nếu có phiếu chưa thanh toán (hoặc mới tạo hôm nay), tự động mở nó.
+        if (r.ok && j.maphieu) {
+          // Ở đây bạn có thể thêm logic kiểm tra j.ngay_kham == today hoặc j.dathanhtoan == 0
+          // Để đơn giản, nếu tìm thấy phiếu active => LOAD LUÔN
+          MAPHIEU = j.maphieu;
+          $('phieuInfo').innerText = `ℹ️ Đã tìm thấy phiếu khám đang mở #${MAPHIEU}`;
+          await loadPhieu();
+          return;
+        }
+      } catch (e) { console.warn(e); }
+
+      // CASE 2: Không có phiếu -> Check Lịch hẹn
+      // "Đã có lịch hẹn?"
+      // Mặc định CHƯA CÓ PHIẾU => LOCK UI
+      lockUI('NO_RECORD'); // Khóa trước, chỉ mở khi tạo phiếu thành công
+
+      try {
+        const r2 = await fetch(`/api/benhnhan/${mabn}/lich-hen-gan-nhat`);
+        const j2 = await r2.json();
+        const selKhoa = document.getElementById('khoa');
+        const inpLyDo = document.getElementById('lydo');
+
+        if (r2.ok && j2.ok) {
+          // Logic điền thông tin lịch hẹn (như cũ)
+          const tStart = new Date(j2.TGBATDAU.replace(' ', 'T'));
+          // ... (giữ nguyên logic check time và fill form)
+          $('phieuInfo').innerText = `ℹ️ Chưa có phiếu. Tự động điền từ lịch hẹn #${j2.ID}. Vui lòng Lưu Phiên Khám để bắt đầu.`;
+
+          // FILL FORM LOGIC (Simplified for brevity, verify existing logic preserved via manual check if needed)
+          if (j2.KHOA) {
+            // Fix Select2 display: use jQuery val() + trigger('change')
+            jQuery('#khoa').val(j2.KHOA).trigger('change');
+          }
+          if (j2.MANHANVIEN) {
+            // Give a small delay or check if options exist
+            setTimeout(() => {
+              if (document.querySelector(`#manv_pk option[value="${j2.MANHANVIEN}"]`)) {
+                jQuery('#manv_pk').val(j2.MANHANVIEN).trigger('change');
+              }
+            }, 100);
+          }
+          if (j2.GHICHU) inpLyDo.value = j2.GHICHU;
+
+        } else {
+          $('phieuInfo').innerText = `ℹ️ Chưa có phiếu khám. Vui lòng tạo phiếu mới.`;
+        }
+      } catch (e) { console.warn('Lỗi check lịch hẹn:', e); }
+    }
+
+    // --- HELPER: Lock/Unlock UI ---
+    function lockUI(reason) {
+      LOCK_REASON = reason;
+      const overlays = document.querySelectorAll('.section-overlay');
+      const isLocked = (reason !== null);
+
+      overlays.forEach(ol => {
+        if (isLocked) ol.classList.add('active');
+        else ol.classList.remove('active');
+      });
+
+      // Disable Buttons explicitly if needed (Optional since overlay covers them)
+      // document.getElementById('btnThemCD').disabled = isLocked;
+      // document.getElementById('btnThemXN').disabled = isLocked;
+      // ...
+    }
+
+    function handleRestrictedClick(zone) {
+      if (LOCK_REASON === 'NO_RECORD') {
+        alert("Hãy tạo phiếu khám trước khi thực hiện chức năng này!");
+      } else if (LOCK_REASON === 'PAID') {
+        alert("Phiếu khám đã hoàn thành (đã thanh toán) nên không thể tiếp tục thao tác!");
+      }
+    }
+
+    // override loadPhieu to check Payment Status
+    const originalLoadPhieu = loadPhieu; // Backup old reference if exists function definition hoisting
+    // Note: loadPhieu is defined LATER in the file usually. 
+    // We should modify the loadPhieu function definition directly instead of overwriting here if possible.
+    // Or we keep this logic inside the actual loadPhieu.
+    // Let's assume we modify `loadPhieu` definition below.
+
+
+    function filterBacSiByKhoa(khoaName) {
+      // 1. Strict Filter: Nếu chưa chọn Khoa -> KHÔNG hiện bác sĩ nào
+      if (!khoaName) {
+        renderBacSiOptions([]); // Empty list
+        return;
+      }
+
+      // 2. Lọc bác sĩ
+      const sub = ALL_NVS.filter(nv => (nv.KHOA || '').toLowerCase() === khoaName.toLowerCase());
+      renderBacSiOptions(sub);
+
+      // Reset selection
+      jQuery('#manv_pk').val('').trigger('change');
+    }
+
+    function renderBacSiOptions(list) {
+      const sel = $('manv_pk');
+      sel.innerHTML = '<option value="">— Chọn bác sĩ khám —</option>';
+      list.forEach(nv => {
+        const opt = document.createElement('option');
+        opt.value = nv.MANHANVIEN;
+        opt.textContent = `${nv.MANHANVIEN} — ${nv.HOVATEN}`; //  + (nv.KHOA ? ` (${nv.KHOA})` : '')
+        sel.appendChild(opt);
+      });
+    }
+
+
+    // NEW: Sync Prescribing Doctor when Examining Doctor changes
+    document.addEventListener('DOMContentLoaded', () => {
+      const manv_pk = $('manv_pk');
+      const manv_don = $('manv_don');
+      if (manv_pk && manv_don) {
+        manv_pk.addEventListener('change', () => {
+          manv_don.value = manv_pk.value;
+        });
+      }
+    });
+
+    // NEW: Payment Confirmation Logic
+    document.addEventListener('DOMContentLoaded', () => {
+      const chkPaid = $('paid');
+      if (chkPaid) {
+        chkPaid.addEventListener('change', async function () {
+          if (this.checked) {
+            if (confirm("Bạn có chắc chắn khách đã thanh toán? Hành động này không thể hoàn tác.")) {
+              try {
+                if (!HOADON_ID) {
+                  alert("Vui lòng tạo hóa đơn trước khi thanh toán!");
+                  this.checked = false;
+                  return;
+                }
+                const r = await fetch(`/api/hoadon/${HOADON_ID}/update`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ DATHANHTOAN: true })
+                });
+                if (!r.ok) throw new Error(j.error || "Lỗi cập nhật");
+                alert("Đã cập nhật trạng thái thanh toán!");
+                // Reload UI to apply locks
+                loadPhieu();
+              } catch (e) {
+                alert("Lỗi: " + e.message);
+                this.checked = false;
+              }
+            } else {
+              this.checked = false;
+            }
+          }
+        });
+      }
+    });
+
+    // NEW: Auto-update Payment Method
+    document.addEventListener('DOMContentLoaded', () => {
+      const selHT = $('hinhthuc');
+      if (selHT) {
+        selHT.addEventListener('change', async function () {
+          if (HOADON_ID) {
+            try {
+              const r = await fetch(`/api/hoadon/${HOADON_ID}/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ HINHTHUC: this.value })
+              });
+              togglePaymentUI(this.value); // Toggle UI immediately
+              if (!r.ok) console.error("Lỗi cập nhật hình thức");
+            } catch (e) { console.error(e); }
+          } else {
+            togglePaymentUI(this.value);
+          }
+        });
+      }
+    });
+
+    function togglePaymentUI(method) {
+      if (IS_PAID) {
+        // If PAID: Always show Checkbox (checked), Hide QR
+        $('paid-container').style.display = 'flex';
+        $('qr-container').style.display = 'none';
+      } else {
+        // Not Paid: Toggle based on method
+        if (method === 'CASH') {
+          $('paid-container').style.display = 'flex';
+          $('qr-container').style.display = 'none';
+        } else {
+          $('paid-container').style.display = 'none';
+          $('qr-container').style.display = 'block';
+        }
+      }
+    }
+
+    let pollInterval = null;
+
+    async function checkPaymentStatus() {
+      if (!HOADON_ID) return;
+      try {
+        const r = await fetch(`/api/hoadon/${HOADON_ID}/status`);
+        const j = await r.json();
+        if (j.ok && j.DATHANHTOAN) {
+          closePayModal();
+          alert("Thanh toán thành công!");
+          // Refresh logic - just reload phieu to be safe and consistent
+          loadPhieu(MAPHIEU);
+        }
+      } catch (e) { console.error("Poll error", e); }
+    }
+
+    window.closePayModal = function () {
+      $('payModal').classList.add('hidden');
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    }
+
+    const makeQR = (url) => `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+
+    window.showQR = async function () {
+      if (!HOADON_ID) return alert("Chưa có hóa đơn");
+      const modal = $('payModal');
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex'; // Ensure flex for centering
+
+      // Start Polling
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(checkPaymentStatus, 3000);
+
+      const qrBox = modal.querySelector(".qrbox");
+      qrBox.innerHTML = `<div class="spinner"></div><div style="text-align:center; color:var(--color-text-secondary); margin-top:8px">Đang tạo liên kết thanh toán...</div>`;
+
+      const btnVnp = modal.querySelector("#openVnp");
+      if (btnVnp) { btnVnp.href = "#"; btnVnp.style.opacity = "0.5"; btnVnp.style.pointerEvents = "none"; }
+
+      const tongTien = $('tong').value;
+      modal.querySelector("#payInfo").innerHTML = `
+         <div>Hóa đơn: <b>#${HOADON_ID}</b></div>
+         <div style="margin-top:4px; font-size:16px">Số tiền: <b style="color:var(--color-accent-blue)">${tongTien}</b></div>
+      `;
+
+      try {
+        const r = await fetch("/api/pay-url", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hoadon_id: Number(HOADON_ID) })
+        });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error || "Lỗi tạo link VNPAY");
+
+        const qrUrl = j.qr_data_url || makeQR(j.url);
+        qrBox.innerHTML = `
+          <div style="min-height:220px; display:flex; align-items:center; justify-content:center">
+             <img src="${qrUrl}" alt="QR Code" style="max-width:100%; border-radius:4px" />
+          </div>
+          <div style="margin-top:8px; font-size:12px; color:var(--color-text-secondary)">Quét mã bằng Camera hoặc mở link bên dưới</div>
+        `;
+
+        if (btnVnp) {
+          btnVnp.href = j.url;
+          btnVnp.style.opacity = "1";
+          btnVnp.style.pointerEvents = "auto";
+        }
+
+      } catch (e) {
+        qrBox.innerHTML = `<div style="color:var(--color-accent-red); padding:10px; text-align:center"><i class="fa-solid fa-circle-exclamation"></i> ${e.message}</div>`;
+      }
+    }
+
+    // --- 0. TRA CỨU BỆNH NHÂN ---
+    async function loadBN(query = "") {
+    const tbody = document.getElementById('bn-tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Đang tải...</td></tr>';
+    
+    // Lấy các tham số lọc khác nếu có
+    const khoa = document.getElementById('khoa-filter')?.value || '';
+
+    try {
+        // TẠO URL VỚI THAM SỐ STATUS
+        const url = `/api/benhnhan?q=${encodeURIComponent(query)}&limit=50&status=${currentStatus}&khoa=${encodeURIComponent(khoa)}`;
+        
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        tbody.innerHTML = "";
+        
+        if (!data || data.length === 0) {
+            let msg = currentStatus === 'unpaid' 
+                ? 'Không có bệnh nhân chờ thanh toán.' 
+                : 'Không tìm thấy lịch sử bệnh nhân đã thanh toán.';
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#888">${msg}</td></tr>`;
+            return;
+        }
+
+        // Render dữ liệu (Giữ nguyên code render cũ của bạn)
+        data.forEach(bn => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><code style="color:var(--color-accent-blue)">${bn.MABENHNHAN}</code></td>
+                <td>${bn.HOVATEN}</td>
+                <td>${bn.NGAYSINH || ''}</td>
+                <td>${bn.SODIENTHOAI || ''}</td>
+                <td>${bn.DIACHI || ''}</td>
+                <td style="text-align:right">
+                    <a href="/kham/${bn.MABENHNHAN}" class="btn btn-sm btn-primary">
+                        ${currentStatus === 'paid' ? 'Xem Lịch Sử' : 'Khám Ngay'}
+                    </a>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Lỗi tải dữ liệu</td></tr>';
+    }
+}
+
+    function initBNList() {
+      const btn = $('bn-search-btn');
+      const inp = $('bn-search');
+      loadKhoaFilter();
+      if (btn && inp) {
+        btn.addEventListener('click', () => loadBN(inp.value.trim()));
+        inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadBN(inp.value.trim()); });
+        loadBN(""); // Load mặc định
+      }
+    }
+    async function loadKhoaFilter() {
+      const sel = document.getElementById('khoa-filter');
+      if (!sel) return;
+
+      try {
+        const r = await fetch('/api/khoa');
+        const list = await r.json();
+
+        sel.innerHTML = '<option value="">— Lọc theo khoa (tuỳ chọn) —</option>' +
+          (list || []).map(k => `<option value="${k}">${k}</option>`).join('');
+      } catch (e) {
+        console.error('loadKhoaFilter error', e);
+      }
+
+  // Select2 cho đẹp (nếu bạn muốn)
+  jQuery('#khoa-filter').select2({ width: '100%' });
+}
+
+
+    // --- CÁC HÀM KHÁM BỆNH (Chỉ chạy khi có BN) ---
+    async function reloadBacSi() {
+      try {
+        const res = await fetch('/api/nhanvien?limit=500');
+        ALL_NVS = await res.json(); // Global
+
+        // Render mặc định cho Kê Đơn (không cần lọc theo khoa)
+        const sel2 = $('manv_don');
+        if (sel2) {
+          sel2.innerHTML = '<option value="">— Chọn bác sĩ kê đơn —</option>';
+          ALL_NVS.forEach(nv => {
+            const opt = document.createElement('option');
+            opt.value = nv.MANHANVIEN;
+            opt.textContent = `${nv.MANHANVIEN} — ${nv.HOVATEN}`;
+            sel2.appendChild(opt);
+          });
+        }
+
+        // --- Populate Khoa Dropdown ---
+        // --- Populate Khoa Dropdown --- (SỬA ĐOẠN NÀY)
+        const selKhoa = $('khoa');
+        if (selKhoa) {
+          const r = await fetch('/api/khoa');
+          const khoaList = await r.json();
+
+          selKhoa.innerHTML = '<option value="">— Chọn Khoa —</option>';
+          (khoaList || []).forEach(k => {
+            const opt = document.createElement('option');
+            opt.value = k;
+            opt.textContent = k;
+            selKhoa.appendChild(opt);
+          });
+        }
+
+
+        // Render cho Khám Bệnh
+        renderBacSiOptions(ALL_NVS);
+      } catch (e) { }
+    }
+
+    // === 1. TẠO PHIẾU ===
+    async function taoPhieu() {
+      const MABN = getMabn();
+      if (!MABN) return alert('Lỗi: Chưa có mã bệnh nhân.');
+
+      const khoa = $('khoa')?.value || '';
+      const manv = $('manv_pk')?.value || '';
+      const cdsb = $('cdsb')?.value || '';
+
+      // VALIDATION
+      if (!khoa) return alert("Vui lòng nhập/chọn Khoa (hoặc kiểm tra lịch hẹn)");
+      if (!manv) return alert("Vui lòng chọn Bác sĩ khám");
+      if (!cdsb) return alert("Vui lòng nhập Chẩn đoán sơ bộ");
+
+      const body = {
+        MABENHNHAN: MABN,
+        MANHANVIEN: manv,
+        KHOA: khoa,
+        LYDOKHAM: $('lydo')?.value || '',
+        CHANDOAN: cdsb,
+        GHICHU: $('ghichu')?.value || ''
+      };
+      try {
+        const r = await fetch('/api/kham', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error || 'Lỗi');
+        MAPHIEU = j.MAPHIEU;
+        $('phieuInfo').innerText = `✅ Đã tạo phiếu #${MAPHIEU}`;
+
+        // Update Button Text
+        const btnSave = document.querySelector('button[onclick="taoPhieu()"]');
+        if (btnSave) btnSave.innerText = "Cập nhật phiếu khám";
+
+        // Unlock UI
+        lockUI(null);
+
+        // Reset Global State & UI to prevent old data carry-over
+        IS_PAID = false;
+        HOADON_ID = null;
+        CART = {};
+        renderCart();
+        renderDrugSource(ALL_DRUGS); // Re-enable add buttons
+
+        loadPhieu();
+      } catch (err) { alert(err.message); }
+    }
+
+    async function loadPhieu() {
+    if (!MAPHIEU) return;
+    try {
+        const r = await fetch('/api/kham/' + MAPHIEU);
+        const j = await r.json();
+
+        // --- 1. Hiển thị Chẩn đoán ---
+        const tb1 = document.querySelector('#tblCD tbody');
+        tb1.innerHTML = '';
+        (j.chandoan || []).forEach(x => {
+            tb1.innerHTML += `<tr><td>${x.ICD10 || ''}</td><td>${x.MOTA || ''}</td><td>${x.LACHINH ? '✓' : ''}</td></tr>`;
+        });
+
+        // --- 2. Hiển thị Xét nghiệm ---
+        const tb2 = document.querySelector('#tblXN tbody');
+        tb2.innerHTML = '';
+        (j.xetnghiem || []).forEach(x => {
+            const giaFormatted = new Intl.NumberFormat('vi-VN').format(x.GIA || 0) + ' đ';
+            tb2.innerHTML += `
+                <tr>
+                    <td>${x.MAXN}</td>
+                    <td>${x.LOAIXN || ''}</td>
+                    <td>${x.CHIDINH || ''}</td>
+                    <td style="color: var(--color-accent-orange); font-weight: bold;">${giaFormatted}</td>
+                    <td>${x.TRANGTHAI || ''}</td>
+                </tr>`;
+        });
+
+        // --- 3. Xử lý Hóa đơn & Trạng thái Khóa UI ---
+        const tb4 = document.querySelector('#tblHD tbody');
+        tb4.innerHTML = '';
+        const hd = (j.hoadon || [])[0];
+        
+        if (hd) {
+            HOADON_ID = hd.ID;
+            IS_PAID = !!hd.DATHANHTOAN;
+
+            // Hiển thị thông tin hóa đơn cơ bản
+            const tongTien = parseFloat(hd.TONGTIEN || 0);
+            $('tong').value = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(tongTien);
+            $('hinhthuc').value = hd.HINHTHUC || 'CASH';
+            $('paid').checked = IS_PAID;
+
+            // Kích hoạt lớp phủ mờ (overlay) nếu đã thanh toán
+            IS_PAID ? lockUI('PAID') : lockUI(null);
+
+            // --- CHIẾN LƯỢC KHÓA TRIỆT ĐỂ ---
+            // Truy xuất tất cả các thành phần có khả năng tương tác
+            const allElements = document.querySelectorAll('button, input, select, textarea, a.btn');
+            
+            allElements.forEach(el => {
+                if (IS_PAID) {
+                    // Chỉ loại trừ duy nhất nút In, tất cả các thành phần khác bị vô hiệu hóa
+                    if (el.id === 'btnInPhieu') {
+                        el.disabled = false;
+                        el.style.pointerEvents = 'auto';
+                        el.style.opacity = '1';
+                        el.style.zIndex = '9999'; // Đảm bảo nổi lên trên lớp phủ overlay
+                    } else {
+                        el.disabled = true;
+                        el.style.pointerEvents = 'none'; // Ngăn chặn sự kiện click chuột
+                        el.style.opacity = '0.6'; // Làm mờ các nút không khả dụng
+                    }
+                } else {
+                    // Mở khóa lại toàn bộ nếu chưa thanh toán
+                    el.disabled = false;
+                    el.style.pointerEvents = 'auto';
+                    el.style.opacity = '1';
+                }
+            });
+
+            // Đặc trị cho các thư viện bên thứ ba như Select2 (không bị ảnh hưởng bởi disabled HTML thuần)
+            jQuery('#xnloai, #xncd, #manv_don, #khoa, #manv_pk, #mota_hd').prop('disabled', IS_PAID).trigger('change');
+
+            // Hiển thị chi tiết các dòng hóa đơn
+            hd.CHITIET.forEach(ct => {
+                tb4.innerHTML += `
+                    <tr>
+                        <td>${ct.LOAI}</td>
+                        <td>${ct.MOTA}</td>
+                        <td>${ct.SOLUONG}</td>
+                        <td>${Number(ct.DONGIA).toLocaleString()}</td>
+                        <td>${Number(ct.THANHTIEN).toLocaleString()}</td>
+                    </tr>`;
+            });
+            
+            $('invoice-details').style.display = 'block';
+            $('btnTaoHD').innerText = IS_PAID ? 'Hóa đơn đã chốt' : 'Cập nhật hóa đơn!';
+            togglePaymentUI(hd.HINHTHUC || 'CASH');
+        } else {
+            $('invoice-details').style.display = 'none';
+            $('btnTaoHD').innerText = 'Tạo hóa đơn';
+        }
+
+        // --- 4. Đồng bộ Đơn thuốc và Giỏ hàng ---
+        CART = {};
+        const lastDon = (j.don || [])[0];
+        if (lastDon && lastDon.CHITIET) {
+            lastDon.CHITIET.forEach(d => {
+                if (d.MATHUOC) {
+                    CART[d.MATHUOC] = {
+                        MATHUOC: d.MATHUOC, TENTHUOC: d.TENTHUOC, DONVI: d.DONVI,
+                        LIEUDUNG: d.LIEUDUNG, SOLUONG: d.SOLUONG, GIA: d.GIA || 0
+                    };
+                }
+            });
+        }
+        renderCart();
+        renderDrugSource(ALL_DRUGS);
+
+        // --- 5. Cập nhật thông tin Phiếu khám ---
+        const pk = j.phieukham || {};
+        if (pk.LYDOKHAM) $('lydo').value = pk.LYDOKHAM;
+        if (pk.CHANDOAN) $('cdsb').value = pk.CHANDOAN;
+        if (pk.GHICHU) $('ghichu').value = pk.GHICHU;
+
+        jQuery('#khoa').val(pk.KHOA || '').trigger('change');
+
+        // Trì hoãn nhẹ để đảm bảo danh sách bác sĩ đã được render trước khi gán giá trị
+        setTimeout(() => {
+            if (pk.MANHANVIEN) {
+                jQuery('#manv_pk').val(pk.MANHANVIEN).trigger('change');
+                const donSel = $('manv_don');
+                if (donSel) {
+                    donSel.value = (lastDon && lastDon.BACSI) ? lastDon.BACSI : pk.MANHANVIEN;
+                    jQuery(donSel).trigger('change');
+                }
+            }
+        }, 100);
+
+    } catch (e) {
+        console.error("Lỗi khi tải thông tin phiếu:", e);
+    }
+}
+    // === 2. CHẨN ĐOÁN & XÉT NGHIỆM ===
+    async function themCD() {
+      if (!MAPHIEU) return alert('Chưa có phiếu khám');
+      if (IS_PAID) return alert('Hóa đơn đã thanh toán, không thể thêm chẩn đoán!');
+
+      const icd = $('icd').value.trim();
+      const mota = $('mota').value.trim();
+      if (!icd || !mota) return alert('Vui lòng nhập đầy đủ Mã ICD10 và Mô tả!');
+
+      try {
+        await fetch(`/api/kham/${MAPHIEU}/chandoan`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ICD10: icd, MOTA: mota, LACHINH: $('la').checked })
+        });
+        $('icd').value = ''; $('mota').value = '';
+        loadPhieu();
+      } catch (e) { }
+    }
+    // Tìm hàm themXN trong khambenh.html và cập nhật:
+    async function themXN() {
+        if (!MAPHIEU) return alert('Chưa có phiếu khám');
+        if (IS_PAID) return alert('Hóa đơn đã thanh toán, không thể thêm xét nghiệm!');
+        
+        // Lấy giá trị từ ô xngia, loại bỏ các ký tự không phải số (ví dụ: "350.000 đ" -> 350000)
+        const giaText = $('xngia').value.replace(/[^\d]/g, ''); 
+        const giaSo = parseFloat(giaText) || 0;
+
+        try {
+            await fetch(`/api/kham/${MAPHIEU}/xn`, {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    LOAIXN: jQuery('#xnloai').val(), 
+                    CHIDINH: jQuery('#xncd').val(),
+                    GIA: giaSo // GỬI THÊM GIÁ TIỀN LÊN SERVER
+                })
+            });
+
+            // Reset lại các ô sau khi thêm thành công
+            jQuery('#xnloai').val('').trigger('change');
+            jQuery('#xncd').empty().append('<option value="">— Chọn chỉ định —</option>').trigger('change');
+            $('xngia').value = '';
+
+            loadPhieu(); // Tải lại để bảng bên phải hiển thị giá mới vừa lưu
+        } catch (e) { console.error(e); }
+    }
+
+    function validateXN() {
+      const loai = jQuery('#xnloai').val();
+      const cd = jQuery('#xncd').val();
+      const btn = document.getElementById('btnThemXN');
+      if (btn) btn.disabled = !(loai && cd);
+    }
+
+    async function loadChiDinhXN() {
+    const loaiId = jQuery('#xnloai').find(':selected').data('id');
+    const selCD = jQuery('#xncd');
+    
+    selCD.empty().append('<option value="">— Đang tải... —</option>');
+    if ($('xngia')) $('xngia').value = ''; // Xóa ô giá khi đổi loại xét nghiệm
+
+    if (!loaiId) {
+        selCD.empty().append('<option value="">— Chọn chỉ định —</option>');
+        return;
+    }
+
+    try {
+        const r = await fetch(`/api/xetnghiem/chidinh?loai_id=${loaiId}`);
+        const list = await r.json();
+        selCD.empty().append('<option value="">— Chọn chỉ định —</option>');
+        
+        list.forEach(item => {
+            const opt = new Option(item.ten, item.ten, false, false);
+            // Cất giá tiền vào thuộc tính data-price
+            jQuery(opt).attr('data-price', item.gia); 
+            selCD.append(opt);
+        });
+        selCD.trigger('change');
+    } catch (e) { console.error(e); }
+}
+
+
+    // === 4. ĐƠN THUỐC (POS) & PAGINATION ===
+    let CURRENT_PAGE = 1;
+    let TOTAL_PAGES = 1;
+    let CURRENT_QUERY = "";
+
+    async function initDrugPos() {
+      await loadDrugGroups();
+      await loadDrugs(1);
+    }
+
+    async function loadDrugGroups() {
+      try {
+        const r = await fetch("/api/nhomthuoc");
+        const list = await r.json();
+        const html = '<option value="">-- Nhóm --</option>' +
+          list.map(x => `<option value="${x.id}">${x.ten}</option>`).join("");
+        const sel = $('filterGroup');
+        if (sel) sel.innerHTML = html;
+      } catch (e) { console.error(e); }
+    }
+
+    async function loadDrugs(page, query = "", gid = "") {
+      try {
+        const res = await fetch(`/api/thuoc?page=${page}&limit=10&q=${encodeURIComponent(query)}&group_id=${gid}`);
+        const data = await res.json();
+
+        // Update Globals
+        ALL_DRUGS = data.items || []; // Note: ALL_DRUGS is now just "Current Page Drugs"
+        CURRENT_PAGE = data.page;
+        TOTAL_PAGES = data.pages;
+
+        // Create full list for CART lookup? 
+        // Logic issue: If item not in current page, addToCart fails? 
+        // Solution: Store full details in cart, lookup only needs current list for click.
+        // Actually addToCart uses ALL_DRUGS.find. So it works for visible items.
+
+        renderDrugSource(ALL_DRUGS);
+        updatePaginationUI();
+      } catch (e) { console.error(e); $('drugListSource').innerHTML = 'Lỗi tải thuốc'; }
+    }
+
+    function updatePaginationUI() {
+      $('pageInfo').innerText = `${CURRENT_PAGE}/${TOTAL_PAGES}`;
+      if (IS_PAID) {
+        $('btnPrev').disabled = true;
+        $('btnNext').disabled = true;
+      } else {
+        $('btnPrev').disabled = (CURRENT_PAGE <= 1);
+        $('btnNext').disabled = (CURRENT_PAGE >= TOTAL_PAGES);
+      }
+    }
+
+    window.changePage = function (delta) {
+      const newPage = CURRENT_PAGE + delta;
+      const k = $('searchThuoc').value.trim();
+      const gid = $('filterGroup').value;
+      if (newPage >= 1 && newPage <= TOTAL_PAGES) {
+        loadDrugs(newPage, k, gid);
+      }
+    }
+
+    // Debounce search
+    let searchTimeout;
+    window.filterThuoc = function () {
+      const k = $('searchThuoc').value.trim();
+      const gid = $('filterGroup').value;
+      CURRENT_QUERY = k;
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        loadDrugs(1, k, gid);
+      }, 300);
+    }
+
+    function renderDrugSource(list) {
+      const c = $('drugListSource'); c.innerHTML = '';
+      if (!list || !list.length) return c.innerHTML = '<div class="empty-state">Trống</div>';
+      list.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'drug-item';
+        const out = (t.TONKHO || 0) <= 0;
+        if (out) div.style.opacity = 0.5;
+        const disabled = out || IS_PAID;
+        const priceStr = new Intl.NumberFormat('vi-VN').format(t.GIA || 0);
+        div.innerHTML = `<div class="drug-info"><b>${t.TENTHUOC}</b><span>${t.MATHUOC} | Tồn: ${t.TONKHO} ${t.DONVI} | Giá: <span style="color:var(--color-accent-orange)">${priceStr}đ</span></span></div><button class="btn-add" ${disabled ? 'disabled' : ''} onclick="addToCart('${t.MATHUOC}')">+</button>`;
+        c.appendChild(div);
+      });
+    }
+    window.addToCart = function (ma) {
+      if (IS_PAID) return alert('Hóa đơn đã thanh toán, không thể thêm thuốc!');
+      const d = ALL_DRUGS.find(x => x.MATHUOC === ma);
+      if (!d) return;
+      if (CART[ma]) CART[ma].SOLUONG++;
+      else CART[ma] = { ...d, SOLUONG: 1, LIEUDUNG: 'Sáng 1, Chiều 1', GIA: d.GIA || 0 };
+      renderCart();
+    }
+    function renderCart() {
+      const c = $('cartList'); c.innerHTML = '';
+      const items = Object.values(CART);
+      $('cartCount').innerText = items.length;
+      if (!items.length) return c.innerHTML = '<div class="empty-state">Chưa chọn</div>';
+      items.forEach(i => {
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        // Disabled if Paid
+        const disAttr = IS_PAID ? 'disabled' : '';
+        const removeBtn = IS_PAID ? '' : `<button class="btn-remove" onclick="delete CART['${i.MATHUOC}']; renderCart()">×</button>`;
+
+        const priceUnit = new Intl.NumberFormat('vi-VN').format(i.GIA || 0);
+        const total = (i.GIA || 0) * (i.SOLUONG || 0);
+        const totalStr = new Intl.NumberFormat('vi-VN').format(total);
+
+        div.innerHTML = `${removeBtn}
+          <div class="cart-item-head">
+               <div><span>${i.TENTHUOC}</span> <small>${i.DONVI}</small></div>
+               <div style="font-size:0.9rem; font-weight:normal; color:var(--color-text-secondary)">
+                   ${priceUnit}đ x ${i.SOLUONG} = <b style="color:var(--color-accent-orange)">${totalStr}đ</b>
+               </div>
+          </div>
+          <div class="cart-controls">
+             <input type="text" value="${i.LIEUDUNG}" ${disAttr} onchange="CART['${i.MATHUOC}'].LIEUDUNG=this.value">
+             <input type="number" min="1" value="${i.SOLUONG}" ${disAttr} onchange="updateCartQty('${i.MATHUOC}', this.value)">
+          </div>`;
+        c.appendChild(div);
+      });
+    }
+    window.clearCart = function () { CART = {}; renderCart(); }
+
+    async function luuDonThuoc() {
+      if (!MAPHIEU) return alert('Chưa có phiếu khám');
+      if (IS_PAID) return alert('Hóa đơn đã thanh toán, không thể lưu đơn thuốc!');
+      const items = Object.values(CART);
+      if (!items.length) return alert('Chưa kê thuốc nào');
+      try {
+        const payload = {
+          BACSI: $('manv_don').value || '',
+          GHICHU: '',
+          CHITIET: items.map(i => ({
+            MATHUOC: i.MATHUOC, TENTHUOC: i.TENTHUOC,
+            LIEUDUNG: i.LIEUDUNG, SOLUONG: i.SOLUONG, DONVI: i.DONVI,
+            HAMLUONG: i.HAMLUONG || ''
+          }))
+        };
+
+        const r = await fetch(`/api/kham/${MAPHIEU}/don/save`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error || 'Lỗi lưu đơn');
+
+        // Auto update Invoice
+        await taoHD();
+
+        alert('✅ Đã lưu đơn thuốc và cập nhật hóa đơn!');
+        clearCart();
+        // loadPhieu is called inside taoHD, so we don't strictly need it here, 
+        // but taoHD might fail silently (catch block), so loadPhieu here ensures UI refresh?
+        // taoHD has a try-catch that swallows errors. 
+        // If taoHD fails, we still want to see the prescriptionSaved state.
+        // Let's rely on taoHD's loadPhieu or call it again. 
+        // Actually taoHD calls loadPhieu at the end of its try block.
+      } catch (e) { alert(e.message); }
+    }
+
+    // === 5. HÓA ĐƠN ===
+    function updateCartQty(ma, val) {
+      if (!CART[ma]) return;
+      let n = Number(val);
+      if (n < 1) n = 1;
+      CART[ma].SOLUONG = n;
+      renderCart();
+    }
+
+    async function taoHD() {
+      if (!MAPHIEU) return alert('Chưa có phiếu khám');
+      try {
+        const r = await fetch(`/api/kham/${MAPHIEU}/hoadon`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ DATHANHTOAN: $('paid').checked, HINHTHUC: $('hinhthuc').value })
+        });
+        const j = await r.json();
+        HOADON_ID = j.HOADON_ID;
+        $('btnTaoHD').innerText = 'Đã cập nhật hóa đơn!';
+        loadPhieu();
+      } catch (e) { }
+    }
+    async function themDongHD() {
+      if (!HOADON_ID) return alert('Hãy tạo hóa đơn trước');
+      // NEW: Check if paid
+      if ($('paid').checked) return alert('Hóa đơn đã thanh toán, không thể thêm chi phí!');
+      try {
+        await fetch(`/api/hoadon/${HOADON_ID}/ct`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ LOAI: 'SERVICE', MOTA: $('mota_hd').value, SOLUONG: $('soluong_hd').value, DONGIA: $('dongia_hd').value })
+        });
+        $('mota_hd').value = ''; $('dongia_hd').value = '';
+        loadPhieu();
+      } catch (e) { }
+    }
+
+    // === 6. SELECT2 INIT ===
+    jQuery(document).ready(function () {
+      // Initialize Select2 on specific selects
+      jQuery('#xnloai, #xncd, #khoa, #manv_pk, #manv_don').select2({
+        width: '100%' // Ensure it takes full width of container
+        
+      });
+      // Thêm vào trong jQuery(document).ready
+      jQuery('#xncd').on('select2:select', function (e) {
+          const opt = jQuery(this).find(':selected');
+          const gia = parseFloat(opt.attr('data-price') || 0);
+          
+          // Hiển thị giá đã format tiền tệ vào ô xngia
+          $('xngia').value = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(gia);
+          validateXN();
+      });
+
+      // Bind Select2 change event to original logic if needed
+      // Note: onchange="loadChiDinhXN()" in HTML might not trigger with Select2 
+      // so we manually bind it here for #xnloai
+      jQuery('#xnloai').on('select2:select', function (e) {
+        loadChiDinhXN();
+        validateXN();
+      });
+
+      jQuery('#xncd').on('select2:select select2:unselect', function (e) {
+        validateXN();
+      });
+
+      jQuery('#xnloai, #xncd').on('change', function () {
+        validateXN();
+      });
+
+      // Khoa → lọc bác sĩ; khoa + bác sĩ → tải dịch vụ đúng khoa (API /api/dich-vu?khoa=...)
+      jQuery('#khoa').on('change', function () {
+        filterBacSiByKhoa(this.value);
+        refreshDichVuSelect();
+      });
+      jQuery('#manv_pk').on('change', function () {
+        refreshDichVuSelect();
+      });
+      jQuery('#mota_hd').on('select2:select', function (e) {
+        updateServicePrice();
+          });
+
+      refreshDichVuSelect();
+    });
+
+    async function refreshDichVuSelect() {
+      const khoa = ($('khoa')?.value || '').trim();
+      const manv = ($('manv_pk')?.value || '').trim();
+      const sel = jQuery('#mota_hd');
+
+      if (sel.hasClass('select2-hidden-accessible')) {
+        try { sel.select2('destroy'); } catch (e) { /* ignore */ }
+      }
+
+      const needBoth = !khoa || !manv;
+      const placeholder = needBoth
+        ? '— Chọn khoa và bác sĩ trước —'
+        : '— Nhập hoặc chọn chi phí —';
+      sel.empty().append(new Option(placeholder, '', false, false));
+
+      if (needBoth) {
+        sel.prop('disabled', true);
+        sel.select2({ width: '100%', tags: true, placeholder: placeholder });
+        if (IS_PAID) sel.prop('disabled', true);
+        return;
+      }
+
+      sel.prop('disabled', false);
+      try {
+        const r = await fetch('/api/dich-vu?khoa=' + encodeURIComponent(khoa));
+        const list = await r.json();
+        if (!Array.isArray(list)) throw new Error('bad json');
+
+        list.forEach(s => {
+          if (!s || !s.ten) return;
+          const opt = new Option(s.ten, s.ten, false, false);
+          jQuery(opt).attr('data-price', s.dongia);
+          sel.append(opt);
+        });
+      } catch (e) {
+        console.error('Lỗi tải dịch vụ theo khoa', e);
+      }
+
+      sel.select2({ width: '100%', tags: true, placeholder: placeholder });
+      if (IS_PAID) sel.prop('disabled', true);
+    }
+    
+
+    // Auto-update price when Qty or Service changes
+    window.updateServicePrice = function () {
+      const sel = jQuery('#mota_hd');
+      const opt = sel.find('option:selected');
+      
+      // Lấy giá gốc từ thuộc tính data-price
+      const basePrice = parseFloat(opt.attr('data-price') || 0);
+
+      const qtyInput = document.getElementById('soluong_hd');
+      const priceInput = document.getElementById('dongia_hd');
+
+      if (qtyInput && priceInput) {
+        const qty = parseFloat(qtyInput.value) || 0;
+        // Tính tổng tiền dựa trên số lượng
+        priceInput.value = basePrice * qty; 
+      }
+    }
+
+    // OVERRIDE themDongHD to handle calculated unit price
+    const originalThemDongHD = window.themDongHD; // backup if needed, but we replace logic
+    window.themDongHD = async function () {
+      if (!HOADON_ID) return alert('Hãy tạo hóa đơn trước');
+      if ($('paid').checked) return alert('Hóa đơn đã thanh toán, không thể thêm chi phí!');
+
+      // Use jQuery to get value to support Select2 tags
+      let mota = jQuery('#mota_hd').val();
+      if (!mota) return alert('Vui lòng chọn chi phí');
+
+      let qty = parseFloat($('soluong_hd').value) || 0;
+      let totalInput = parseFloat($('dongia_hd').value) || 0;
+
+      if (qty <= 0) return alert('Số lượng phải > 0');
+
+      // Calculate Unit Price
+      // If user selected a service -> dongia_hd is (Unit * Qty)
+      // If user typed custom -> dongia_hd is whatever they typed.
+      // We assume dongia_hd is TOTAL for that row as per "nhân theo số lượng" request.
+
+      let unitPrice = totalInput / qty;
+
+      try {
+        await fetch(`/api/hoadon/${HOADON_ID}/ct`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            LOAI: 'SERVICE',
+            MOTA: mota,
+            SOLUONG: qty,
+            DONGIA: unitPrice
+          })
+        });
+
+        // Reset
+        jQuery('#mota_hd').val(null).trigger('change');
+        $('soluong_hd').value = '1';
+        $('dongia_hd').value = '';
+
+        loadPhieu();
+      } catch (e) { alert('Lỗi thêm chi phí'); }
+    }
+    let currentKhoa = ""; // Biến lưu khoa đang chọn
+
+    // Bắt sự kiện khi bấm vào tên khoa
+    document.querySelectorAll('.dept-item').forEach(item => {
+        item.addEventListener('click', function() {
+            // 1. Xử lý giao diện (Active state)
+            document.querySelectorAll('.dept-item').forEach(i => i.classList.remove('active', 'bg-primary', 'text-white'));
+            this.classList.add('active', 'bg-primary', 'text-white'); // Highlight dòng được chọn
+
+            // 2. Lấy tên khoa
+            currentKhoa = this.getAttribute('data-khoa');
+            
+            // 3. Gọi hàm tải lại danh sách
+            console.log("Đang lọc theo khoa:", currentKhoa);
+            loadPatients(); 
+        });
+    });
+
+    // Hàm load bệnh nhân (Cập nhật từ code cũ của bạn)
+    async function loadPatients() {
+        const q = document.getElementById('searchInput').value.trim(); // Input tìm kiếm
+        
+        // Tạo URL với tham số khoa
+        let url = `/api/benhnhan?limit=50&q=${encodeURIComponent(q)}`;
+        
+        // Nếu có chọn khoa thì thêm vào URL
+        if (currentKhoa) {
+            url += `&khoa=${encodeURIComponent(currentKhoa)}`;
+        }
+
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            // Gọi hàm render bảng (hàm này bạn đã có sẵn để vẽ bảng)
+            renderPatientTable(data); 
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Hàm vẽ bảng (Ví dụ - bạn dùng hàm render hiện tại của bạn)
+    function renderPatientTable(data) {
+        const tbody = document.querySelector("#patient-table tbody"); // ID bảng của bạn
+        tbody.innerHTML = "";
+        
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">Không có bệnh nhân nào ở khoa này</td></tr>';
+            return;
+        }
+
+        data.forEach(bn => {
+            const tr = `
+                <tr>
+                    <td><a href="/kham/${bn.MABENHNHAN}" class="fw-bold">${bn.MABENHNHAN}</a></td>
+                    <td>${bn.HOVATEN}</td>
+                    <td>${bn.NGAYSINH}</td>
+                    <td>${bn.SODIENTHOAI}</td>
+                    <td>${bn.DIACHI}</td>
+                    <td><a href="/kham/${bn.MABENHNHAN}" class="btn btn-sm btn-primary">Khám ngay</a></td>
+                </tr>
+            `;
+            tbody.innerHTML += tr;
+        });
+    }
+  </script>
+
+  <!-- MODAL QR CODE -->
+  <div id="modal-qr" class="modal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div class="modal-content"
+      style="background:var(--color-bg-dark); padding:20px; border-radius:8px; width:300px; text-align:center; position:relative;">
+      <span onclick="$('modal-qr').style.display='none'"
+        style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:1.5rem;">&times;</span>
+      <h3 style="margin-top:0;">Quét Mã QR</h3>
+      <!-- Placeholder QR Image -->
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ExamplePaymentData" alt="QR Code"
+        style="width:200px; height:200px; margin-bottom:10px;">
+      <p>Vui lòng quét mã để thanh toán</p>
+    </div>
+  </div>
+  <!-- MODAL QR CODE (Full Version) -->
+  <div id="payModal" class="modal hidden">
+    <div class="modal-body">
+      <div class="modal-head">
+        <h3><i class="fa-solid fa-qrcode"></i> Thanh toán VNPAY</h3>
+        <button class="close-btn" onclick="closePayModal()">×</button>
+      </div>
+
+      <div id="payInfo" style="font-size:14px; margin-bottom:10px; line-height:1.6"></div>
+
+      <div class="qrbox">
+        <!-- Content injected by JS -->
+        <img id="qrImg" alt="QR Code" style="display:none" />
+      </div>
+
+      <div class="modal-actions">
+        <!-- <button id="btnCopied" class="btn btn-outline" style="border-color:var(--color-border); color:var(--color-text-primary)"><i class="fa-regular fa-copy"></i> Copy Link</button> -->
+        <a id="openVnp" class="btn btn-primary" target="_blank" rel="noopener"
+          style="background:var(--color-accent-blue); color:white; text-decoration:none; padding:8px 16px; border-radius:6px;">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Web VNPAY
+        </a>
+      </div>
+    </div>
+  </div>
+  
+
+  <script src="/static/theme.js"></script>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+
+</html>

@@ -1,0 +1,498 @@
+:root {
+  --ink: var(--color-text-primary);
+  --muted: var(--color-text-secondary);
+  --ring: var(--color-border);
+  --bg1: var(--color-bg-darkest);
+  --card: var(--color-bg-dark);
+  --brand: var(--color-accent-blue);
+  --ok: var(--color-accent-green);
+}
+
+* {
+  box-sizing: border-box
+}
+
+html,
+body {
+  height: 100%
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background:
+    radial-gradient(900px 400px at 110% 0%, #e0f2fe 0%, transparent 60%),
+    radial-gradient(900px 400px at -10% -10%, #e2e8f0 0%, transparent 60%),
+    linear-gradient(180deg, #eef2ff, #f8fafc);
+}
+
+.wrap {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px
+}
+
+.head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.title {
+  display: flex;
+  gap: 12px;
+  align-items: center
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--brand);
+  color: #fff
+}
+
+h1 {
+  font-size: 24px;
+  margin: 0
+}
+
+.muted {
+  color: var(--muted);
+  margin: 0
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center
+}
+
+select,
+.btn {
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--ring);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.btn {
+  background: var(--bg1);
+  cursor: pointer
+}
+
+.nowbox {
+  background: var(--card);
+  border: 1px solid var(--ring);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 16px;
+}
+
+.nowlabel {
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 8px
+}
+
+.nowrow {
+  display: flex;
+  gap: 16px;
+  align-items: center
+}
+
+.big {
+  font-size: 84px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 1px;
+  min-width: 200px;
+  text-align: center;
+  background: linear-gradient(180deg, var(--color-accent-blue), var(--brand));
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.info .name {
+  font-size: 32px;
+  font-weight: 800
+}
+
+.info .khoa {
+  color: var(--muted);
+  margin-top: 6px
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px
+}
+
+@media (max-width:900px) {
+  .grid {
+    grid-template-columns: 1fr
+  }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--ring);
+  border-radius: 18px;
+  padding: 12px 12px 2px;
+  box-shadow: var(--shadow-md);
+}
+
+.cardtitle {
+  font-weight: 800;
+  padding: 4px 4px 10px 4px
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--ring)
+}
+
+.table thead th {
+  background: var(--bg1);
+  text-align: left
+}
+
+.table tbody tr:nth-child(odd) {
+  background: var(--card);
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700
+}
+
+.b-WAITING {
+  background: rgba(2, 132, 199, 0.1);
+  color: var(--brand)
+}
+
+.b-CALLING {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--color-accent-orange)
+}
+
+.b-DONE {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--ok)
+}
+
+.b-SKIPPED {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-accent-red)
+}
+
+.msg {
+  margin-top: 12px;
+  color: #991b1b;
+  font-weight: 600
+}
+
+:root {
+  --ink: var(--color-text-primary);
+  --muted: var(--color-text-secondary);
+  --ring: var(--color-border);
+  --bg1: var(--color-bg-darkest);
+  --card: var(--color-bg-dark);
+  --brand: var(--color-accent-blue);
+  --ok: var(--color-accent-green);
+}
+
+* {
+  box-sizing: border-box
+}
+
+html,
+body {
+  height: 100%
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background: var(--color-bg-darkest);
+  /* radial-gradient(900px 400px at 110% 0%, #e0f2fe 0%, transparent 60%),
+    radial-gradient(900px 400px at -10% -10%, #e2e8f0 0%, transparent 60%),
+    linear-gradient(180deg,#eef2ff,#f8fafc); */
+}
+
+.wrap {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px
+}
+
+.head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.title {
+  display: flex;
+  gap: 12px;
+  align-items: center
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--brand);
+  color: #fff
+}
+
+h1 {
+  font-size: 24px;
+  margin: 0
+}
+
+.muted {
+  color: var(--muted);
+  margin: 0
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center
+}
+
+select,
+.btn {
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--ring);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.btn {
+  background: var(--bg1);
+  cursor: pointer
+}
+
+.nowbox {
+  background: var(--card);
+  border: 1px solid var(--ring);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 16px;
+}
+
+.nowlabel {
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 8px
+}
+
+.nowrow {
+  display: flex;
+  gap: 16px;
+  align-items: center
+}
+
+.big {
+  font-size: 84px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 1px;
+  min-width: 200px;
+  text-align: center;
+  background: linear-gradient(180deg, var(--brand), var(--brand));
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.info .name {
+  font-size: 32px;
+  font-weight: 800
+}
+
+.info .khoa {
+  color: var(--muted);
+  margin-top: 6px
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px
+}
+
+/* Đây là media query có sẵn của bạn - rất tốt! */
+@media (max-width:900px) {
+  .grid {
+    grid-template-columns: 1fr
+  }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--ring);
+  border-radius: 18px;
+  padding: 12px 12px 2px;
+  box-shadow: var(--shadow-md);
+}
+
+.cardtitle {
+  font-weight: 800;
+  padding: 4px 4px 10px 4px
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--ring)
+}
+
+.table thead th {
+  background: var(--bg1);
+  text-align: left
+}
+
+.table tbody tr:nth-child(odd) {
+  background: var(--card)
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700
+}
+
+.b-WAITING {
+  background: rgba(2, 132, 199, 0.1);
+  color: var(--brand)
+}
+
+.b-CALLING {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--color-accent-orange)
+}
+
+.b-DONE {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--ok)
+}
+
+.b-SKIPPED {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-accent-red)
+}
+
+.msg {
+  margin-top: 12px;
+  color: #991b1b;
+  font-weight: 600
+}
+
+
+/* ========================================= */
+/* ⭐ BỔ SUNG TỐI ƯU CHO ĐIỆN THOẠI (DƯỚI 700px) */
+/* ========================================= */
+@media (max-width: 700px) {
+  .wrap {
+    margin: 16px auto;
+    /* Giảm khoảng trống */
+    padding: 0 10px;
+  }
+
+  .head {
+    flex-wrap: wrap;
+    /* Cho phép rớt dòng */
+    gap: 16px;
+  }
+
+  .controls {
+    width: 100%;
+    /* Cho 2 control chiếm 100% khi rớt dòng */
+    display: grid;
+    grid-template-columns: 1fr auto;
+    /* Select dãn ra, nút giữ nguyên */
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .logo {
+    width: 38px;
+    height: 38px;
+  }
+
+  /* 1. Xử lý ô đang gọi */
+  .nowrow {
+    flex-direction: column;
+    /* Xếp chồng số và tên */
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .big {
+    font-size: 72px;
+    /* Giảm cỡ chữ số */
+    min-width: 0;
+    /* Xóa min-width để không bị đẩy */
+    text-align: left;
+    /* Căn trái */
+  }
+
+  .info .name {
+    font-size: 26px;
+    /* Giảm cỡ chữ tên */
+  }
+
+  /* 2. Xử lý bảng */
+  .table {
+    display: block;
+    /* Cho phép table có overflow */
+    width: 100%;
+    overflow-x: auto;
+    /* Thêm thanh cuộn ngang CHỈ cho bảng */
+    white-space: nowrap;
+    /* Giữ các hàng không bị xuống dòng */
+  }
+
+  .table th,
+  .table td {
+    white-space: nowrap;
+    /* Đảm bảo cell không bị vỡ */
+  }
+}
+
+/* Dấu } thừa đã bị xóa khỏi đây */

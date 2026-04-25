@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Quản lý dịch vụ - HOPITAL</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* === 1. DASHBOARD LAYOUT STYLES === */
+    :root {
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --bg-body: #f4f7f6;
+      --sidebar-bg: #2c3e50;
+      --sidebar-text: #ecf0f1;
+      --active-item: #3498db;
+      --color-border: #e5e7eb;
+      --card-bg: #ffffff;
+      
+      /* Page Specific Colors */
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --radius: 10px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    /* Sửa lỗi xung đột theme.css bằng cách khóa chặt thuộc tính body */
+    body.app { 
+      font-family: 'Segoe UI', sans-serif; 
+      display: flex !important; 
+      margin: 0 !important; 
+      background: var(--bg-body); 
+      height: 100vh !important; 
+      overflow: hidden !important; 
+      color: var(--text);
+    }
+
+    /* Bỏ gạch chân triệt để ở mọi liên kết */
+    a, a:hover, a:focus, a:active { text-decoration: none !important; }
+
+    /* Sidebar - Khóa chiều cao 100vh */
+    .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; height: 100vh !important; }
+    .sidebar-brand { height: var(--header-height); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; text-decoration: none; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-item { display: flex; align-items: center; padding: 12px 25px; color: #bdc3c7; text-decoration: none; transition: 0.3s; border-left: 4px solid transparent; font-size: 0.95rem; }
+    .nav-item i { width: 25px; margin-right: 10px; text-align: center; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--active-item); }
+    
+    /* Submenu */
+    .nav-group { margin: 0; }
+    .nav-group-label { padding: 12px 25px; color: #bdc3c7; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .nav-group-label .left { display: flex; align-items: center; gap: 10px; }
+    .nav-group-label .left i { width: 25px; text-align: center; }
+    .nav-group-label:hover { color: white; }
+    .nav-group-content { display: none; background: rgba(0,0,0,0.2); }
+    .nav-group.is-open .nav-group-content { display: block; }
+    .nav-group-content .nav-item { padding-left: 55px; font-size: 0.9rem; }
+
+    /* Main Content */
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh !important; }
+    .top-header { height: var(--header-height); background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); z-index: 10; flex-shrink: 0; }
+    .header-user { display: flex; align-items: center; gap: 15px; }
+    .btn-logout { color: #e74c3c; text-decoration: none; font-weight: 500; font-size: 0.9rem; border: 1px solid #e74c3c; padding: 5px 15px; border-radius: 20px; transition: 0.2s; }
+    .btn-logout:hover { background: #e74c3c; color: white; }
+
+    /* Content Body */
+    .content-body { flex: 1; overflow-y: auto; padding: 30px; }
+
+    /* === 2. STYLE RIÊNG CHO TRANG DỊCH VỤ === */
+    .controls { background: white; padding: 20px; border-radius: 10px; box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+    
+    .filter-group { display: flex; align-items: center; gap: 10px; flex: 1; }
+    .filter-group select { padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; outline: none; min-width: 250px; background: #fff; cursor: pointer; }
+    .hint-text { color: #888; font-size: 0.85rem; margin-left: 10px; font-style: italic; }
+
+    .btn-primary { background: var(--active-item); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary:hover { opacity: 0.9; }
+
+    /* Table Styles */
+    .table-container { background: white; border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--color-border); }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f9fafb; color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; padding: 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    td { padding: 15px; border-bottom: 1px solid #e5e7eb; color: #1f2937; vertical-align: middle; }
+    tr:hover { background: #f9fafb; }
+    tr:last-child td { border-bottom: none; }
+
+    .badge-khoa { background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; }
+    .price-text { font-weight: 600; color: #059669; }
+
+    .btn-icon { padding: 6px 10px; border-radius: 4px; border: 1px solid transparent; background: transparent; cursor: pointer; transition: 0.2s; }
+    .btn-edit { color: #d97706; border-color: #fcd34d; background: #fffbeb; }
+    .btn-edit:hover { background: #fef3c7; }
+    .btn-delete { color: #dc2626; border-color: #fca5a5; background: #fef2f2; }
+    .btn-delete:hover { background: #fee2e2; }
+
+    /* Modal Styles */
+    dialog.modal { padding: 0; border: none; border-radius: 10px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 500px; max-width: 90%; }
+    dialog::backdrop { background: rgba(0,0,0,0.5); }
+    .modal__panel { padding: 25px; background: white; display: flex; flex-direction: column; gap: 20px; }
+    .modal__header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+    .modal__header h3 { margin: 0; color: var(--sidebar-bg); font-size: 1.2rem; }
+    .modal__close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
+    .modal__close:hover { color: #ef4444; }
+    
+    .form-grid { display: flex; flex-direction: column; gap: 15px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.9rem; font-weight: 600; color: #374151; }
+    .field input, .field select { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; font-size: 0.95rem; }
+    .field input:focus, .field select:focus { border-color: var(--active-item); box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
+    
+    .modal__actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+    .btn-light { background: white; border: 1px solid #d1d5db; color: #374151; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    .btn-light:hover { background: #f3f4f6; }
+  </style>
+</head>
+
+<body class="app">
+
+  <aside class="sidebar">
+    <a href="{{ url_for('trang_chu') }}" class="sidebar-brand">
+      <i class="fa-solid fa-hospital-user" style="margin-right: 10px;"></i> HOPITAL
+    </a>
+
+    <div class="sidebar-menu">
+      <a href="{{ url_for('trang_chu') }}" class="nav-item {{ 'active' if active=='trang_chu' else '' }}">
+        <i class="fa-solid fa-house"></i> Trang chủ
+      </a>
+
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('ql_bac_si') }}" class="nav-item {{ 'active' if active=='ql_bac_si' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i> Quản lý bác sĩ
+        </a>
+        <a href="/admin/khoa" class="nav-item {{ 'active' if active=='ql_khoa' else '' }}">
+          <i class="fa-solid fa-building-circle-check"></i> Quản lý Khoa
+        </a>
+        <a href="{{ url_for('admin_accounts_page_v2') }}" class="nav-item {{ 'active' if active=='ql_tai_khoan' else '' }}">
+          <i class="fa-solid fa-users-gear"></i> Tài khoản hệ thống
+        </a>
+        <a href="/admin/dich-vu" class="nav-item active">
+          <i class="fa-solid fa-receipt"></i> Quản lý Dịch vụ
+        </a>
+        <a href="/admin/xet-nghiem" class="nav-item {{ 'active' if active=='ql_xet_nghiem' else '' }}">
+          <i class="fa-solid fa-flask"></i> Quản lý Xét nghiệm
+        </a>
+        <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+          <i class="fa-solid fa-bed"></i> Phòng bệnh
+        </a>
+      {% endif %}
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+
+        <div class="nav-group {{ 'is-open' if active in ['ql_lich_hen','goi_so','lay_so_online'] else '' }}">
+          <div class="nav-group-label" onclick="this.parentElement.classList.toggle('is-open')">
+            <div class="left">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Lịch hẹn</span>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
+          </div>
+          
+          <div class="nav-group-content">
+            {% if session.role == 'doctor' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            <a href="{{ url_for('goi_so') }}" class="nav-item {{ 'active' if active=='goi_so' else '' }}">Danh sách thứ tự</a>
+            <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">Lấy số online</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('ql_kham_benh') }}" class="nav-item {{ 'active' if active=='ql_kham_benh' else '' }}">
+          <i class="fa-solid fa-stethoscope"></i> Khám bệnh
+        </a>
+
+        <a href="{{ url_for('benh_nhan') }}" class="nav-item {{ 'active' if active=='benh_nhan' else '' }}">
+          <i class="fa-solid fa-address-card"></i> Hồ sơ bệnh nhân
+        </a>
+
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('ql_thuoc_kho') }}" class="nav-item {{ 'active' if active=='thuoc_kho' else '' }}">
+            <i class="fa-solid fa-pills"></i> Thuốc & Kho
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('ql_thanh_toan') }}" class="nav-item {{ 'active' if active=='thanh_toan' else '' }}">
+          <i class="fa-solid fa-credit-card"></i> Thanh toán
+        </a>
+
+        <a href="{{ url_for('lich_lam_viec') }}" class="nav-item {{ 'active' if active=='lich_lam_viec' else '' }}">
+          <i class="fa-solid fa-calendar-days"></i> Lịch làm việc
+        </a>
+
+        {% if session.role == 'doctor' %}
+          <a href="{{ url_for('xet_lich_lam') }}" class="nav-item {{ 'active' if active=='xet_lich_lam' else '' }}">
+            <i class="fa-solid fa-user-clock"></i> Đăng ký lịch
+          </a>
+
+          <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+            <i class="fa-solid fa-bed"></i> Phòng bệnh
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('bao_cao_thong_ke') }}" class="nav-item {{ 'active' if active=='bao_cao' else '' }}">
+          <i class="fa-solid fa-chart-line"></i> Báo cáo
+        </a>
+
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+
+      {% else %}
+        <a href="{{ url_for('quansat_layso') }}" class="nav-item {{ 'active' if active=='quansat_layso' else '' }}">
+          <i class="fa-solid fa-eye"></i> Quan sát số
+        </a>
+        <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">
+          <i class="fa-solid fa-ticket"></i> Lấy số online
+        </a>
+        <a href="{{ url_for('dat_lich_page') }}" class="nav-item {{ 'active' if active=='dat_lich' else '' }}">
+          <i class="fa-solid fa-calendar-plus"></i> Đặt lịch khám
+        </a>
+        {% if session.mabn %}
+          <a href="{{ url_for('ho_so_benh_nhan', mabn=session.mabn) }}" class="nav-item {{ 'active' if active=='ho_so_toi' else '' }}">
+            <i class="fa-solid fa-file-medical"></i> Hồ sơ của tôi
+          </a>
+        {% endif %}
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="top-header">
+      <div style="font-weight: bold; font-size: 1.1rem; color: #2c3e50;">QUẢN TRỊ HỆ THỐNG</div>
+      <div class="header-user">
+        <span>Xin chào, <b>{{ session.user }}</b></span>
+        <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+      </div>
+    </header>
+
+    <div class="content-body">
+      
+      <section class="controls">
+        <div class="filter-group">
+          <label for="khoaFilter" style="font-weight:600; color:#555">Lọc:</label>
+          <select id="khoaFilter">
+            <option value="">-- Tất cả khoa --</option>
+          </select>
+          <span id="khoaHint" class="hint-text">Đang tải danh sách khoa...</span>
+        </div>
+
+        <button onclick="openModal()" class="btn-primary">
+          <i class="fa-solid fa-plus-circle"></i> Thêm dịch vụ
+        </button>
+      </section>
+
+      <div class="table-container">
+        <table id="tbl">
+          <thead>
+            <tr>
+              <th style="width:35%;">Tên dịch vụ / Chi phí</th>
+              <th style="width:25%;">Khoa</th>
+              <th style="width:20%;">Đơn giá (VNĐ)</th>
+              <th style="text-align:center; width:20%;">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">Đang tải dữ liệu...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <dialog id="dlg" class="modal">
+    <form method="dialog" id="frm" class="modal__panel" onsubmit="return false;">
+      <header class="modal__header">
+        <h3 id="dlgTitle"><i class="fa-solid fa-pen-to-square"></i> Thêm dịch vụ</h3>
+        <button type="button" id="btnClose" class="modal__close" aria-label="Đóng">✕</button>
+      </header>
+
+      <div class="form-grid">
+        <input type="hidden" id="editId">
+
+        <div class="field">
+          <label for="ten">Tên dịch vụ <span style="color:red">*</span></label>
+          <input id="ten" required placeholder="Nhập tên dịch vụ khám/chữa bệnh...">
+        </div>
+
+        <div class="field">
+          <label for="khoa_ten">Khoa áp dụng <span style="color:red">*</span></label>
+          <select id="khoa_ten" required>
+            <option value="">-- Chọn khoa --</option>
+          </select>
+          <div style="font-size:0.8rem; color:#888; margin-top:2px;">
+            * Danh sách khoa lấy từ bảng KHOA (DB), trùng với trang quản lý khoa.
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="dongia">Đơn giá (VNĐ) <span style="color:red">*</span></label>
+          <input id="dongia" type="number" min="0" required placeholder="Nhập số tiền...">
+        </div>
+      </div>
+
+      <footer class="modal__actions">
+        <button type="button" class="btn-light" onclick="closeModal()">Hủy bỏ</button>
+        <button type="button" onclick="save()" class="btn-primary">
+          <i class="fa-solid fa-floppy-disk"></i> Lưu lại
+        </button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    let LIST = [];
+    let KHOA_NAMES = [];
+
+    function fmtMoney(n) {
+      const x = Number(n || 0);
+      return new Intl.NumberFormat('vi-VN').format(x);
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    // 1. Tải danh sách khoa từ DBO.KHOA (GET /api/khoa)
+    async function loadKhoaFromNhanVien(){
+      const hint = $('khoaHint');
+      hint.textContent = 'Đang tải khoa...';
+
+      try{
+        const res = await fetch('/api/khoa');
+        const unique = await res.json();
+
+        KHOA_NAMES = unique;
+
+        const filter = $('khoaFilter');
+        filter.innerHTML = `<option value="">-- Tất cả khoa --</option>` +
+          unique.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+
+        const sel = $('khoa_ten');
+        sel.innerHTML = `<option value="">-- Chọn khoa --</option>` +
+          unique.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+
+        hint.textContent = '';
+      }catch(e){
+        console.error(e);
+        hint.textContent = 'Lỗi tải khoa.';
+        hint.style.color = 'red';
+      }
+    }
+
+
+    // 2. Tải danh sách dịch vụ
+    async function load() {
+        try {
+            $('tbody').innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">Đang tải dữ liệu...</td></tr>';
+
+            const khoa = ($('khoaFilter').value || '').trim();
+            const url = khoa ? `/api/dich-vu?khoa=${encodeURIComponent(khoa)}` : '/api/dich-vu';
+
+            const res = await fetch(url);
+            LIST = await res.json();
+            render();
+        } catch (e) {
+            $('tbody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:red; padding:20px;">Lỗi tải dữ liệu. Vui lòng thử lại.</td></tr>';
+        }
+    }
+
+    // 3. Render bảng
+    function render() {
+      const tb = $('tbody');
+      tb.innerHTML = '';
+
+      if (!Array.isArray(LIST) || LIST.length === 0) {
+        tb.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">Chưa có dịch vụ nào trong hệ thống.</td></tr>';
+        return;
+      }
+
+      LIST.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:500;">${escapeHtml(item.ten ?? '')}</td>
+          <td><span class="badge-khoa">${escapeHtml(item.khoa_ten ?? item.khoa ?? '')}</span></td>
+          <td class="price-text">${fmtMoney(item.dongia)}</td>
+          <td style="text-align: center;">
+            <button class="btn-icon btn-edit" onclick="edit(${item.id})" title="Sửa">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="btn-icon btn-delete" onclick="delItem(${item.id})" title="Xóa">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tb.appendChild(tr);
+      });
+    }
+
+    // 4. Modal Logic
+    function openModal(item = null) {
+      const dlg = $('dlg');
+
+      if (item) {
+        $('dlgTitle').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Sửa dịch vụ';
+        $('editId').value = item.id ?? '';
+        $('ten').value = item.ten ?? '';
+        $('dongia').value = item.dongia ?? '';
+        $('khoa_ten').value = (item.khoa_ten ?? item.khoa ?? '');
+      } else {
+        $('dlgTitle').innerHTML = '<i class="fa-solid fa-plus-circle"></i> Thêm dịch vụ';
+        $('editId').value = '';
+        $('ten').value = '';
+        $('dongia').value = '';
+        $('khoa_ten').value = '';
+      }
+
+      dlg.showModal();
+    }
+
+    function closeModal(){
+      $('dlg').close();
+    }
+
+    function edit(id) {
+      const item = LIST.find(x => x.id === id);
+      if (item) openModal(item);
+    }
+
+    // 5. Delete Logic
+    async function delItem(id) {
+      if (!confirm('Bạn có chắc muốn xóa dịch vụ này? Hành động không thể hoàn tác.')) return;
+      try {
+        const res = await fetch(`/api/admin/dich-vu/${id}`, { method: 'DELETE' });
+        const j = await res.json();
+        if (j.success) load();
+        else alert(j.error || 'Lỗi xóa');
+      } catch (e) {
+        alert('Lỗi kết nối đến máy chủ');
+      }
+    }
+
+    // 6. Save Logic
+    async function save() {
+      const id = $('editId').value;
+      const ten = ($('ten').value || '').trim();
+      const dongia = Number($('dongia').value || 0);
+      const khoa_ten = ($('khoa_ten').value || '').trim();
+
+      if (!ten) return alert("Vui lòng nhập tên dịch vụ");
+      if (!khoa_ten) return alert("Vui lòng chọn khoa áp dụng");
+
+      const payload = { ten, dongia, khoa_ten };
+      const url = id ? `/api/admin/dich-vu/${id}` : '/api/admin/dich-vu';
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const j = await res.json();
+
+        if (j.success) {
+          closeModal();
+          load();
+        } else {
+          alert(j.error || 'Lỗi lưu dữ liệu');
+        }
+      } catch (e) {
+        alert('Lỗi kết nối máy chủ');
+      }
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadKhoaFromNhanVien();
+      $('khoaFilter').addEventListener('change', load);
+      load();
+    });
+
+    $('btnClose').addEventListener('click', closeModal);
+  </script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+======================================================================
+FULL DATABASE SCHEMA DUMP
+======================================================================
+  CHANDOANCT                | ID                        | bigint               | NOT NULL
+  CHANDOANCT                | MAPHIEU                   | bigint               | NOT NULL
+  CHANDOANCT                | ICD10                     | nvarchar    (20)     | NULL
+  CHANDOANCT                | MOTA                      | nvarchar    (2000)   | NULL
+  CHANDOANCT                | LACHINH                   | bit                  | NOT NULL
+
+  CHI_DINH_XET_NGHIEM       | ID                        | int                  | NOT NULL
+  CHI_DINH_XET_NGHIEM       | LOAI_ID                   | int                  | NOT NULL
+  CHI_DINH_XET_NGHIEM       | TEN_CHI_DINH              | nvarchar    (200)    | NOT NULL
+  CHI_DINH_XET_NGHIEM       | GIA_THAM_KHAO             | decimal              | NULL
+  CHI_DINH_XET_NGHIEM       | DON_VI                    | nvarchar    (50)     | NULL
+
+  DANGNHAP                  | ID                        | int                  | NOT NULL
+  DANGNHAP                  | TAIKHOAN                  | nvarchar    (50)     | NOT NULL
+  DANGNHAP                  | MATKHAU                   | nvarchar    (255)    | NOT NULL
+  DANGNHAP                  | MATKHAU_HASH              | nvarchar    (255)    | NULL
+  DANGNHAP                  | ROLE                      | nvarchar    (20)     | NOT NULL
+  DANGNHAP                  | MANHANVIEN                | nvarchar    (100)    | NULL
+  DANGNHAP                  | MABENHNHAN                | varchar     (20)     | NULL
+  DANGNHAP                  | TOTP_ENABLED              | bit                  | NULL
+  DANGNHAP                  | TOTP_SECRET               | nvarchar    (64)     | NULL
+  DANGNHAP                  | EMAIL                     | nvarchar    (200)    | NULL
+
+  DICHVU                    | ID                        | int                  | NOT NULL
+  DICHVU                    | TEN_CHI_PHI               | nvarchar    (255)    | NOT NULL
+  DICHVU                    | DON_GIA                   | decimal              | NULL
+  DICHVU                    | KHOA_NUM                  | int                  | NULL
+
+  DONTHUOC                  | MADON                     | bigint               | NOT NULL
+  DONTHUOC                  | MAPHIEU                   | bigint               | NOT NULL
+  DONTHUOC                  | NGAYKE                    | datetime2            | NULL
+  DONTHUOC                  | BACSI                     | nvarchar    (100)    | NULL
+  DONTHUOC                  | GHICHU                    | nvarchar    (1000)   | NULL
+
+  DONTHUOC_CT               | ID                        | bigint               | NOT NULL
+  DONTHUOC_CT               | MADON                     | bigint               | NOT NULL
+  DONTHUOC_CT               | MATHUOC                   | nvarchar    (100)    | NULL
+  DONTHUOC_CT               | TENTHUOC                  | nvarchar    (300)    | NOT NULL
+  DONTHUOC_CT               | HAMLUONG                  | nvarchar    (200)    | NULL
+  DONTHUOC_CT               | LIEUDUNG                  | nvarchar    (500)    | NULL
+  DONTHUOC_CT               | SOLUONG                   | decimal              | NULL
+  DONTHUOC_CT               | DONVI                     | nvarchar    (50)     | NULL
+  DONTHUOC_CT               | GHICHU                    | nvarchar    (500)    | NULL
+
+  GIUONGBENH                | ID                        | int                  | NOT NULL
+  GIUONGBENH                | PHONG_ID                  | int                  | NULL
+  GIUONGBENH                | TENGIUONG                 | nvarchar    (50)     | NULL
+  GIUONGBENH                | MABENHNHAN                | nvarchar    (50)     | NULL
+  GIUONGBENH                | NGAYVAO                   | datetime             | NULL
+  GIUONGBENH                | NGAYRA                    | datetime             | NULL
+  GIUONGBENH                | TRANGTHAI                 | nvarchar    (20)     | NULL
+
+  HOADON                    | ID                        | int                  | NOT NULL
+  HOADON                    | PHIEUKHAM_ID              | bigint               | NOT NULL
+  HOADON                    | NGAYLAP                   | datetime2            | NULL
+  HOADON                    | TONGTIEN                  | decimal              | NULL
+  HOADON                    | DATHANHTOAN               | bit                  | NULL
+  HOADON                    | HINHTHUC                  | nvarchar    (50)     | NULL
+  HOADON                    | VNPAY_TXNREF              | nvarchar    (64)     | NULL
+  HOADON                    | VNPAY_STATUS              | nvarchar    (20)     | NULL
+  HOADON                    | VNPAY_TMN_CODE            | nvarchar    (16)     | NULL
+  HOADON                    | VNPAY_TRANSACTIONNO       | nvarchar    (64)     | NULL
+  HOADON                    | VNPAY_BANKCODE            | nvarchar    (50)     | NULL
+  HOADON                    | VNPAY_CARDTYPE            | nvarchar    (50)     | NULL
+  HOADON                    | VNPAY_PAYDATE             | nvarchar    (14)     | NULL
+  HOADON                    | VNPAY_RESPONSECODE        | nvarchar    (4)      | NULL
+  HOADON                    | VNPAY_SECUREHASH          | nvarchar    (256)    | NULL
+
+  HOADON_CT                 | ID                        | int                  | NOT NULL
+  HOADON_CT                 | HOADON_ID                 | int                  | NULL
+  HOADON_CT                 | LOAI                      | nvarchar    (50)     | NULL
+  HOADON_CT                 | MOTA                      | nvarchar    (500)    | NULL
+  HOADON_CT                 | SOLUONG                   | int                  | NULL
+  HOADON_CT                 | DONGIA                    | decimal              | NULL
+  HOADON_CT                 | REF_ID                    | nvarchar    (100)    | NULL
+
+  HOSOBENHNHAN              | MABENHNHAN                | nvarchar    (1000)   | NOT NULL
+  HOSOBENHNHAN              | HOVATEN                   | nvarchar    (1000)   | NOT NULL
+  HOSOBENHNHAN              | NGAYSINH                  | date                 | NULL
+  HOSOBENHNHAN              | SODIENTHOAI               | nvarchar    (100)    | NULL
+  HOSOBENHNHAN              | EMAIL                     | nvarchar    (100)    | NULL
+  HOSOBENHNHAN              | DIACHI                    | nvarchar    (1000)   | NULL
+  HOSOBENHNHAN              | QUEQUAN                   | nvarchar    (1000)   | NULL
+  HOSOBENHNHAN              | DAXOA                     | bit                  | NULL
+  HOSOBENHNHAN              | SO_THU_TU                 | int                  | NULL
+
+  HOSODINHKEM               | ID                        | int                  | NOT NULL
+  HOSODINHKEM               | MABENHNHAN                | nvarchar    (50)     | NOT NULL
+  HOSODINHKEM               | MAPHIEU                   | int                  | NULL
+  HOSODINHKEM               | TENTEP                    | nvarchar    (255)    | NOT NULL
+  HOSODINHKEM               | LOAITEP                   | nvarchar    (100)    | NULL
+  HOSODINHKEM               | URL                       | nvarchar             | NOT NULL
+  HOSODINHKEM               | NGAYTAI                   | datetime             | NULL
+  HOSODINHKEM               | GHICHU                    | nvarchar             | NULL
+
+  KETQUAXN                  | ID                        | bigint               | NOT NULL
+  KETQUAXN                  | MAXN                      | bigint               | NOT NULL
+  KETQUAXN                  | CHISO                     | nvarchar    (200)    | NULL
+  KETQUAXN                  | GIATRI                    | nvarchar    (200)    | NULL
+  KETQUAXN                  | DONVI                     | nvarchar    (50)     | NULL
+  KETQUAXN                  | MOCTHAMCHIEU              | nvarchar    (200)    | NULL
+  KETQUAXN                  | DANHGIA                   | nvarchar    (500)    | NULL
+  KETQUAXN                  | FILEURL                   | nvarchar    (1000)   | NULL
+  KETQUAXN                  | NGAYKQ                    | datetime2            | NULL
+
+  KHOA                      | ID                        | int                  | NOT NULL
+  KHOA                      | TEN_KHOA                  | nvarchar    (200)    | NOT NULL
+  KHOA                      | MO_TA                     | nvarchar    (500)    | NULL
+  KHOA                      | TRANG_THAI                | bit                  | NULL
+
+  LAYSO_ONLINE              | ID                        | int                  | NOT NULL
+  LAYSO_ONLINE              | KHOA                      | nvarchar    (100)    | NOT NULL
+  LAYSO_ONLINE              | SO_THU_TU                 | int                  | NOT NULL
+  LAYSO_ONLINE              | MABENHNHAN                | nvarchar    (1000)   | NULL
+  LAYSO_ONLINE              | HOVATEN                   | nvarchar    (1000)   | NOT NULL
+  LAYSO_ONLINE              | CREATED_AT                | datetime2            | NOT NULL
+  LAYSO_ONLINE              | STATUS                    | nvarchar    (20)     | NOT NULL
+
+  LICH_LAM_VIEC             | ID                        | int                  | NOT NULL
+  LICH_LAM_VIEC             | MANHANVIEN                | nvarchar    (100)    | NULL
+  LICH_LAM_VIEC             | NGAY                      | date                 | NOT NULL
+  LICH_LAM_VIEC             | CA                        | nvarchar    (50)     | NULL
+  LICH_LAM_VIEC             | TGBATDAU                  | time                 | NULL
+  LICH_LAM_VIEC             | TGKETTHUC                 | time                 | NULL
+  LICH_LAM_VIEC             | PHONG                     | nvarchar    (50)     | NULL
+
+  LICHHEN                   | ID                        | int                  | NOT NULL
+  LICHHEN                   | MABENHNHAN                | nvarchar    (50)     | NULL
+  LICHHEN                   | MANHANVIEN                | nvarchar    (50)     | NULL
+  LICHHEN                   | TGBATDAU                  | datetime             | NULL
+  LICHHEN                   | TGKETTHUC                 | datetime             | NULL
+  LICHHEN                   | TRANGTHAI                 | nvarchar    (20)     | NULL
+  LICHHEN                   | GHICHU                    | nvarchar    (500)    | NULL
+  LICHHEN                   | STT                       | int                  | NULL
+  LICHHEN                   | NGAY                      | date                 | NULL
+
+  LOAI_XET_NGHIEM           | ID                        | int                  | NOT NULL
+  LOAI_XET_NGHIEM           | TEN_LOAI                  | nvarchar    (100)    | NOT NULL
+  LOAI_XET_NGHIEM           | MO_TA                     | nvarchar    (255)    | NULL
+
+  NHOMTHUOC                 | ID                        | int                  | NOT NULL
+  NHOMTHUOC                 | TEN                       | nvarchar    (255)    | NOT NULL
+
+  PHIEUKHAM                 | MAPHIEU                   | bigint               | NOT NULL
+  PHIEUKHAM                 | MABENHNHAN                | nvarchar    (1000)   | NOT NULL
+  PHIEUKHAM                 | MANHANVIEN                | nvarchar    (100)    | NULL
+  PHIEUKHAM                 | NGAYKHAM                  | datetime2            | NOT NULL
+  PHIEUKHAM                 | KHOA                      | nvarchar    (200)    | NULL
+  PHIEUKHAM                 | LYDOKHAM                  | nvarchar    (1000)   | NULL
+  PHIEUKHAM                 | CHANDOAN                  | nvarchar    (2000)   | NULL
+  PHIEUKHAM                 | GHICHU                    | nvarchar    (2000)   | NULL
+  PHIEUKHAM                 | PHIKHAM                   | decimal              | NULL
+
+  PHONGBENH                 | ID                        | int                  | NOT NULL
+  PHONGBENH                 | TENPHONG                  | nvarchar    (100)    | NOT NULL
+  PHONGBENH                 | KHOA                      | nvarchar    (200)    | NULL
+  PHONGBENH                 | LOAI                      | nvarchar    (50)     | NULL
+  PHONGBENH                 | SUCCHUA                   | int                  | NULL
+  PHONGBENH                 | TRANGTHAI                 | nvarchar    (20)     | NULL
+
+  QUANLINHANVIEN            | MANHANVIEN                | nvarchar    (100)    | NOT NULL
+  QUANLINHANVIEN            | HOVATEN                   | nvarchar    (1000)   | NOT NULL
+  QUANLINHANVIEN            | CHUYENMON                 | nvarchar    (100)    | NULL
+  QUANLINHANVIEN            | KHOA                      | nvarchar    (100)    | NULL
+  QUANLINHANVIEN            | NGAYSINH                  | date                 | NULL
+  QUANLINHANVIEN            | DIACHI                    | nvarchar    (1000)   | NULL
+  QUANLINHANVIEN            | SOCCCD                    | nvarchar    (100)    | NULL
+  QUANLINHANVIEN            | CHUCVU                    | nvarchar    (100)    | NULL
+  QUANLINHANVIEN            | SDT                       | nvarchar    (100)    | NULL
+  QUANLINHANVIEN            | TRINHDO                   | nvarchar    (100)    | NULL
+  QUANLINHANVIEN            | EMAIL                     | nvarchar    (200)    | NULL
+
+  THUOC                     | MATHUOC                   | nvarchar    (100)    | NOT NULL
+  THUOC                     | TENTHUOC                  | nvarchar    (1000)   | NOT NULL
+  THUOC                     | DONVI                     | nvarchar    (100)    | NOT NULL
+  THUOC                     | HANSUDUNG                 | date                 | NULL
+  THUOC                     | GIA                       | decimal              | NOT NULL
+  THUOC                     | TONKHO                    | int                  | NOT NULL
+  THUOC                     | TONTOITHIEU               | int                  | NOT NULL
+  THUOC                     | IS_ACTIVE                 | bit                  | NOT NULL
+  THUOC                     | NHOM_ID                   | int                  | NULL
+
+  XETNGHIEM                 | MAXN                      | bigint               | NOT NULL
+  XETNGHIEM                 | MAPHIEU                   | bigint               | NOT NULL
+  XETNGHIEM                 | LOAIXN                    | nvarchar    (200)    | NOT NULL
+  XETNGHIEM                 | CHIDINH                   | nvarchar    (1000)   | NULL
+  XETNGHIEM                 | GIA                       | decimal              | NULL
+  XETNGHIEM                 | NGAYCHIDINH               | datetime2            | NULL
+  XETNGHIEM                 | TRANGTHAI                 | nvarchar    (50)     | NULL
+
+  XUATNHAP_KHO              | ID                        | int                  | NOT NULL
+  XUATNHAP_KHO              | MATHUOC                   | nvarchar    (50)     | NULL
+  XUATNHAP_KHO              | LOAI                      | nvarchar    (10)     | NULL
+  XUATNHAP_KHO              | SOLUONG                   | int                  | NULL
+  XUATNHAP_KHO              | NGAYGD                    | datetime             | NULL
+  XUATNHAP_KHO              | THAMCHIEU                 | nvarchar    (200)    | NULL
+  XUATNHAP_KHO              | GHICHU                    | nvarchar    (500)    | NULL
+
+
+======================================================================
+SCHEMA QUICK REFERENCE (columns per table)
+======================================================================
+
+CHANDOANCT: ID, MAPHIEU, ICD10, MOTA, LACHINH
+
+CHI_DINH_XET_NGHIEM: ID, LOAI_ID, TEN_CHI_DINH, GIA_THAM_KHAO, DON_VI
+
+DANGNHAP: ID, TAIKHOAN, MATKHAU, MATKHAU_HASH, ROLE, MANHANVIEN, MABENHNHAN, TOTP_ENABLED, TOTP_SECRET, EMAIL
+
+DICHVU: ID, TEN_CHI_PHI, DON_GIA, KHOA_NUM
+
+DONTHUOC: MADON, MAPHIEU, NGAYKE, BACSI, GHICHU
+
+DONTHUOC_CT: ID, MADON, MATHUOC, TENTHUOC, HAMLUONG, LIEUDUNG, SOLUONG, DONVI, GHICHU
+
+GIUONGBENH: ID, PHONG_ID, TENGIUONG, MABENHNHAN, NGAYVAO, NGAYRA, TRANGTHAI
+
+HOADON: ID, PHIEUKHAM_ID, NGAYLAP, TONGTIEN, DATHANHTOAN, HINHTHUC, VNPAY_TXNREF, VNPAY_STATUS, VNPAY_TMN_CODE, VNPAY_TRANSACTIONNO, VNPAY_BANKCODE, VNPAY_CARDTYPE, VNPAY_PAYDATE, VNPAY_RESPONSECODE, VNPAY_SECUREHASH
+
+HOADON_CT: ID, HOADON_ID, LOAI, MOTA, SOLUONG, DONGIA, REF_ID
+
+HOSOBENHNHAN: MABENHNHAN, HOVATEN, NGAYSINH, SODIENTHOAI, EMAIL, DIACHI, QUEQUAN, DAXOA, SO_THU_TU
+
+HOSODINHKEM: ID, MABENHNHAN, MAPHIEU, TENTEP, LOAITEP, URL, NGAYTAI, GHICHU
+
+KETQUAXN: ID, MAXN, CHISO, GIATRI, DONVI, MOCTHAMCHIEU, DANHGIA, FILEURL, NGAYKQ
+
+KHOA: ID, TEN_KHOA, MO_TA, TRANG_THAI
+
+LAYSO_ONLINE: ID, KHOA, SO_THU_TU, MABENHNHAN, HOVATEN, CREATED_AT, STATUS
+
+LICH_LAM_VIEC: ID, MANHANVIEN, NGAY, CA, TGBATDAU, TGKETTHUC, PHONG
+
+LICHHEN: ID, MABENHNHAN, MANHANVIEN, TGBATDAU, TGKETTHUC, TRANGTHAI, GHICHU, STT, NGAY
+
+LOAI_XET_NGHIEM: ID, TEN_LOAI, MO_TA
+
+NHOMTHUOC: ID, TEN
+
+PHIEUKHAM: MAPHIEU, MABENHNHAN, MANHANVIEN, NGAYKHAM, KHOA, LYDOKHAM, CHANDOAN, GHICHU, PHIKHAM
+
+PHONGBENH: ID, TENPHONG, KHOA, LOAI, SUCCHUA, TRANGTHAI
+
+QUANLINHANVIEN: MANHANVIEN, HOVATEN, CHUYENMON, KHOA, NGAYSINH, DIACHI, SOCCCD, CHUCVU, SDT, TRINHDO, EMAIL
+
+THUOC: MATHUOC, TENTHUOC, DONVI, HANSUDUNG, GIA, TONKHO, TONTOITHIEU, IS_ACTIVE, NHOM_ID
+
+XETNGHIEM: MAXN, MAPHIEU, LOAIXN, CHIDINH, GIA, NGAYCHIDINH, TRANGTHAI
+
+XUATNHAP_KHO: ID, MATHUOC, LOAI, SOLUONG, NGAYGD, THAMCHIEU, GHICHU

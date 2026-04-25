@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Quản lý tài khoản - HOPITAL</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* === 1. DASHBOARD LAYOUT STYLES === */
+    :root {
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --bg-body: #f4f7f6;
+      --sidebar-bg: #2c3e50;
+      --sidebar-text: #ecf0f1;
+      --active-item: #3498db;
+      --color-border: #e5e7eb;
+      --card-bg: #ffffff;
+      
+      /* Colors specific to this page */
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --success: #16a34a;
+      --radius: 10px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+
+    /* Sửa lỗi xung đột theme.css bằng cách khóa chặt thuộc tính body */
+    body.app { 
+      font-family: 'Segoe UI', sans-serif; 
+      display: flex !important; 
+      margin: 0 !important; 
+      background: var(--bg-body); 
+      height: 100vh !important; 
+      overflow: hidden !important; 
+      color: var(--text);
+    }
+
+    /* Bỏ gạch chân triệt để ở mọi liên kết */
+    a, a:hover, a:focus, a:active { text-decoration: none !important; }
+
+    /* Sidebar - Khóa chiều cao 100vh */
+    .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; height: 100vh !important; }
+    .sidebar-brand { height: var(--header-height); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; text-decoration: none; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-item { display: flex; align-items: center; padding: 12px 25px; color: #bdc3c7; text-decoration: none; transition: 0.3s; border-left: 4px solid transparent; font-size: 0.95rem; }
+    .nav-item i { width: 25px; margin-right: 10px; text-align: center; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--active-item); }
+    
+    /* Submenu */
+    .nav-group { margin: 0; }
+    .nav-group-label { padding: 12px 25px; color: #bdc3c7; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .nav-group-label .left { display: flex; align-items: center; gap: 10px; }
+    .nav-group-label .left i { width: 25px; text-align: center; }
+    .nav-group-label:hover { color: white; }
+    .nav-group-content { display: none; background: rgba(0,0,0,0.2); }
+    .nav-group.is-open .nav-group-content { display: block; }
+    .nav-group-content .nav-item { padding-left: 55px; font-size: 0.9rem; }
+
+    /* Main Content */
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh !important; }
+    .top-header { height: var(--header-height); background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); z-index: 10; flex-shrink: 0; }
+    .header-user { display: flex; align-items: center; gap: 15px; }
+    .btn-logout { color: #e74c3c; text-decoration: none; font-weight: 500; font-size: 0.9rem; border: 1px solid #e74c3c; padding: 5px 15px; border-radius: 20px; transition: 0.2s; }
+    .btn-logout:hover { background: #e74c3c; color: white; }
+
+    /* Content Body */
+    .content-body { flex: 1; overflow-y: auto; padding: 30px; }
+
+    /* === 2. PAGE SPECIFIC STYLES === */
+    .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 24px; border: 1px solid var(--color-border); }
+    .card h2 { margin-top: 0; font-size: 1.1rem; color: var(--sidebar-bg); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 20px; }
+
+    /* Grid Form */
+    .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+    .field input { width: 100%; padding: 10px; border: 1px solid var(--color-border); border-radius: 6px; outline: none; font-size: 0.9rem; transition: border-color 0.2s; }
+    .field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .field input[readonly] { background-color: #f9fafb; cursor: not-allowed; }
+
+    /* Buttons & Pills */
+    .actions { display: flex; gap: 10px; align-items: center; }
+    .btn { border: none; border-radius: 6px; padding: 10px 16px; font-size: 0.9rem; cursor: pointer; color: #fff; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; font-weight: 500; }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary { background: var(--primary); }
+    .btn-warn { background: var(--warning); color: #fff; }
+    .btn-danger { background: var(--danger); }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--color-border); }
+    .btn-ghost:hover { background: #f3f4f6; color: var(--text); }
+
+    .pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; background: #f3f4f6; color: var(--muted); }
+    .pill.ok { background: #dcfce7; color: var(--success); }
+    .pill.bad { background: #fee2e2; color: var(--danger); }
+
+    /* Table */
+    .table-responsive { overflow-x: auto; border: 1px solid var(--color-border); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th { text-align: left; padding: 12px 15px; background: #f9fafb; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid var(--color-border); }
+    td { padding: 12px 15px; border-bottom: 1px solid var(--color-border); font-size: 0.9rem; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: #f9fafb; }
+    .mono { font-family: 'Consolas', monospace; color: var(--primary); }
+
+    /* Inline Action */
+    .inline-pass { display: flex; gap: 5px; }
+    .inline-pass input { padding: 6px 10px; font-size: 0.85rem; width: 180px; }
+    .cell-actions { display: flex; gap: 5px; }
+    .btn-sm { padding: 6px 10px; font-size: 0.8rem; }
+
+    /* Toast */
+    .toast-wrap { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast { background: white; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); padding: 12px 16px; min-width: 300px; display: flex; align-items: flex-start; gap: 12px; animation: slideIn 0.3s ease-out; pointer-events: auto; border-left: 4px solid var(--sidebar-bg); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .toast.ok { border-left-color: var(--success); }
+    .toast.bad { border-left-color: var(--danger); }
+    .toast-content h4 { margin: 0; font-size: 0.95rem; color: var(--text); }
+    .toast-content p { margin: 2px 0 0; font-size: 0.85rem; color: var(--muted); }
+  </style>
+</head>
+
+<body class="app">
+
+  <aside class="sidebar">
+    <a href="{{ url_for('trang_chu') }}" class="sidebar-brand">
+      <i class="fa-solid fa-hospital-user" style="margin-right: 10px;"></i> HOPITAL
+    </a>
+
+    <div class="sidebar-menu">
+      <a href="{{ url_for('trang_chu') }}" class="nav-item {{ 'active' if active=='trang_chu' else '' }}">
+        <i class="fa-solid fa-house"></i> Trang chủ
+      </a>
+
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('ql_bac_si') }}" class="nav-item {{ 'active' if active=='ql_bac_si' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i> Quản lý bác sĩ
+        </a>
+        <a href="/admin/khoa" class="nav-item {{ 'active' if active=='ql_khoa' else '' }}">
+          <i class="fa-solid fa-building-circle-check"></i> Quản lý Khoa
+        </a>
+        <a href="{{ url_for('admin_accounts_page_v2') }}" class="nav-item active">
+          <i class="fa-solid fa-users-gear"></i> Tài khoản hệ thống
+        </a>
+        <a href="/admin/dich-vu" class="nav-item {{ 'active' if active=='ql_dich_vu' else '' }}">
+          <i class="fa-solid fa-receipt"></i> Quản lý Dịch vụ
+        </a>
+        <a href="/admin/xet-nghiem" class="nav-item {{ 'active' if active=='ql_xet_nghiem' else '' }}">
+          <i class="fa-solid fa-flask"></i> Quản lý Xét nghiệm
+        </a>
+        <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+          <i class="fa-solid fa-bed"></i> Phòng bệnh
+        </a>
+      {% endif %}
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+
+        <div class="nav-group {{ 'is-open' if active in ['ql_lich_hen','goi_so','lay_so_online'] else '' }}">
+          <div class="nav-group-label" onclick="this.parentElement.classList.toggle('is-open')">
+            <div class="left">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Lịch hẹn</span>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
+          </div>
+          
+          <div class="nav-group-content">
+            {% if session.role == 'doctor' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            <a href="{{ url_for('goi_so') }}" class="nav-item {{ 'active' if active=='goi_so' else '' }}">Danh sách thứ tự</a>
+            <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">Lấy số online</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('ql_kham_benh') }}" class="nav-item {{ 'active' if active=='ql_kham_benh' else '' }}">
+          <i class="fa-solid fa-stethoscope"></i> Khám bệnh
+        </a>
+
+        <a href="{{ url_for('benh_nhan') }}" class="nav-item {{ 'active' if active=='benh_nhan' else '' }}">
+          <i class="fa-solid fa-address-card"></i> Hồ sơ bệnh nhân
+        </a>
+
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('ql_thuoc_kho') }}" class="nav-item {{ 'active' if active=='thuoc_kho' else '' }}">
+            <i class="fa-solid fa-pills"></i> Thuốc & Kho
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('ql_thanh_toan') }}" class="nav-item {{ 'active' if active=='thanh_toan' else '' }}">
+          <i class="fa-solid fa-credit-card"></i> Thanh toán
+        </a>
+
+        <a href="{{ url_for('lich_lam_viec') }}" class="nav-item {{ 'active' if active=='lich_lam_viec' else '' }}">
+          <i class="fa-solid fa-calendar-days"></i> Lịch làm việc
+        </a>
+
+        {% if session.role == 'doctor' %}
+          <a href="{{ url_for('xet_lich_lam') }}" class="nav-item {{ 'active' if active=='xet_lich_lam' else '' }}">
+            <i class="fa-solid fa-user-clock"></i> Đăng ký lịch
+          </a>
+
+          <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+            <i class="fa-solid fa-bed"></i> Phòng bệnh
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('bao_cao_thong_ke') }}" class="nav-item {{ 'active' if active=='bao_cao' else '' }}">
+          <i class="fa-solid fa-chart-line"></i> Báo cáo
+        </a>
+
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+
+      {% else %}
+        <a href="{{ url_for('quansat_layso') }}" class="nav-item {{ 'active' if active=='quansat_layso' else '' }}">
+          <i class="fa-solid fa-eye"></i> Quan sát số
+        </a>
+        <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">
+          <i class="fa-solid fa-ticket"></i> Lấy số online
+        </a>
+        <a href="{{ url_for('dat_lich_page') }}" class="nav-item {{ 'active' if active=='dat_lich' else '' }}">
+          <i class="fa-solid fa-calendar-plus"></i> Đặt lịch khám
+        </a>
+        {% if session.mabn %}
+          <a href="{{ url_for('ho_so_benh_nhan', mabn=session.mabn) }}" class="nav-item {{ 'active' if active=='ho_so_toi' else '' }}">
+            <i class="fa-solid fa-file-medical"></i> Hồ sơ của tôi
+          </a>
+        {% endif %}
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="top-header">
+      <div style="font-weight: bold; font-size: 1.1rem; color: #2c3e50;">QUẢN TRỊ HỆ THỐNG</div>
+      <div class="header-user">
+        <span>Xin chào, <b>{{ session.user }}</b></span>
+        <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+      </div>
+    </header>
+
+    <div class="content-body">
+      
+      <div class="card">
+        <h2><i class="fa-solid fa-user-plus"></i> Tạo tài khoản bác sĩ</h2>
+        <div class="grid-form">
+          <div class="field">
+            <label>Username (Tài khoản)</label>
+            <input id="taikhoan" placeholder="vd: bacsi01" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label>Mã nhân viên</label>
+            <div style="position:relative;">
+              <input id="manhanvien" placeholder="vd: BS001" autocomplete="off" />
+              <span id="nvStatus" class="pill" style="position:absolute; right:5px; top:50%; transform:translateY(-50%);"></span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Họ và tên</label>
+            <input id="hovaten" placeholder="Tự động điền" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label>Khoa</label>
+            <input id="khoa" placeholder="Tự động điền" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label>Mật khẩu (Tuỳ chọn)</label>
+            <input id="password" type="password" placeholder="Để trống = tự tạo" autocomplete="new-password" />
+          </div>
+          <div class="field">
+            <label>Email (Tuỳ chọn)</label>
+            <input id="email" placeholder="Gửi thông tin TK" autocomplete="off" />
+          </div>
+          <div class="field" style="justify-content: flex-end;">
+            <button class="btn btn-primary" onclick="createAccount()" style="width:100%">
+              <i class="fa-solid fa-plus-circle"></i> Tạo tài khoản
+            </button>
+          </div>
+        </div>
+        <div id="createMsg" style="margin-top:15px; font-size:0.9rem; font-weight:500;"></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 2px solid #f0f0f0; padding-bottom:10px;">
+          <h2 style="margin:0; border:none; padding:0;">Danh sách tài khoản</h2>
+          <button class="btn btn-ghost btn-sm" onclick="loadAccounts()">
+            <i class="fa-solid fa-rotate"></i> Làm mới
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:15%">Username</th>
+                <th style="width:10%">Mã NV</th>
+                <th style="width:20%">Họ tên</th>
+                <th style="width:15%">Khoa</th>
+                <th style="width:5%">2FA</th>
+                <th style="width:25%">Đặt lại mật khẩu</th>
+                <th style="width:10%; text-align:center">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="tb">
+              <tr><td colspan="7" style="text-align:center; padding:20px; color:#999">Đang tải dữ liệu...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    /* ========================= TOAST ========================= */
+    function toast(kind, title, msg) {
+      const wrap = document.getElementById("toastWrap");
+      const el = document.createElement("div");
+      el.className = `toast ${kind}`;
+      const icon = kind === 'ok' ? '<i class="fa-solid fa-check-circle" style="color:var(--success)"></i>' : 
+                   kind === 'bad' ? '<i class="fa-solid fa-circle-exclamation" style="color:var(--danger)"></i>' : 
+                   '<i class="fa-solid fa-info-circle" style="color:var(--primary)"></i>';
+      el.innerHTML = `
+        ${icon}
+        <div class="toast-content">
+          <h4>${title || ""}</h4>
+          <p>${msg || ""}</p>
+        </div>
+      `;
+      wrap.appendChild(el);
+      setTimeout(() => { el.style.opacity = "0"; }, 2500);
+      setTimeout(() => { el.remove(); }, 3000);
+    }
+
+    /* ========================= AUTO-FILL ========================= */
+    let _nvTimer = null;
+    function setNvStatus(text, kind) {
+      const el = document.getElementById("nvStatus");
+      el.textContent = text;
+      el.className = "pill " + (kind || "");
+      el.style.display = text ? "inline-flex" : "none";
+    }
+
+    function debounceLookupNhanVien() {
+      clearTimeout(_nvTimer);
+      _nvTimer = setTimeout(lookupNhanVien, 350);
+    }
+
+    async function lookupNhanVien() {
+      const manvEl = document.getElementById("manhanvien");
+      const hovatenEl = document.getElementById("hovaten");
+      const khoaEl = document.getElementById("khoa");
+      const manv = (manvEl.value || "").trim();
+
+      if (!manv) {
+        hovatenEl.value = ""; khoaEl.value = "";
+        hovatenEl.readOnly = false; khoaEl.readOnly = false;
+        setNvStatus("", "");
+        return;
+      }
+
+      setNvStatus("...", "");
+      try {
+        const res = await fetch("/api/admin/nhanvien/" + encodeURIComponent(manv));
+        const data = await res.json();
+        if (data.ok) {
+          hovatenEl.value = data.hovaten || "";
+          khoaEl.value = data.khoa || "";
+          hovatenEl.readOnly = true;
+          khoaEl.readOnly = true;
+          setNvStatus("OK", "ok");
+        } else {
+          hovatenEl.readOnly = false;
+          khoaEl.readOnly = false;
+          setNvStatus("Không thấy", "bad");
+        }
+      } catch (e) {
+        hovatenEl.readOnly = false;
+        khoaEl.readOnly = false;
+        setNvStatus("Lỗi", "bad");
+      }
+    }
+
+    document.getElementById("manhanvien").addEventListener("input", debounceLookupNhanVien);
+
+    /* ========================= API FUNCTIONS ========================= */
+    async function loadAccounts() {
+      const tb = document.getElementById("tb");
+      tb.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#999">Đang tải...</td></tr>`;
+      
+      try {
+        const res = await fetch("/api/admin/accounts?role=doctor");
+        const data = await res.json();
+
+        if (!data.ok) throw new Error(data.error || "Lỗi tải dữ liệu");
+        if (!data.items || data.items.length === 0) {
+          tb.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px;">Chưa có tài khoản nào.</td></tr>`;
+          return;
+        }
+
+        tb.innerHTML = "";
+        for (const it of data.items) {
+          const pwInputId = `pw_${it.taikhoan.replace(/[^a-zA-Z0-9]/g, '_')}`;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="mono"><b>${escapeHtml(it.taikhoan)}</b></td>
+            <td><span class="pill">${escapeHtml(it.manhanvien || '-')}</span></td>
+            <td>${escapeHtml(it.hovaten || '')}</td>
+            <td>${escapeHtml(it.khoa || '')}</td>
+            <td>${it.totp_enabled ? '<i class="fa-solid fa-shield-halved" style="color:var(--success)"></i>' : '<span style="color:#ccc">--</span>'}</td>
+            <td>
+              <div class="inline-pass">
+                <input id="${pwInputId}" type="password" placeholder="Mật khẩu mới..." autocomplete="new-password">
+                <button class="btn btn-primary btn-sm" onclick="setPwInline('${escapeJs(it.taikhoan)}','${pwInputId}')"><i class="fa-solid fa-floppy-disk"></i></button>
+                <button class="btn btn-warn btn-sm" title="Quên mật khẩu (Reset)" onclick="resetPw('${escapeJs(it.taikhoan)}')"><i class="fa-solid fa-rotate-right"></i></button>
+              </div>
+            </td>
+            <td style="text-align:center">
+              <button class="btn btn-danger btn-sm" onclick="delAcc('${escapeJs(it.taikhoan)}')"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          `;
+          tb.appendChild(tr);
+        }
+      } catch (e) {
+        tb.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red">Lỗi: ${e.message}</td></tr>`;
+      }
+    }
+
+    async function createAccount() {
+      const payload = {
+        taikhoan: document.getElementById("taikhoan").value.trim(),
+        manhanvien: document.getElementById("manhanvien").value.trim(),
+        hovaten: document.getElementById("hovaten").value.trim(),
+        khoa: document.getElementById("khoa").value.trim(),
+        password: document.getElementById("password").value.trim(),
+        email: document.getElementById("email").value.trim(),
+      };
+
+      const msgDiv = document.getElementById("createMsg");
+      msgDiv.innerHTML = "";
+      msgDiv.className = "";
+
+      if (!payload.taikhoan || !payload.manhanvien) {
+        toast("bad", "Thiếu thông tin", "Vui lòng nhập Username và Mã NV");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/admin/accounts", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          toast("ok", "Thành công", `Đã tạo TK: ${payload.taikhoan}`);
+          msgDiv.innerHTML = `<span style="color:var(--success)"><i class="fa-solid fa-check"></i> Tạo thành công. Mật khẩu: <b>${data.generated_password}</b></span>`;
+          loadAccounts();
+          // Clear form basic fields
+          document.getElementById("taikhoan").value = "";
+          document.getElementById("password").value = "";
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (e) {
+        toast("bad", "Lỗi tạo TK", e.message);
+        msgDiv.innerHTML = `<span style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> ${e.message}</span>`;
+      }
+    }
+
+    async function delAcc(taikhoan) {
+      if (!confirm(`Xóa tài khoản [${taikhoan}]? Hành động này không thể hoàn tác.`)) return;
+      try {
+        const res = await fetch(`/api/admin/accounts/${encodeURIComponent(taikhoan)}`, { method: "DELETE" });
+        const data = await res.json();
+        if (data.ok) {
+          toast("ok", "Đã xóa", `Tài khoản ${taikhoan} đã bị xóa.`);
+          loadAccounts();
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (e) { toast("bad", "Lỗi xóa", e.message); }
+    }
+
+    async function setPwInline(taikhoan, inputId) {
+      const inp = document.getElementById(inputId);
+      const newPw = (inp.value || "").trim();
+      if (newPw.length < 6) return toast("bad", "Mật khẩu yếu", "Tối thiểu 6 ký tự");
+
+      try {
+        const res = await fetch(`/api/admin/accounts/${encodeURIComponent(taikhoan)}/set-password`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ new_password: newPw })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          toast("ok", "Đã đổi mật khẩu", `Cập nhật thành công cho ${taikhoan}`);
+          inp.value = "";
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (e) { toast("bad", "Lỗi đổi mật khẩu", e.message); }
+    }
+
+    async function resetPw(taikhoan) {
+      if(!confirm(`Reset mật khẩu ngẫu nhiên cho ${taikhoan}?`)) return;
+      try {
+        const res = await fetch(`/api/admin/accounts/${encodeURIComponent(taikhoan)}/reset-password`, { method: "POST" });
+        const data = await res.json();
+        if (data.ok) {
+          prompt(`Mật khẩu mới cho ${taikhoan} (hãy copy lại):`, data.new_password);
+          loadAccounts();
+        } else throw new Error(data.error);
+      } catch (e) { toast("bad", "Lỗi reset", e.message); }
+    }
+
+    function escapeHtml(s) { return (s || "").toString().replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    function escapeJs(s) { return (s || "").toString().replace(/\\/g, "\\\\").replace(/'/g, "\\'"); }
+
+    // Init
+    loadAccounts();
+  </script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

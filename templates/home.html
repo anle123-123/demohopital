@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>{{ title or 'Trang chủ' }}</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root{
+      --primary-color:#0093E9;
+      --primary-dark:#005b9f;
+
+      --sidebar-width:260px;
+      --header-height:70px;
+
+      --bg-body:#f4f7f6;
+      --sidebar-bg:#2c3e50;
+      --sidebar-text:#ecf0f1;
+      --active-item:#3498db;
+
+      --topbar-bg:#004ebc;
+      --btn-hot:#d32f2f;
+      --text-color:#333;
+
+      --border-soft:rgba(255,255,255,0.08);
+    }
+
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:'Segoe UI',sans-serif; color:var(--text-color); }
+    body.app{ display:flex; background:var(--bg-body); height:100vh; overflow:hidden; }
+    a{ text-decoration:none; }
+    ul{ list-style:none; padding:0; margin:0; }
+
+    /* =========================================================
+       DASHBOARD (LOGGED IN) - Đã đồng bộ với quanlibacsi
+    ========================================================= */
+    .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; height: 100vh;}
+    .sidebar-brand { height: var(--header-height); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; text-decoration: none; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-item { display: flex; align-items: center; padding: 12px 25px; color: #bdc3c7; text-decoration: none; transition: 0.3s; border-left: 4px solid transparent; font-size: 0.95rem; }
+    .nav-item i { width: 25px; margin-right: 10px; text-align: center; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white;text-decoration: none; }
+    .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--active-item); }
+    
+    /* Submenu */
+    .nav-group{ margin: 0; }
+    .nav-group-label { padding: 12px 25px; color: #bdc3c7; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .nav-group-label:hover { color: white; }
+    .nav-group-label .left{ display:flex; align-items:center; }
+    .nav-group-label .left i{ width:25px; text-align:center; margin-right: 10px; }
+    .nav-group-content { display: none; background: rgba(0,0,0,0.2); }
+    .nav-group.is-open .nav-group-content { display: block; }
+    .nav-group-content .nav-item { padding-left: 55px; font-size: 0.9rem; text-decoration: none;}
+
+    .main-wrapper{ flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .top-header{
+      height:var(--header-height);
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 24px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.06);
+      flex-shrink:0;
+    }
+    .header-user{ display:flex; align-items:center; gap:14px; }
+    .btn-logout{
+      color:#e74c3c;
+      border:1px solid #e74c3c;
+      padding:6px 14px;
+      border-radius:20px;
+      font-weight:600;
+      font-size:0.9rem;
+      transition:0.2s;
+    }
+    .btn-logout:hover{ background:#e74c3c; color:#fff;text-decoration:none; }
+
+    .content-body{ flex:1; overflow-y:auto; padding:28px; }
+
+    .quick-actions{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+      gap:18px;
+      margin-bottom:26px;
+    }
+    .qa{
+      background:#fff;
+      padding:20px;
+      border-radius:12px;
+      text-align:center;
+      color:#34495e;
+      box-shadow:0 2px 6px rgba(0,0,0,0.05);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      height:108px;
+      font-weight:700;
+      border:1px solid transparent;
+      transition:0.15s;
+    }
+    .qa:hover{ transform:translateY(-2px); border-color:var(--active-item); color:var(--active-item);text-decoration:none; }
+    .qa i{ font-size:2rem; margin-bottom:10px; color:var(--active-item); }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:18px;
+    }
+    .stats .card{
+      background:#fff;
+      padding:22px;
+      border-radius:12px;
+      text-align:center;
+      border-left:5px solid var(--active-item);
+      box-shadow:0 2px 6px rgba(0,0,0,0.05);
+    }
+    .stats .num{ font-size:3rem; font-weight:800; color:#2c3e50; }
+
+    /* =========================================================
+       LANDING (GUEST)
+    ========================================================= */
+    .top-info-bar{ background:var(--topbar-bg); color:#fff; padding:8px 0; font-size:0.9rem; }
+    .container{ max-width:1200px; margin:0 auto; padding:0 15px; }
+    .top-flex{ display:flex; justify-content:space-between; align-items:center; }
+    .social-icons i{ margin-left:15px; cursor:pointer; transition:0.2s; }
+    .social-icons i:hover{ opacity:0.85;text-decoration:none; }
+
+    .landing-header{ background:#fff; box-shadow:0 2px 10px rgba(0,0,0,0.05); position:sticky; top:0; z-index:100; }
+    .nav-container{ height:80px; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+    .logo-brand{ font-size:1.8rem; font-weight:900; color:var(--topbar-bg); display:flex; align-items:center; gap:10px; }
+
+    .main-menu{ display:flex; gap:25px; height:100%; align-items:center; }
+    .main-menu > a{ color:#333; font-weight:600; font-size:1rem; transition:0.2s; padding:10px 0; }
+    .main-menu > a:hover{ color:var(--primary-color);text-decoration:none; }
+
+    .dropdown{ position:relative; height:100%; display:flex; align-items:center; }
+    .dropdown > a{
+      color:#333; font-weight:600; font-size:1rem; transition:0.2s; cursor:pointer;
+      display:flex; align-items:center; gap:6px;
+    }
+    .dropdown:hover > a{ color:var(--primary-color);text-decoration:none; }
+    .dropdown-content{
+      display:none;
+      position:absolute;
+      top:60px;
+      left:-100px;
+      background:#fff;
+      min-width:600px;
+      box-shadow:0 8px 25px rgba(0,0,0,0.15);
+      border-radius:8px;
+      padding:20px;
+      z-index:1000;
+      grid-template-columns:1fr 1fr;
+      gap:15px;
+      border-top:4px solid var(--primary-color);
+      animation:fadeIn .25s ease;
+    }
+    .dropdown:hover .dropdown-content{ display:grid;text-decoration:none; }
+    .menu-sub-item{
+      display:flex !important;
+      align-items:center;
+      color:#555 !important;
+      font-size:0.95rem !important;
+      padding:10px;
+      border-radius:6px;
+      transition:0.15s;
+    }
+    .menu-sub-item:hover{ background:#f0f8ff; color:var(--primary-color) !important; padding-left:15px; text-decoration:none;}
+    .menu-sub-item i{ width:25px; color:var(--primary-color); margin-right:10px; text-align:center; }
+
+    @keyframes fadeIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+    .btn-appointment{
+      background:var(--btn-hot);
+      color:#fff;
+      padding:10px 25px;
+      border-radius:30px;
+      font-weight:800;
+      transition:.2s;
+      box-shadow:0 4px 10px rgba(211,47,47,0.3);
+      white-space:nowrap;
+    }
+    .btn-appointment:hover{ background:#b71c1c; transform:translateY(-2px);text-decoration:none; }
+
+    .hero-section{
+      background:linear-gradient(180deg,#4facfe 0%,#00f2fe 100%);
+      padding:80px 0 100px;
+      color:#fff;
+      text-align:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .hero-content h1{ font-size:3rem; font-weight:900; margin:0; text-transform:uppercase; text-shadow:0 2px 10px rgba(0,0,0,0.2); }
+    .hero-content h2{ font-size:1.2rem; margin-top:15px; font-weight:600; opacity:.9; }
+
+    .features-row{ display:flex; justify-content:center; gap:30px; margin-top:-60px; position:relative; z-index:10; flex-wrap:wrap; }
+    .feat-box{
+      background:#fff; width:300px; padding:30px 20px; border-radius:15px; text-align:center;
+      box-shadow:0 10px 30px rgba(0,0,0,0.1); transition:.2s;
+    }
+    .feat-box.blue{ background:#0093E9; color:#fff; transform:scale(1.05); }
+    .feat-box i{ font-size:2.5rem; margin-bottom:20px; color:var(--primary-color); }
+    .feat-box.blue i{ color:#fff; }
+    .feat-box h3{ font-size:1.3rem; margin-bottom:10px; font-weight:800; }
+    .feat-box p{ font-size:.9rem; color:#666; line-height:1.5; }
+    .feat-box.blue p{ color:#e1f5fe; }
+
+    .section-padding{ padding:80px 0; }
+    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:50px; align-items:center; }
+    .intro-img img{ width:100%; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.1); }
+    .section-title{ font-size:2.2rem; color:#333; font-weight:900; margin-bottom:20px; }
+    .section-desc{ color:#555; line-height:1.6; margin-bottom:20px; text-align:justify; }
+    .check-list li{ margin-bottom:10px; font-weight:700; color:var(--topbar-bg); }
+    .check-list li i{ margin-right:10px; }
+
+    .bg-light{ background:#f9fbfd; }
+    .text-center{ text-align:center; }
+    .svc-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:30px; margin-top:40px; }
+    .svc-card{
+      background:#fff; border-radius:15px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,0.05); transition:.2s;
+      display:flex; flex-direction:column;
+    }
+    .svc-card:hover{ transform:translateY(-5px); box-shadow:0 15px 30px rgba(0,0,0,0.1); text-decoration:none;}
+    .svc-img{ height:200px; background:#ddd; }
+    .svc-img img{ width:100%; height:100%; object-fit:cover; }
+    .svc-body{ background:var(--primary-color); color:#fff; padding:20px; flex:1; }
+    .svc-body h3{ margin:0 0 10px; font-size:1.2rem; font-weight:900; }
+    .svc-body p{ font-size:.9rem; opacity:.95; margin:0; }
+
+    .doc-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:30px; margin-top:40px; }
+    .doc-card{ background:#fff; border-radius:15px; padding:20px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.05); border:1px solid #eee; }
+    .doc-img{ width:150px; height:150px; margin:0 auto 20px; border-radius:50%; overflow:hidden; border:3px solid #eee; }
+    .doc-img img{ width:100%; height:100%; object-fit:cover; }
+    .doc-name{ color:var(--topbar-bg); font-weight:900; font-size:1.1rem; margin-bottom:5px; }
+    .doc-role{ color:#777; font-size:.9rem; }
+
+    .schedule-box{ background:#fff; border-radius:20px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.08); display:flex; flex-wrap:wrap; }
+    .schedule-content{ padding:40px; flex:1; min-width:300px; }
+    .schedule-img{ flex:1; min-width:300px; background:#eee; }
+    .schedule-img img{ width:100%; height:100%; object-fit:cover; }
+    .btn-outline{ border:2px solid var(--primary-color); color:var(--primary-color); padding:10px 25px; border-radius:30px; font-weight:900; margin-left:10px; display:inline-block; }
+
+    .main-footer{ background:#004ebc; color:#fff; padding:60px 0 20px; }
+    .footer-grid{ display:grid; grid-template-columns:1.5fr 1fr 1fr 1.5fr; gap:40px; margin-bottom:40px; }
+    .footer-col h4{ font-size:1.1rem; margin-bottom:20px; font-weight:900; text-transform:uppercase; }
+    .footer-col p,.footer-col a{ color:rgba(255,255,255,0.85); font-size:.9rem; line-height:1.8; display:block; margin-bottom:8px; }
+    .footer-col a:hover{ color:#fff; text-decoration:none;}
+
+    .footer-form input{
+      width:100%;
+      padding:10px;
+      margin-bottom:10px;
+      border-radius:5px;
+      border:1px solid rgba(255,255,255,0.3);
+      background:rgba(255,255,255,0.1);
+      color:#fff;
+      outline:none;
+    }
+    .footer-form input::placeholder{ color:rgba(255,255,255,0.6); }
+    .footer-form button{ background:#fff; color:var(--topbar-bg); border:none; padding:10px 20px; font-weight:900; border-radius:5px; cursor:pointer; }
+    .copyright{ text-align:center; border-top:1px solid rgba(255,255,255,0.12); padding-top:20px; font-size:.85rem; color:rgba(255,255,255,0.65); }
+
+    .floating-btns{
+      position:fixed;
+      left:30px;
+      bottom:30px;
+      z-index:9999;
+      display:flex;
+      flex-direction:column;
+      gap:15px;
+    }
+    .float-btn{
+      width:50px; height:50px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:1.4rem;
+      box-shadow:0 4px 10px rgba(0,0,0,0.3);
+      cursor:pointer;
+      transition:.2s;
+    }
+    .float-btn:hover{ transform:scale(1.1);text-decoration:none; }
+
+    @keyframes pulse-red{
+      0%{ box-shadow:0 0 0 0 rgba(211,47,47,0.7); }
+      70%{ box-shadow:0 0 0 15px rgba(211,47,47,0); }
+      100%{ box-shadow:0 0 0 0 rgba(211,47,47,0); }
+    }
+    @keyframes pulse-blue{
+      0%{ box-shadow:0 0 0 0 rgba(0,104,255,0.7); }
+      70%{ box-shadow:0 0 0 15px rgba(0,104,255,0); }
+      100%{ box-shadow:0 0 0 0 rgba(0,104,255,0); }
+    }
+    .btn-phone{ background:#d32f2f; animation:pulse-red 2s infinite; }
+    .btn-zalo{ background:#0068ff; animation:pulse-blue 2s infinite; }
+
+    /* =========================================================
+       CHAT UI
+    ========================================================= */
+    #chat-bubble{
+      position:fixed;
+      right:22px;
+      bottom:22px;
+      width:54px; height:54px;
+      border-radius:50%;
+      background:var(--primary-color);
+      color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px;
+      cursor:pointer;
+      box-shadow:0 10px 25px rgba(0,0,0,0.18);
+      z-index:99999;
+      user-select:none;
+    }
+    #chat-module{
+      position:fixed;
+      right:22px;
+      bottom:22px;
+      width:340px;
+      max-width:calc(100vw - 44px);
+      height:460px;
+      background:#fff;
+      border-radius:14px;
+      box-shadow:0 12px 35px rgba(0,0,0,0.22);
+      z-index:99999;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    #chat-module.hidden{ display:none; }
+
+    .chat-header{
+      background:var(--topbar-bg);
+      color:#fff;
+      padding:12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .chat-header h5{ margin:0; font-size:1rem; }
+    #close-chat-btn{
+      border:none;
+      background:transparent;
+      color:#fff;
+      font-size:20px;
+      cursor:pointer;
+    }
+    #chat-messages{
+      flex:1;
+      padding:12px;
+      overflow-y:auto;
+      background:#f6f8fb;
+    }
+    .message{
+      padding:10px 12px;
+      border-radius:12px;
+      margin:8px 0;
+      max-width:85%;
+      line-height:1.35;
+      font-size:.92rem;
+      word-wrap:break-word;
+      white-space:pre-wrap;
+    }
+    .message.user{
+      background:#dff3ff;
+      margin-left:auto;
+    }
+    .message.bot{
+      background:#fff;
+      border:1px solid #e6eaf0;
+    }
+    #chat-form{
+      display:flex;
+      gap:8px;
+      padding:10px;
+      border-top:1px solid #e6eaf0;
+      background:#fff;
+    }
+    #chat-input{
+      flex:1;
+      padding:10px 12px;
+      border:1px solid #d9e1ea;
+      border-radius:10px;
+      outline:none;
+    }
+    #chat-form button{
+      padding:10px 14px;
+      border:none;
+      border-radius:10px;
+      background:var(--primary-color);
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px){
+      .top-info-bar,.main-menu{ display:none; }
+      .grid-2,.schedule-box,.footer-grid{ display:block; }
+      .intro-img,.schedule-img{ margin-bottom:20px; }
+      .footer-col{ margin-bottom:30px; }
+      .floating-btns{ left:20px; bottom:20px; }
+
+      body.app{ height:auto; min-height:100vh; overflow:auto; }
+      .sidebar{ display:none; }
+      .main-wrapper{ width:100%; }
+    }
+  </style>
+</head>
+
+<body class="{{ 'app' if session.user else 'guest' }}">
+
+  {% if session.user %}
+  <aside class="sidebar">
+    <a href="{{ url_for('trang_chu') }}" class="sidebar-brand">
+      <i class="fa-solid fa-hospital-user" style="margin-right: 10px;"></i> HOPITAL
+    </a>
+
+    <div class="sidebar-menu">
+      <a href="{{ url_for('trang_chu') }}" class="nav-item {{ 'active' if active=='trang_chu' else '' }}">
+        <i class="fa-solid fa-house"></i> Trang chủ
+      </a>
+
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('ql_bac_si') }}" class="nav-item {{ 'active' if active=='ql_bac_si' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i> Quản lý bác sĩ
+        </a>
+        <a href="/admin/khoa" class="nav-item {{ 'active' if active=='ql_khoa' else '' }}">
+          <i class="fa-solid fa-building-circle-check"></i> Quản lý Khoa
+        </a>
+        <a href="{{ url_for('admin_accounts_page_v2') }}" class="nav-item {{ 'active' if active=='ql_tai_khoan' else '' }}">
+          <i class="fa-solid fa-users-gear"></i> Tài khoản hệ thống
+        </a>
+        <a href="/admin/dich-vu" class="nav-item {{ 'active' if active=='ql_dich_vu' else '' }}">
+          <i class="fa-solid fa-receipt"></i> Quản lý Dịch vụ
+        </a>
+        <a href="/admin/xet-nghiem" class="nav-item {{ 'active' if active=='ql_xet_nghiem' else '' }}">
+          <i class="fa-solid fa-flask"></i> Quản lý Xét nghiệm
+        </a>
+        <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+          <i class="fa-solid fa-bed"></i> Phòng bệnh
+        </a>
+      {% endif %}
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+
+        <div class="nav-group {{ 'is-open' if active in ['ql_lich_hen','goi_so','lay_so_online'] else '' }}">
+          <div class="nav-group-label" onclick="this.parentElement.classList.toggle('is-open')">
+            <div class="left">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Lịch hẹn</span>
+            </div>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
+          </div>
+          
+          <div class="nav-group-content">
+            {% if session.role == 'doctor' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+              <a href="{{ url_for('ql_lich_hen') }}" class="nav-item {{ 'active' if active=='ql_lich_hen' else '' }}">Quản lý lịch hẹn</a>
+            {% endif %}
+            <a href="{{ url_for('goi_so') }}" class="nav-item {{ 'active' if active=='goi_so' else '' }}">Danh sách thứ tự</a>
+            <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">Lấy số online</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('ql_kham_benh') }}" class="nav-item {{ 'active' if active=='ql_kham_benh' else '' }}">
+          <i class="fa-solid fa-stethoscope"></i> Khám bệnh
+        </a>
+
+        <a href="{{ url_for('benh_nhan') }}" class="nav-item {{ 'active' if active=='benh_nhan' else '' }}">
+          <i class="fa-solid fa-address-card"></i> Hồ sơ bệnh nhân
+        </a>
+
+        {% if session.role == 'admin' %}
+          <a href="{{ url_for('ql_thuoc_kho') }}" class="nav-item {{ 'active' if active=='thuoc_kho' else '' }}">
+            <i class="fa-solid fa-pills"></i> Thuốc & Kho
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('ql_thanh_toan') }}" class="nav-item {{ 'active' if active=='thanh_toan' else '' }}">
+          <i class="fa-solid fa-credit-card"></i> Thanh toán
+        </a>
+
+        <a href="{{ url_for('lich_lam_viec') }}" class="nav-item {{ 'active' if active=='lich_lam_viec' else '' }}">
+          <i class="fa-solid fa-calendar-days"></i> Lịch làm việc
+        </a>
+
+        {% if session.role == 'doctor' %}
+          <a href="{{ url_for('xet_lich_lam') }}" class="nav-item {{ 'active' if active=='xet_lich_lam' else '' }}">
+            <i class="fa-solid fa-user-clock"></i> Đăng ký lịch
+          </a>
+
+          <a href="{{ url_for('phong_benh_page') }}" class="nav-item {{ 'active' if active=='phong_benh' else '' }}">
+            <i class="fa-solid fa-bed"></i> Phòng bệnh
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('bao_cao_thong_ke') }}" class="nav-item {{ 'active' if active=='bao_cao' else '' }}">
+          <i class="fa-solid fa-chart-line"></i> Báo cáo
+        </a>
+
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+
+      {% else %}
+        <a href="{{ url_for('quansat_layso') }}" class="nav-item {{ 'active' if active=='quansat_layso' else '' }}">
+          <i class="fa-solid fa-eye"></i> Quan sát số
+        </a>
+        <a href="{{ url_for('lay_so_online') }}" class="nav-item {{ 'active' if active=='lay_so_online' else '' }}">
+          <i class="fa-solid fa-ticket"></i> Lấy số online
+        </a>
+        <a href="{{ url_for('dat_lich_page') }}" class="nav-item {{ 'active' if active=='dat_lich' else '' }}">
+          <i class="fa-solid fa-calendar-plus"></i> Đặt lịch khám
+        </a>
+        {% if session.mabn %}
+          <a href="{{ url_for('ho_so_benh_nhan', mabn=session.mabn) }}" class="nav-item {{ 'active' if active=='ho_so_toi' else '' }}">
+            <i class="fa-solid fa-file-medical"></i> Hồ sơ của tôi
+          </a>
+        {% endif %}
+        <a href="{{ url_for('doi_mat_khau_page') }}" class="nav-item {{ 'active' if active=='doi_mat_khau' else '' }}">
+          <i class="fa-solid fa-lock"></i> Đổi mật khẩu
+        </a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="top-header">
+      <div style="font-weight: bold; font-size: 1.1rem; color: #2c3e50;">TỔNG QUAN</div>
+      <div class="header-user">
+        <span>Xin chào, <b>{{ session.user }}</b></span>
+        <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+      </div>
+    </header>
+
+    <div class="content-body">
+      <h2 style="margin:0 0 22px; color:#2c3e50;">Tổng quan hoạt động</h2>
+
+      {% if session.get('role', 'doctor') != 'patient' %}
+        <div class="quick-actions">
+          <a href="{{ url_for('benh_nhan') }}" class="qa"><i class="fa-solid fa-user-plus"></i>Thêm bệnh nhân</a>
+          <a href="{{ url_for('ql_kham_benh') }}" class="qa"><i class="fa-solid fa-notes-medical"></i>Lập phiếu khám</a>
+          <a href="{{ url_for('lay_so_online') }}" class="qa"><i class="fa-solid fa-ticket"></i>Lấy số online</a>
+          <a href="{{ url_for('ql_thanh_toan') }}" class="qa"><i class="fa-solid fa-money-bill-wave"></i>Thu ngân</a>
+        </div>
+
+        <div class="stats">
+          <div class="card"><div class="num">{{ bn_moi }}</div><div class="lbl">Bệnh nhân mới</div></div>
+          <div class="card"><div class="num">{{ dang_dieu_tri }}</div><div class="lbl">Đang khám</div></div>
+          <div class="card"><div class="num">{{ lich_hen }}</div><div class="lbl">Lịch hẹn</div></div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+{% else %}
+  <div class="top-info-bar">
+    <div class="container top-flex">
+      <div class="contact-info">
+        <span style="margin-right:20px"><i class="fa-solid fa-phone"></i> Hotline: 0888999777</span>
+        <span><i class="fa-solid fa-clock"></i> 7:30 - 17:00 (T2-T7)</span>
+      </div>
+      <div class="social-icons">
+        <i class="fa-brands fa-facebook"></i>
+        <i class="fa-brands fa-tiktok"></i>
+        <i class="fa-brands fa-youtube"></i>
+        <a href="{{ url_for('login_page') }}" style="color:white; margin-left:20px; font-weight:800;">
+          <i class="fa-solid fa-user"></i> Đăng nhập
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <header class="landing-header">
+    <div class="container nav-container">
+      <a href="{{ url_for('trang_chu') }}" class="logo-brand">
+        <i class="fa-solid fa-hospital-user"></i> HOPITAL AZC
+      </a>
+
+      <nav class="main-menu">
+        <a href="{{ url_for('gioi_thieu_page') }}">Giới thiệu</a>
+
+        <div class="dropdown">
+          <a href="#">Dịch vụ <i class="fa-solid fa-chevron-down" style="font-size:0.7rem;"></i></a>
+          <div class="dropdown-content" style="min-width:250px; grid-template-columns:1fr; left:0;">
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-stethoscope"></i> Khám Chuyên khoa</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-user-clock"></i> Khám theo yêu cầu</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-file-medical"></i> Khám sức khỏe tổng quát</a>
+          </div>
+        </div>
+
+        <div class="dropdown">
+          <a href="#">Chuyên khoa <i class="fa-solid fa-chevron-down" style="font-size:0.7rem;"></i></a>
+          <div class="dropdown-content">
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-bone"></i> Cơ Xương Khớp</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-brain"></i> Thần Kinh</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-utensils"></i> Tiêu Hoá</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-heart-pulse"></i> Tim Mạch</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-ear-listen"></i> Tai Mũi Họng</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-tooth"></i> Răng Hàm Mặt</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-eye"></i> Nhãn Khoa</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-baby"></i> Nhi Khoa</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-person-pregnant"></i> Sản Phụ Khoa</a>
+            <a href="#" class="menu-sub-item"><i class="fa-solid fa-hand-dots"></i> Da Liễu</a>
+          </div>
+        </div>
+
+        <a href="{{ url_for('bac_si_page') }}">Bác sĩ</a>
+        <a href="#">Liên hệ</a>
+      </nav>
+
+      <a href="{{ url_for('dat_lich_page') }}" class="btn-appointment">Đặt lịch khám</a>
+    </div>
+  </header>
+
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-content">
+        <h1>Công nghệ hiện đại</h1>
+        <h2>CHẨN ĐOÁN CHÍNH XÁC - PHÁT HIỆN SỚM - ĐIỀU TRỊ KỊP THỜI</h2>
+      </div>
+    </div>
+  </section>
+
+  <section class="container">
+    <div class="features-row">
+      <div class="feat-box">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <h3>Khám dễ dàng</h3>
+        <p>Quy trình tối giản, đặt lịch nhanh chóng, không chờ đợi lâu.</p>
+      </div>
+      <div class="feat-box blue">
+        <i class="fa-solid fa-hand-holding-dollar"></i>
+        <h3>Giá tốt</h3>
+        <p>Chi phí minh bạch, hợp lý, hỗ trợ thanh toán đầy đủ.</p>
+      </div>
+      <div class="feat-box">
+        <i class="fa-solid fa-user-doctor"></i>
+        <h3>Bác sĩ tận tâm</h3>
+        <p>Đội ngũ chuyên gia giàu kinh nghiệm, y đức, luôn lắng nghe.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-padding container">
+    <div class="grid-2">
+      <div class="intro-img">
+        <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800" alt="Hospital Interior">
+      </div>
+      <div class="intro-text">
+        <div style="color:var(--primary-color); font-weight:900; margin-bottom:10px;">Về Hopital AZC</div>
+        <h2 class="section-title">Chăm sóc tận tâm, dịch vụ vượt trội</h2>
+        <p class="section-desc">
+          Hopital AZC được xây dựng với định hướng trở thành một trung tâm chăm sóc sức khỏe toàn diện,
+          nơi mỗi khách hàng được tiếp cận dịch vụ y tế chất lượng cao trong môi trường an toàn.
+        </p>
+        <ul class="check-list">
+          <li><i class="fa-solid fa-circle-check"></i> Chăm sóc liên mạch</li>
+          <li><i class="fa-solid fa-circle-check"></i> Lấy bệnh nhân làm trung tâm</li>
+          <li><i class="fa-solid fa-circle-check"></i> Công nghệ tiên tiến</li>
+          <li><i class="fa-solid fa-circle-check"></i> Chăm sóc toàn diện</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-padding bg-light">
+    <div class="container">
+      <div style="color:var(--primary-color); font-weight:900; margin-bottom:10px;">Dịch vụ của chúng tôi</div>
+      <h2 class="section-title">Dịch vụ nổi bật</h2>
+
+      <div class="svc-grid">
+        <div class="svc-card">
+          <div class="svc-img">
+            <img src="https://cdn.pixabay.com/photo/2016/11/09/15/27/dna-1811955_1280.jpg" alt="Kham Tong Quat" referrerpolicy="no-referrer">
+          </div>
+          <div class="svc-body">
+            <h3>Khám tổng quát</h3>
+            <p>Gói khám sức khỏe định kỳ chất lượng cao.</p>
+          </div>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-img">
+            <img src="https://cdn.pixabay.com/photo/2016/11/09/15/27/dna-1811955_1280.jpg" alt="Xet Nghiem Mau" referrerpolicy="no-referrer">
+          </div>
+          <div class="svc-body">
+            <h3>Xét nghiệm máu</h3>
+            <p>Hệ thống máy xét nghiệm tự động hiện đại.</p>
+          </div>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-img">
+            <img src="https://cdn.pixabay.com/photo/2017/01/29/21/16/nurse-2019420_1280.jpg" alt="Kham Yeu Cau" referrerpolicy="no-referrer">
+          </div>
+          <div class="svc-body">
+            <h3>Khám theo yêu cầu</h3>
+            <p>Khám theo yêu cầu là dịch vụ chất lượng cao, nơi người bệnh được đặt lịch trước.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-padding container">
+    <h2 class="section-title text-center">Đội ngũ chuyên gia</h2>
+    <div class="doc-grid">
+      <div class="doc-card">
+        <div class="doc-img">
+          <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300" alt="Doc">
+        </div>
+        <div class="doc-name">BS. Nguyễn Văn Kiên</div>
+        <div class="doc-role">Khoa Nội Tổng Hợp</div>
+      </div>
+      <div class="doc-card">
+        <div class="doc-img">
+          <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300" alt="Doc">
+        </div>
+        <div class="doc-name">BS. Võ Mạnh Hùng</div>
+        <div class="doc-role">Khoa Ngoại</div>
+      </div>
+      <div class="doc-card">
+        <div class="doc-img">
+          <img src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=300" alt="Doc">
+        </div>
+        <div class="doc-name">BS. Lê Mai Quỳnh Nga</div>
+        <div class="doc-role">Khoa Sản</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-padding bg-light">
+    <div class="container">
+      <div class="schedule-box">
+        <div class="schedule-content">
+          <div style="color:var(--primary-color); font-weight:900; margin-bottom:10px;">Hỗ trợ 24/7</div>
+          <h2 class="section-title">Lịch làm việc</h2>
+          <p style="margin-bottom:30px; color:#555;">
+            Hopital AZC luôn sẵn sàng hỗ trợ bạn mọi lúc. Liên hệ đường dây nóng của chúng tôi để được giải đáp thắc mắc ngay lập tức.
+          </p>
+          <div style="margin-bottom:30px;">
+            <a href="{{ url_for('dat_lich_page') }}" class="btn-appointment">Đặt lịch khám</a>
+            <a href="#" class="btn-outline">Hỗ trợ BHYT</a>
+          </div>
+          <ul class="check-list">
+            <li><i class="fa-solid fa-check"></i> Thứ 2 - Thứ 7: Từ 7h30 - 17h00</li>
+            <li><i class="fa-solid fa-check"></i> Lấy bệnh nhân làm trung tâm</li>
+            <li><i class="fa-solid fa-check"></i> Đặt lịch nhanh chóng qua Hotline</li>
+          </ul>
+        </div>
+        <div class="schedule-img">
+          <img src="https://images.unsplash.com/photo-1666214280557-f1b5022eb634?auto=format&fit=crop&q=80&w=800" alt="Work">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="main-footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <div style="font-size:1.5rem; font-weight:900; margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+          <i class="fa-solid fa-hospital-user"></i> HOPITAL AZC
+        </div>
+        <p>ĐKKD số: ......</p>
+        <p>Sở Tài Chính cấp ngày .....</p>
+        <div style="margin-top:20px;">
+          <span style="background:red; padding:5px 10px; border-radius:5px; font-size:0.8rem; font-weight:900;">.....</span>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Địa chỉ & Giờ làm</h4>
+        <p><i class="fa-solid fa-location-dot"></i> 358 Đường Lê Thanh Nghị, Cẩm Phả, Quảng Ninh</p>
+        <p><i class="fa-solid fa-clock"></i> T2 - T7: 7h00 - 17h00</p>
+        <h4>Liên hệ</h4>
+        <p>Cấp cứu: 0888999777</p>
+        <p>Đặt lịch: 0777999888</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Liên kết</h4>
+        <a href="#">Giới thiệu</a>
+        <a href="#">Liên hệ</a>
+        <div class="social-icons" style="margin-top:20px; font-size:1.2rem;">
+          <i class="fa-brands fa-facebook"></i>
+          <i class="fa-brands fa-tiktok"></i>
+          <i class="fa-brands fa-youtube"></i>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Đăng ký tư vấn</h4>
+        <form class="footer-form">
+          <input type="text" placeholder="Nhập số điện thoại của bạn...">
+          <button type="button">Gửi</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="copyright">Copyright 2025 © Hopital Clinic</div>
+  </footer>
+
+  <div class="floating-btns">
+    <div class="float-btn btn-phone"><i class="fa-solid fa-phone"></i></div>
+    <div class="float-btn btn-zalo"><i class="fa-solid fa-comment-dots"></i></div>
+  </div>
+{% endif %}
+
+  <div id="chat-bubble">💬</div>
+  <div id="chat-module" class="hidden">
+    <div class="chat-header">
+      <h5>🏥 Trợ lý ảo Y tế</h5>
+      <button id="close-chat-btn">×</button>
+    </div>
+    <div id="chat-messages">
+      <div class="message bot">Xin chào! Tôi có thể giúp gì cho bạn?</div>
+    </div>
+    <form id="chat-form">
+      <input type="text" id="chat-input" placeholder="Nhập câu hỏi...">
+      <button type="submit">Gửi</button>
+    </form>
+  </div>
+
+  <script>
+    const IS_LOGGED_IN = {{ 'true' if session.user else 'false' }};
+    const CHATBOT_API_URL = '/api/chat';
+
+    (function(){
+      const bubble = document.getElementById('chat-bubble');
+      const module = document.getElementById('chat-module');
+      const closeBtn = document.getElementById('close-chat-btn');
+
+      if(bubble && module){
+        bubble.onclick = () => { module.classList.remove('hidden'); bubble.style.display='none'; };
+        closeBtn.onclick = () => { module.classList.add('hidden'); bubble.style.display='flex'; };
+      }
+
+      const form = document.getElementById('chat-form');
+      if(form){
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const inp = document.getElementById('chat-input');
+          const txt = (inp.value || '').trim();
+          if(!txt) return;
+
+          addMsg(txt, 'user');
+          inp.value = '';
+
+          try{
+            const r = await fetch(CHATBOT_API_URL, {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({query:txt})
+            });
+            const j = await r.json();
+            addMsg(j.answer || j.error || 'Không có phản hồi', 'bot');
+          }catch(err){
+            addMsg('Lỗi kết nối', 'bot');
+          }
+        };
+      }
+
+      function addMsg(txt, role){
+        const d = document.createElement('div');
+        d.className = `message ${role}`;
+        d.innerText = txt;
+        const box = document.getElementById('chat-messages');
+        box.appendChild(d);
+        box.scrollTop = box.scrollHeight;
+      }
+    })();
+  </script>
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

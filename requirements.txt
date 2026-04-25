@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic==2.*
+chromadb
+faiss-cpu
+sentence-transformers
+transformers
+torch
+python-dotenv
+openai>=1.37.0

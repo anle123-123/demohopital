@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8">
+  <title>{{ title or "Kết quả thanh toán" }}</title>
+  <style>
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      background: #0b0f14;
+      color: #e5e7eb;
+      margin: 0
+    }
+
+    .wrap {
+      max-width: 880px;
+      margin: 40px auto;
+      padding: 0 16px
+    }
+
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 18px 20px
+    }
+
+    .ok {
+      color: #34d399
+    }
+
+    .fail {
+      color: #f87171
+    }
+
+    .muted {
+      color: #9ca3af
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px
+    }
+
+    th,
+    td {
+      border-top: 1px solid #1f2937;
+      padding: 8px 10px;
+      text-align: left
+    }
+
+    th {
+      width: 280px;
+      color: #cbd5e1
+    }
+
+    a.btn {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: #2563eb;
+      color: #fff;
+      text-decoration: none
+    }
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>💳 {{ title or "Kết quả thanh toán" }}</h1>
+
+    <div class="card">
+      <p>
+        Trạng thái:
+        {% if valid %}
+        <b class="ok">Hợp lệ</b>
+        {% else %}
+        <b class="fail">Không hợp lệ (Sai chữ ký hoặc tham số)</b>
+        {% endif %}
+      </p>
+      {% if message %}<p class="muted">{{ message }}</p>{% endif %}
+
+      {% if detail %}
+      <table>
+        <tbody>
+          {% for k,v in detail.items() %}
+          <tr>
+            <th>{{ k }}</th>
+            <td>{{ v }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+
+      {% if session.get('user') %}
+      <a class="btn" href="{{ url_for('ql_thanh_toan') }}">← Quay lại danh sách hóa đơn</a>
+      {% else %}
+      <a class="btn" href="/">← Quay lại trang chủ</a>
+      {% endif %}
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+
+</html>
