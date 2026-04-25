@@ -1,0 +1,17 @@
+HƯỚNG DẪN ĐẶT LỊCH KHÁM VÀ LẤY SỐ ONLINE TẠI BỆNH VIỆN HOPITAL AZC
+
+1. Hướng dẫn đặt lịch hẹn trực tuyến (Online Booking):
+- Bệnh nhân có thể chủ động đặt lịch khám thông qua tính năng "Đặt lịch khám online" trên Website hoặc App của bệnh viện.
+- Thông tin bắt buộc cần cung cấp: Họ và tên, Số điện thoại (9-11 số), Ngày khám, Giờ khám.
+- Thông tin không bắt buộc (tùy chọn): Chọn Bác sĩ cụ thể (nếu có), Chọn Khoa khám, Ghi chú tình trạng bệnh, Email cá nhân.
+- Sau khi đặt lịch thành công: Nếu bệnh nhân chưa có tài khoản, hệ thống sẽ tự động tạo tài khoản (Tên đăng nhập là Mã bệnh nhân, Mật khẩu được cấp ngẫu nhiên) và gửi thông tin qua Email (nếu có cung cấp). Bệnh nhân sẽ nhận được mã lịch hẹn.
+
+2. Hướng dẫn lấy số thứ tự online:
+- Bệnh nhân có thể dùng tính năng "Lấy số online" để xếp hàng từ xa.
+- Chỉ cần nhập Họ Tên và chọn Khoa muốn khám. 
+- Hệ thống sẽ cấp một Số Thứ Tự (STT) theo khoa trong ngày hôm đó. Bệnh nhân có thể theo dõi bảng trạng thái gọi số trên màn hình hoặc ứng dụng để biết khi nào đến lượt mình.
+
+3. Thời gian làm việc của Bác sĩ (Khung giờ khám):
+- Ca Sáng: Bắt đầu từ 07:00 đến 11:30.
+- Ca Chiều: Bắt đầu từ 13:30 đến 17:00.
+Bệnh nhân vui lòng đặt lịch nằm trong các khung giờ này. Không đặt lịch vào khung giờ đã qua trong ngày.

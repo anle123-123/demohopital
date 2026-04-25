@@ -1,0 +1,2 @@
+Quy trình khám ngoại trú gồm tiếp đón, khám sàng lọc, chỉ định cận lâm sàng, thanh toán và nhận đơn thuốc. Lưu ý: tuân thủ hướng dẫn của bác sĩ và quy định bệnh viện.
+Quy trình lấy số khám gồm: Truy cập vào website click chọn lấy số sẽ hiện ra cửa sổ lấy số bệnh nhân ghi họ và tên + Khoa và ngồi chờ gọi

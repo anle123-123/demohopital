@@ -1,0 +1,67 @@
+BẢNG GIÁ VÀ CHI PHÍ ĐIỀU TRỊ THAM KHẢO CÁC BỆNH LÝ TẠI BỆNH VIỆN HOPITAL AZC
+
+[HƯỚNG DẪN DÀNH CHO CHATBOT]
+Khi bệnh nhân hỏi về chi phí khám chữa bệnh, giá tiền phẫu thuật, chatbot phải tuân thủ các nguyên tắc sau:
+1. Luôn nhấn mạnh đây là "MỨC GIÁ THAM KHẢO", chi phí thực tế sẽ phụ thuộc vào mức độ bệnh, loại thuốc sử dụng, và các chỉ định cận lâm sàng (xét nghiệm, siêu âm, X-quang) của bác sĩ.
+2. Cung cấp khoảng giá cụ thể dựa vào danh sách bên dưới để bệnh nhân an tâm chuẩn bị tài chính.
+3. Hướng dẫn bệnh nhân mang theo Thẻ Bảo hiểm Y tế (nếu có) để được hỗ trợ giảm trừ chi phí.
+
+[BẢNG GIÁ THAM KHẢO CHI TIẾT THEO KHOA]
+
+#1. KHOA NỘI (Tiêu hóa, Tim mạch, Thần kinh, Hô hấp)
+- Phí khám ban đầu: 150.000 VNĐ - 300.000 VNĐ.
+- Nội soi dạ dày/đại tràng (thường/có gây mê): 500.000 VNĐ - 2.000.000 VNĐ.
+- Siêu âm tim, điện tâm đồ: 150.000 VNĐ - 400.000 VNĐ.
+- Chi phí điều trị nội trú các bệnh mạn tính (tiểu đường, huyết áp, viêm loét dạ dày): Dao động từ 2.000.000 VNĐ - 5.000.000 VNĐ/đợt điều trị.
+
+#2. KHOA NGOẠI (Phẫu thuật, Chấn thương)
+- Phẫu thuật nội soi cắt ruột thừa: 5.000.000 VNĐ - 10.000.000 VNĐ.
+- Tán sỏi thận/sỏi mật ngoài cơ thể hoặc nội soi: 4.000.000 VNĐ - 12.000.000 VNĐ.
+- Phẫu thuật cắt trĩ (phương pháp Longo/Laser): 5.000.000 VNĐ - 15.000.000 VNĐ.
+- Nắn chỉnh, bó bột gãy xương (tùy vị trí): 500.000 VNĐ - 3.000.000 VNĐ.
+
+#3. KHOA SẢN (Sản Phụ khoa)
+- Gói khám thai, siêu âm thai (2D/4D), đo tim thai: 300.000 VNĐ - 800.000 VNĐ/lần.
+- Khám phụ khoa, soi cổ tử cung, tầm soát ung thư: 400.000 VNĐ - 1.500.000 VNĐ.
+- Chi phí sinh thường: 4.000.000 VNĐ - 8.000.000 VNĐ.
+- Chi phí sinh mổ (tùy yêu cầu phòng/bác sĩ): 10.000.000 VNĐ - 20.000.000 VNĐ.
+
+#4. KHOA NHI
+- Khám bệnh lý nhi khoa chung: 150.000 VNĐ - 300.000 VNĐ.
+- Khí dung, hút đờm: 50.000 VNĐ - 150.000 VNĐ/lần.
+- Điều trị nội trú (viêm phổi, sốt xuất huyết, tay chân miệng): 2.000.000 VNĐ - 6.000.000 VNĐ/đợt (tùy số ngày nằm viện).
+
+#5. KHOA CẤP CỨU
+- Phí khám và giường lưu cấp cứu: 200.000 VNĐ - 500.000 VNĐ/ngày.
+- Khâu vá vết thương hở (tùy kích thước): 300.000 VNĐ - 1.500.000 VNĐ.
+- Rửa dạ dày cấp cứu do ngộ độc: 500.000 VNĐ - 2.000.000 VNĐ.
+- Lưu ý: Các ca cấp cứu nghiêm trọng (đột quỵ, nhồi máu cơ tim, chấn thương sọ não) sẽ cần can thiệp phẫu thuật hoặc hồi sức tích cực, chi phí có thể từ 20.000.000 VNĐ trở lên.
+
+#6. KHOA MẮT
+- Đo khúc xạ, kiểm tra thị lực, cắt kính: 100.000 VNĐ - 300.000 VNĐ.
+- Lấy dị vật giác mạc, chích chắp lẹo: 200.000 VNĐ - 500.000 VNĐ.
+- Phẫu thuật đục thủy tinh thể (Phaco): 6.000.000 VNĐ - 15.000.000 VNĐ/mắt (tùy loại nhân mắt).
+- Phẫu thuật cận thị (Lasik/Femto): 15.000.000 VNĐ - 40.000.000 VNĐ.
+
+#7. KHOA TAI MŨI HỌNG
+- Khám và nội soi Tai Mũi Họng: 200.000 VNĐ - 400.000 VNĐ.
+- Lấy dị vật (hóc xương cá, dị vật trong tai/mũi): 300.000 VNĐ - 800.000 VNĐ.
+- Phẫu thuật cắt Amidan, nạo VA: 5.000.000 VNĐ - 10.000.000 VNĐ.
+- Phẫu thuật mổ xoang nội soi: 8.000.000 VNĐ - 15.000.000 VNĐ.
+
+#8. KHOA RĂNG HÀM MẶT
+- Khám, tư vấn, cạo vôi răng: 150.000 VNĐ - 300.000 VNĐ.
+- Trám răng thẩm mỹ/trám răng sâu: 200.000 VNĐ - 500.000 VNĐ/răng.
+- Nhổ răng khôn (răng số 8) mọc lệch/ngầm: 1.000.000 VNĐ - 3.500.000 VNĐ/răng.
+- Điều trị tủy răng: 800.000 VNĐ - 2.000.000 VNĐ/răng.
+- Bọc răng sứ, trồng răng Implant: Từ 2.000.000 VNĐ - 25.000.000 VNĐ/răng tùy chất liệu.
+
+#9. KHOA DA LIỄU
+- Khám da liễu, soi da: 150.000 VNĐ - 300.000 VNĐ.
+- Đốt Laser (mụn ruồi, mụn cóc, sùi mào gà): 150.000 VNĐ - 400.000 VNĐ/nốt.
+- Điều trị mụn trứng cá, viêm da cơ địa, nấm (kèm thuốc): 1.000.000 VNĐ - 3.000.000 VNĐ/liệu trình.
+
+#10. KHOA PHỤC HỒI CHỨC NĂNG
+- Châm cứu, xoa bóp bấm huyệt: 100.000 VNĐ - 250.000 VNĐ/lần.
+- Kéo giãn cột sống, điện xung trị liệu: 150.000 VNĐ - 300.000 VNĐ/lần.
+- Tập vật lý trị liệu phục hồi sau phẫu thuật/tai biến: 200.000 VNĐ - 500.000 VNĐ/ngày.

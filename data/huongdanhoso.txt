@@ -1,0 +1,14 @@
+HƯỚNG DẪN TRA CỨU HỒ SƠ BỆNH ÁN VÀ THANH TOÁN TẠI BỆNH VIỆN
+
+1. Tra cứu hồ sơ bệnh nhân, đơn thuốc, kết quả xét nghiệm:
+- Bệnh nhân cần đăng nhập vào hệ thống bằng tài khoản đã được cấp (Email/Số điện thoại hoặc Mã bệnh nhân) và Mật khẩu.
+- Sau khi đăng nhập, truy cập mục "Hồ sơ bệnh nhân". Tại đây, bệnh nhân có thể xem lịch sử các lần khám bệnh, kết quả chẩn đoán, chi tiết kết quả xét nghiệm, và đơn thuốc bác sĩ đã kê.
+- Tính năng bảo mật: Bệnh nhân chỉ được phép xem hồ sơ của chính mình. 
+
+2. Hướng dẫn thanh toán viện phí:
+- Bệnh viện hỗ trợ 2 hình thức thanh toán chính: Thanh toán bằng Tiền mặt (CASH) tại quầy thu ngân và Thanh toán trực tuyến qua cổng VNPAY.
+- Đối với thanh toán VNPAY: Bệnh nhân có thể quét mã QR hoặc bấm nút thanh toán trên ứng dụng/website. Hệ thống sẽ chuyển hướng sang VNPAY, hỗ trợ thanh toán qua thẻ ATM nội địa, thẻ quốc tế (Visa/Mastercard) hoặc ứng dụng Mobile Banking của các ngân hàng.
+- Lưu ý: Sau khi thanh toán VNPAY thành công, trạng thái hóa đơn trên hệ thống sẽ tự động chuyển sang "Đã thanh toán". Nếu chưa thanh toán hóa đơn cũ, hệ thống có thể sẽ chặn việc xóa hồ sơ hoặc các thao tác khác.
+
+3. Hỗ trợ tài khoản:
+- Nếu bệnh nhân quên mật khẩu, vui lòng liên hệ bộ phận CSKH hoặc quản trị viên (Admin) của bệnh viện để được cấp lại mật khẩu mới qua Email. Hệ thống có bảo mật 2 lớp (OTP qua email) khi đăng nhập từ thiết bị lạ.

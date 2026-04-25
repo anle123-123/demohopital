@@ -1,0 +1,36 @@
+HƯỚNG DẪN VÀ GIẢI ĐÁP THẮC MẮC THANH TOÁN VIỆN PHÍ QUA VNPAY TẠI BỆNH VIỆN HOPITAL AZC
+
+[HƯỚNG DẪN DÀNH CHO CHATBOT]
+Khi người dùng hỏi về vấn đề thanh toán, đặc biệt là lỗi trừ tiền, chatbot cần:
+1. Trấn an người bệnh (VD: "Bạn đừng quá lo lắng, hệ thống luôn ghi nhận mọi giao dịch...").
+2. Tuyệt đối KHÔNG khuyên bệnh nhân thanh toán lại ngay lập tức nếu họ báo đã bị trừ tiền trong tài khoản ngân hàng.
+3. Hướng dẫn họ kiểm tra lại trạng thái hóa đơn hoặc liên hệ quầy thu ngân để đối soát.
+
+[CÁC CÂU HỎI THƯỜNG GẶP VÀ CÁCH XỬ LÝ LỖI THANH TOÁN]
+
+1. Bệnh viện hỗ trợ những hình thức thanh toán nào?
+- Trả lời: Bệnh viện Hopital AZC hiện hỗ trợ 2 hình thức:
+  + Thanh toán bằng Tiền mặt (CASH) trực tiếp tại quầy thu ngân.
+  + Thanh toán Trực tuyến qua cổng VNPAY (quét mã QR bằng ứng dụng ngân hàng, thẻ ATM nội địa, hoặc thẻ quốc tế Visa/Mastercard).
+
+2. Tôi quét mã VNPAY, ngân hàng đã báo trừ tiền nhưng màn hình bệnh viện báo "Thanh toán thất bại" hoặc hóa đơn vẫn báo "Chưa thanh toán"?
+- Nguyên nhân: Đây thường là do độ trễ của mạng internet khiến hệ thống của bệnh viện chưa nhận được tín hiệu xác nhận (IPN) từ VNPAY gửi về.
+- Hướng xử lý: Bạn tuyệt đối KHÔNG thanh toán lại lần thứ hai. Vui lòng đợi từ 3 - 5 phút và tải lại trang "Quản lý thanh toán" hoặc "Hồ sơ bệnh nhân". Nếu sau 10 phút hóa đơn vẫn chưa chuyển trạng thái, bạn hãy báo lại cho quầy thu ngân kèm theo hình ảnh biên lai trừ tiền trên app ngân hàng để nhân viên đối soát và cập nhật thủ công.
+
+3. Hệ thống báo lỗi "Hóa đơn đã thanh toán" (Mã lỗi 02) khi tôi đang cố quét mã?
+- Nguyên nhân: Hóa đơn này đã được thanh toán thành công trước đó (có thể do người nhà của bạn đã thanh toán giúp hoặc bạn đã thanh toán xong nhưng bấm nhầm lại vào link).
+- Hướng xử lý: Bạn không cần làm gì thêm, hóa đơn đã được ghi nhận. Bạn có thể vào mục Hồ sơ để kiểm tra chi tiết.
+
+4. Hệ thống báo lỗi "Số tiền không hợp lệ" (Mã lỗi 04)?
+- Nguyên nhân: Có thể trong lúc bạn đang thực hiện thanh toán, bác sĩ đã cập nhật thêm thuốc hoặc dịch vụ vào phiếu khám khiến tổng tiền của hóa đơn bị thay đổi so với mã QR ban đầu.
+- Hướng xử lý: Bạn hãy đóng cửa sổ thanh toán hiện tại, tải lại (refresh) trang web/app để hệ thống cập nhật lại tổng tiền mới nhất, sau đó lấy mã VNPAY mới để quét lại.
+
+5. Hệ thống báo "Đang xử lý" hoặc vòng quay load liên tục khi bấm vào thanh toán?
+- Nguyên nhân: Lỗi kết nối mạng tạm thời hoặc phiên đăng nhập của bạn đã hết hạn.
+- Hướng xử lý: Bạn hãy thử đăng xuất và đăng nhập lại tài khoản, sau đó vào lại mục Thanh toán.
+
+6. Làm sao để biết tôi đã thanh toán thành công?
+- Trả lời: Khi thanh toán thành công, màn hình sẽ hiển thị thông báo "Thanh toán thành công!" kèm theo mã giao dịch. Đồng thời, khi bạn vào xem lại chi tiết Hóa đơn, hệ thống sẽ hiển thị trạng thái là "Đã thanh toán" (màu xanh). Lúc này bạn có thể yên tâm ra về hoặc đi nhận thuốc tại quầy.
+
+7. Tôi có thể nhờ người nhà ở xa thanh toán viện phí giúp được không?
+- Trả lời: Hoàn toàn được. Bạn chỉ cần gửi tài khoản đăng nhập cho người nhà, hoặc gửi trực tiếp đường link thanh toán / ảnh chụp mã QR VNPAY cho người nhà quét bằng ứng dụng ngân hàng của họ. Mọi giao dịch thành công đều sẽ tự động cập nhật vào hồ sơ của bạn.

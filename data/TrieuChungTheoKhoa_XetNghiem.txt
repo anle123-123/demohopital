@@ -1,0 +1,8 @@
+# Dịch vụ Khoa Xét nghiệm
+- Xét nghiệm máu
+- Thử nước tiểu
+- Xét nghiệm đường huyết (đo đường)
+- Xét nghiệm mỡ máu (cholesterol)
+- Xét nghiệm chức năng gan
+- Xét nghiệm chức năng thận
+- Xét nghiệm tổng quát
